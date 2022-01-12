@@ -22,4 +22,7 @@ By that we differentiate between changes caused by selection and changes caused 
 The **replicated selection** is used to calculate a *FDR for selection*. 
 Turner and Miller (2012) applied this significance threshold only on the
 statistic based on the allele frequency differences. 
-Whereas we applied the this new significance threshold to the commonly used **FST** statistic.
+Whereas we applied the this new significance threshold to the commonly used \eqn{F_{ST}}
+**FST** statistic.
+
+$ F_{ST} $
