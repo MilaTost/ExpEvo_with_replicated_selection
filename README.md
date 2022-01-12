@@ -1,0 +1,2 @@
+# Selection_signature_mapping_scripts_with_replicated_selection
+This repository contains scripts for selection signature mapping with replicated selection.
