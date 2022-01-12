@@ -49,14 +49,11 @@ library(data.table)
 library(doMC)
 library(vcfR)
 library(parallel)
-
 cores <- as.integer(Sys.getenv('SLURM_CPUS_PER_TASK'))
 cores <- detectCores(all.tests = FALSE, logical = TRUE)
 registerDoMC(cores)
-
 setwd("/your/personal/working/directory/")
 vcf_S4 <- read.vcfR("DATA.vcf", verbose = FALSE)
-
 cat("VCF contains before anything was done:",nrow(vcf_S4@fix),"markers.","\n")
 ```
 The last command also tells you, how many markers the VCF file comprises.
@@ -100,12 +97,82 @@ cat("The vcf_S4 file still contains:",ncol(vcf_S4@gt)-1,"individuals.","\n")
 ```
 
 #### Filtering for read depth per sample
+In these steps the average read depth per sample is calculated:
 ```{r}
+cat("VCF file contains:",nrow(vcf_S4@fix),"markers before filtering for read depth.","\n")
+dp <- extract.info(vcf_S4, element = "DP", as.numeric=TRUE)
+an <- extract.info(vcf_S4, element = "AN", as.numeric=TRUE)
+obs <- (an/2)
+average_depth <- dp/obs
+average_depth <- as.data.frame(average_depth)
+rownames(average_depth) <- paste(vcf_S4@fix[,1],vcf_S4@fix[,2], sep = "_")
+average_depth$SNP_ID <- paste(vcf_S4@fix[,1],vcf_S4@fix[,2], sep = "_")
+average_depth$tot_DP <- dp
+average_depth$observations <- obs
+average_depth$observations <- as.numeric(average_depth$observations)
+average_depth$tot_DP <- as.numeric(average_depth$tot_DP)
+average_depth$average_depth <- as.numeric(average_depth$average_depth)
 
+write.table(average_depth,"/usr/users/mtost/GB_easy_results_analysis_wd/GB1002_average_read_depth.txt", sep = "  ", row.names = TRUE,
+            quote = FALSE)
 ```
+The actually filtering is done by these commands:
+```{r}
+index_depth <- which(average_depth$average_depth > 1 & average_depth$average_depth < 10)
+vcf_S4@gt <- vcf_S4@gt[index_depth,]
+vcf_S4@fix <- vcf_S4@fix[index_depth,]
+```
+
 
 #### Filtering for missingness
 ```{r}
+dp <- extract.gt(vcf_S4, element = "DP", as.numeric=TRUE)
+gt <- extract.gt(vcf_S4, element = "GT", as.numeric=TRUE)
+gt_pop <- gt
+colnames(gt_pop) <- str_sub(colnames(gt),1,9)
+Shoepag_1 <- gt_pop[,which(colnames(gt_pop)=="Shoepag_1")]
+Shoepag_2 <- gt_pop[,which(colnames(gt_pop)=="Shoepag_2")]
+Shoepag_3 <- gt_pop[,which(colnames(gt_pop)=="Shoepag_3")]
+Shoepag_4 <- gt_pop[,which(colnames(gt_pop)=="Shoepag_4")]
+
+get_missing_obs_pop1 <- function(i){
+  length(which(is.na(Shoepag_1[i,])))
+}
+mis_obs_pop1 <- unlist(mclapply(1:nrow(Shoepag_1), get_missing_obs_pop1))
+
+get_missing_obs_pop2 <- function(i){
+  length(which(is.na(Shoepag_2[i,])))
+}
+mis_obs_pop2 <- unlist(mclapply(1:nrow(Shoepag_2), get_missing_obs_pop2))
+
+get_missing_obs_pop3 <- function(i){
+  length(which(is.na(Shoepag_3[i,])))
+}
+mis_obs_pop3 <- unlist(mclapply(1:nrow(Shoepag_3), get_missing_obs_pop3))
+
+get_missing_obs_pop4 <- function(i){
+  length(which(is.na(Shoepag_4[i,])))
+}
+mis_obs_pop4 <- unlist(mclapply(1:nrow(Shoepag_4), get_missing_obs_pop4))
+
+NAs_per_marker_per_pop <- cbind(mis_obs_pop1,mis_obs_pop2,mis_obs_pop3,mis_obs_pop4)
+NAs_per_marker_per_pop <- as.data.frame(NAs_per_marker_per_pop)
+NAs_per_marker_per_pop <- cbind(rownames(gt_pop),NAs_per_marker_per_pop)
+colnames(NAs_per_marker_per_pop) <- c("SNP_ID","mis_obs_pop1","mis_obs_pop2","mis_obs_pop3","mis_obs_pop4")
+NAs_per_marker_per_pop <- as.data.frame(NAs_per_marker_per_pop)
+
+rm(gt_pop,Shoepag_1,Shoepag_2,Shoepag_3,Shoepag_4)
+
+### Calculate the range of missing markers -------------------------------------
+################################################################################
+get_range_of_missingness <- function(i){
+  abs(range(NAs_per_marker_per_pop[i,2:5])[1]-range(NAs_per_marker_per_pop[i,2:5])[2])
+}
+
+markers_diff <- unlist(mclapply(1:nrow(NAs_per_marker_per_pop),get_range_of_missingness))
+NAs_per_marker_per_pop$range_of_missingness <- markers_diff
+
+cat("Calculation of missing observations per markers is done.","\n")
 
 ```
 
