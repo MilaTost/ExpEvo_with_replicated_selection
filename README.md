@@ -30,8 +30,17 @@ Whereas we applied the this new significance threshold to the commonly used
 statistic.
 
 ## Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy)
+For the analysis of our raw reads from paired-end genotyping-by-sequencing (GBS) with ApeKI according to [Elshire et al. 2011](https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0019379&type=printable), we used the GB-eaSy pipeline from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy). <br />
+The pipeline consists out of several steps, which comprises:
+- [Demultiplexing and trimming of the adapter sequence](https://github.com/dpwickland/GB-eaSy#step-2-demultiplex-raw-reads)
+- [Alignement to the reference genome](https://github.com/dpwickland/GB-eaSy#step-3-align-to-reference)
+- [Create a list of sorted bam files](https://github.com/dpwickland/GB-eaSy#step-4-create-list-of-sorted-bam-files)
+- [Generate pileup and SNP calling](https://github.com/dpwickland/GB-eaSy#step-5-and-6-generate-pileup-and-call-snps)
+- Filtering for quality parameters <br /> <br />
 
-
+This bash-script was run on every sequenced plate separately, since every sequenced plate had it's own adapters and the same set of barcodes was used for all sequenced plates in our case. The *Demultiplexing* and *Alignement to the reference genome* steps were conducted by the <Demultiplexing_and_alignement_to_the_reference_genome.bash> script. <br /> <br />
+The *Generate Pileup*,*SNP calling* and *Filtering for quality parameters* were run for all sequencing runs together. The *Filtering for quality parameters* was changed a lot and differed from the GB-eaSy pipline introduced by [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy). The  *Generate Pileup*,*SNP calling* and *Filtering for quality parameters* steps were conducted by the <Demultiplexing_and_alignement_to_the_reference_genome.bash> script.
+          
 ## Filtering
 After the VCF file was created with the GB-eaSy pipeline from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy) and filtered for some quality parameters we did some additional filtering in R. 
 #### The filtering steps included:
@@ -41,8 +50,8 @@ After the VCF file was created with the GB-eaSy pipeline from [Wickland et al. 2
 - Removal of non-diallelic and non-polymorphic markers 
 
 #### Loading of required packages and the VCF file:
-Most of the function come from the vcfR package from [Knaus and Grünwald 2018](https://github.com/knausb/vcfR#:~:text=VcfR%20is%20an%20R%20package%20intended%20to%20allow,rapidly%20read%20from%20and%20write%20to%20VCF%20files.)
-Most calculations and filtering steps over the entire set of markers were run by using the `mclapply()` function from the `parallel()` package.
+Most of the function come from the <vcfR> package from [Knaus and Grünwald 2018](https://github.com/knausb/vcfR#:~:text=VcfR%20is%20an%20R%20package%20intended%20to%20allow,rapidly%20read%20from%20and%20write%20to%20VCF%20files.). The <vcfR> package from [Knaus and Grünwald 2018] works with S4 objects, therefore the syntax is quite different from "normal" R jargon. 
+Most calculations and filtering steps over the entire set of markers were run by using the `mclapply()` function from the `parallel` package. We observed that the <mclapply()> function was extremly fast and efficient. 
 ```{r}
 library(stringr)
 library(data.table)
@@ -59,7 +68,6 @@ cat("VCF contains before anything was done:",nrow(vcf_S4@fix),"markers.","\n")
 The last command also tells you, how many markers the VCF file comprises.
 
 #### Generate a plot to check the quality parameters and if the previous filtering worked:
-
 ```{r}
 chrom <- create.chromR(name="Supercontig", vcf=vcf_S4, verbose=FALSE)
 png(file='101_Quality_plot_distribution_before_filtering_vcf.png',width = 480, height = 480, units = "px", pointsize=12)
@@ -70,59 +78,91 @@ par(
 chromoqc(chrom, dp.alpha = 66)
 dev.off()
 ```
-
 #### Filtering for individual samples with low coverage
-In these steps the missing observation per individual sample are calculated.
+In our case, we choosed a minimum coverage of 10% `(0.1)`> per individual sample.
 ```{r}
-gt <- extract.gt(vcf_S4, element = "GT", as.numeric=TRUE)
-coverage_ind <- function(i){
-  length(which(!is.na(gt[,i])))
+filter_for_ind_coverage <- function(data, threshold){
+  gt <- extract.gt(data, element = "GT", as.numeric=TRUE)
+  coverage_ind <- function(i){
+    length(which(!is.na(gt[,i])))
+  }
+  coverage_ind_tot <- mapply(coverage_ind,1:ncol(gt))
+  coverage_ind_rel <- coverage_ind_tot/NROW(gt)
+  NAs_per_ind <- cbind(coverage_ind_tot,coverage_ind_rel)
+  rownames(NAs_per_ind) <- colnames(gt)
+  NAs_per_ind <- as.data.frame(NAs_per_ind)
+  index_ind <- rownames(NAs_per_ind[which(NAs_per_ind$coverage_ind_rel < threshold),])
+  look_up_index <- function(i){
+    which(colnames(gt)==index_ind[i])
+  }
+  index_vcf_S4 <- unlist(mclapply(1:length(index_ind),look_up_index))
+  data@gt <- data@gt[,-index_vcf_S4]
+  return(data)
 }
-coverage_ind_tot <- mapply(coverage_ind,1:ncol(gt))
-coverage_ind_rel <- coverage_ind_tot/NROW(gt)
-NAs_per_ind <- cbind(coverage_ind_tot,coverage_ind_rel)
-rownames(NAs_per_ind) <- colnames(gt)
-NAs_per_ind <- as.data.frame(NAs_per_ind)
+vcf_S4 <- filter_for_ind_coverage(data = vcf_S4, threshold = 0.1)
 ```
-The actually filtering is done by these commands:
+With the following function, the missing observation per individual sample are calculated. Additionally the relative coverage of an individual is calculated. This function needs only be applied, when you want to **save the information about individual coverage** e.g. for plotting. 
 ```{r}
-cat("Before filtering the vcf_S4 file contained:",ncol(vcf_S4@gt)-1,"individuals.","\n")
-index_ind <- rownames(NAs_per_ind[which(NAs_per_ind$coverage_ind_rel < 0.1),])
-look_up_index <- function(i){
-  which(colnames(gt)==index_ind[i])
+coverage_per_individual <- function(data){
+  gt <- extract.gt(data, element = "GT", as.numeric=TRUE)
+  coverage_ind <- function(i){
+    length(which(!is.na(gt[,i])))
+  }
+  coverage_ind_tot <- mapply(coverage_ind,1:ncol(gt))
+  coverage_ind_rel <- coverage_ind_tot/NROW(gt)
+  NAs_per_ind <- cbind(coverage_ind_tot,coverage_ind_rel)
+  rownames(NAs_per_ind) <- colnames(gt)
+  NAs_per_ind <- as.data.frame(NAs_per_ind)
+  return(NAs_per_ind)
 }
-index_vcf_S4 <- unlist(mclapply(1:length(index_ind),look_up_index))
-vcf_S4@gt <- vcf_S4@gt[,-index_vcf_S4]
-cat("The vcf_S4 file still contains:",ncol(vcf_S4@gt)-1,"individuals.","\n")
+NAs_per_ind <- coverage_per_individual(data = vcf_S4)
 ```
-
 #### Filtering for read depth per sample
-In these steps the average read depth per sample is calculated:
+In our case, we choosed a minimum average read depth of 1 and a maximum average read depth of 10 per marker. We choosed these thresholds based on the distribution of average read depth across all markers. 
 ```{r}
-cat("VCF file contains:",nrow(vcf_S4@fix),"markers before filtering for read depth.","\n")
-dp <- extract.info(vcf_S4, element = "DP", as.numeric=TRUE)
-an <- extract.info(vcf_S4, element = "AN", as.numeric=TRUE)
-obs <- (an/2)
-average_depth <- dp/obs
-average_depth <- as.data.frame(average_depth)
-rownames(average_depth) <- paste(vcf_S4@fix[,1],vcf_S4@fix[,2], sep = "_")
-average_depth$SNP_ID <- paste(vcf_S4@fix[,1],vcf_S4@fix[,2], sep = "_")
-average_depth$tot_DP <- dp
-average_depth$observations <- obs
-average_depth$observations <- as.numeric(average_depth$observations)
-average_depth$tot_DP <- as.numeric(average_depth$tot_DP)
-average_depth$average_depth <- as.numeric(average_depth$average_depth)
+filter_for_average_read_depth <- function(data, min_av_depth, max_av_depth){
+  dp <- extract.info(data, element = "DP", as.numeric=TRUE)
+  an <- extract.info(data, element = "AN", as.numeric=TRUE)
+  obs <- (an/2)
+  average_depth <- dp/obs
+  average_depth <- as.data.frame(average_depth)
+  rownames(average_depth) <- paste(data@fix[,1],data@fix[,2], sep = "_")
+  average_depth$SNP_ID <- paste(data@fix[,1],data@fix[,2], sep = "_")
+  average_depth$tot_DP <- dp
+  average_depth$observations <- obs
+  average_depth$observations <- as.numeric(average_depth$observations)
+  average_depth$tot_DP <- as.numeric(average_depth$tot_DP)
+  average_depth$average_depth <- as.numeric(average_depth$average_depth)
+  index_depth <- which(average_depth$average_depth > min_av_depth & average_depth$average_depth < max_av_depth)
+  data@gt <- data@gt[index_depth,]
+  data@fix <- data@fix[index_depth,]
+  return(data)
+}
+vcf_S4 <- filter_for_average_read_depth(data = vcf_S4, min_av_depth = 1, 
+                                        max_av_depth = 10)              
+``` 
+**Distribution of average read depth across all markers**
+![GB1002 1_Average_read_depth](https://user-images.githubusercontent.com/63467079/149306207-62129755-9db6-473d-a1a9-dc2795ec84c6.png)
 
-write.table(average_depth,"/usr/users/mtost/GB_easy_results_analysis_wd/GB1002_average_read_depth.txt", sep = "  ", row.names = TRUE,
-            quote = FALSE)
-```
-The actually filtering is done by these commands:
+In these steps the average read depth per sample is calculated. Based on this data, the previous plot was created:
 ```{r}
-index_depth <- which(average_depth$average_depth > 1 & average_depth$average_depth < 10)
-vcf_S4@gt <- vcf_S4@gt[index_depth,]
-vcf_S4@fix <- vcf_S4@fix[index_depth,]
+calulate_average_read_depth <- function(data){
+  dp <- extract.info(data, element = "DP", as.numeric=TRUE)
+  an <- extract.info(data, element = "AN", as.numeric=TRUE)
+  obs <- (an/2)
+  average_depth <- dp/obs
+  average_depth <- as.data.frame(average_depth)
+  rownames(average_depth) <- paste(data@fix[,1],data@fix[,2], sep = "_")
+  average_depth$SNP_ID <- paste(data@fix[,1],data@fix[,2], sep = "_")
+  average_depth$tot_DP <- dp
+  average_depth$observations <- obs
+  average_depth$observations <- as.numeric(average_depth$observations)
+  average_depth$tot_DP <- as.numeric(average_depth$tot_DP)
+  average_depth$average_depth <- as.numeric(average_depth$average_depth)
+  return(average_depth)
+}
+average_depth <- calulate_average_read_depth(data = vcf_S4)
 ```
-
 
 #### Filtering for missingness
 ```{r}
