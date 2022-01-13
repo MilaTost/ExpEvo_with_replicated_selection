@@ -166,56 +166,101 @@ average_depth <- calulate_average_read_depth(data = vcf_S4)
 
 #### Filtering for missingness
 ```{r}
-dp <- extract.gt(vcf_S4, element = "DP", as.numeric=TRUE)
-gt <- extract.gt(vcf_S4, element = "GT", as.numeric=TRUE)
-gt_pop <- gt
-colnames(gt_pop) <- str_sub(colnames(gt),1,9)
-Shoepag_1 <- gt_pop[,which(colnames(gt_pop)=="Shoepag_1")]
-Shoepag_2 <- gt_pop[,which(colnames(gt_pop)=="Shoepag_2")]
-Shoepag_3 <- gt_pop[,which(colnames(gt_pop)=="Shoepag_3")]
-Shoepag_4 <- gt_pop[,which(colnames(gt_pop)=="Shoepag_4")]
-
-get_missing_obs_pop1 <- function(i){
-  length(which(is.na(Shoepag_1[i,])))
+filter_missingness_per_pop <- function(data, 
+                                          population_1,
+                                          population_2,
+                                          population_3,
+                                          population_4,
+                                          max_missing_obs){
+  gt_pop <- extract.gt(vcf_S4, element = "GT", as.numeric=TRUE)
+  pop_1 <- gt_pop[,which(str_detect(colnames(gt_pop),population_1))]
+  pop_2 <- gt_pop[,which(str_detect(colnames(gt_pop),population_2))]
+  pop_3 <- gt_pop[,which(str_detect(colnames(gt_pop),population_3))]
+  pop_4 <- gt_pop[,which(str_detect(colnames(gt_pop),population_4))]
+  get_missing_obs_per_pop <- function(pop){
+    get_missing_obs <- function(i){
+      length(which(is.na(pop[i,])))
+    }
+    mis_obs_pop <- unlist(mclapply(1:nrow(pop), get_missing_obs))
+    return(mis_obs_pop)
+  }
+  mis_obs_pop1 <- get_missing_obs_per_pop(pop = pop_1)
+  mis_obs_pop2 <- get_missing_obs_per_pop(pop = pop_2)
+  mis_obs_pop3 <- get_missing_obs_per_pop(pop = pop_3)
+  mis_obs_pop4 <- get_missing_obs_per_pop(pop = pop_4)
+  NAs_per_marker_per_pop <- cbind(mis_obs_pop1,mis_obs_pop2,mis_obs_pop3,mis_obs_pop4)
+  NAs_per_marker_per_pop <- as.data.frame(NAs_per_marker_per_pop)
+  NAs_per_marker_per_pop <- cbind(rownames(gt_pop),NAs_per_marker_per_pop)
+  colnames(NAs_per_marker_per_pop) <- c("SNP_ID","mis_obs_pop1","mis_obs_pop2","mis_obs_pop3","mis_obs_pop4")
+  NAs_per_marker_per_pop <- as.data.frame(NAs_per_marker_per_pop)
+  get_range_of_missingness <- function(i){
+    abs(range(NAs_per_marker_per_pop[i,2:5])[1]-range(NAs_per_marker_per_pop[i,2:5])[2])
+  }
+  
+  markers_diff <- unlist(mclapply(1:nrow(NAs_per_marker_per_pop),get_range_of_missingness))
+  NAs_per_marker_per_pop$range_of_missingness <- markers_diff
+  index_NA_markers_dp <- subset(rownames(dp),96-as.numeric(NAs_per_marker_per_pop[,2]) > max_missing_obs &
+                                96-as.numeric(NAs_per_marker_per_pop[,3]) > max_missing_obs &
+                                96-as.numeric(NAs_per_marker_per_pop[,4]) > max_missing_obs &
+                                96-as.numeric(NAs_per_marker_per_pop[,5]) > max_missing_obs)
+  index_NA_markers_gt <- subset(rownames(gt),96-as.numeric(NAs_per_marker_per_pop[,2]) > max_missing_obs &
+                                96-as.numeric(NAs_per_marker_per_pop[,3]) > max_missing_obs &
+                                96-as.numeric(NAs_per_marker_per_pop[,4]) > max_missing_obs &
+                                96-as.numeric(NAs_per_marker_per_pop[,5]) > max_missing_obs)
+  vcf_S4@gt <- vcf_S4@gt[match(index_NA_markers_gt, rownames(gt)),]
+  vcf_S4@fix <- vcf_S4@fix[match(index_NA_markers_dp, rownames(dp)),]
+  return(vcf_S4)
 }
-mis_obs_pop1 <- unlist(mclapply(1:nrow(Shoepag_1), get_missing_obs_pop1))
-
-get_missing_obs_pop2 <- function(i){
-  length(which(is.na(Shoepag_2[i,])))
-}
-mis_obs_pop2 <- unlist(mclapply(1:nrow(Shoepag_2), get_missing_obs_pop2))
-
-get_missing_obs_pop3 <- function(i){
-  length(which(is.na(Shoepag_3[i,])))
-}
-mis_obs_pop3 <- unlist(mclapply(1:nrow(Shoepag_3), get_missing_obs_pop3))
-
-get_missing_obs_pop4 <- function(i){
-  length(which(is.na(Shoepag_4[i,])))
-}
-mis_obs_pop4 <- unlist(mclapply(1:nrow(Shoepag_4), get_missing_obs_pop4))
-
-NAs_per_marker_per_pop <- cbind(mis_obs_pop1,mis_obs_pop2,mis_obs_pop3,mis_obs_pop4)
-NAs_per_marker_per_pop <- as.data.frame(NAs_per_marker_per_pop)
-NAs_per_marker_per_pop <- cbind(rownames(gt_pop),NAs_per_marker_per_pop)
-colnames(NAs_per_marker_per_pop) <- c("SNP_ID","mis_obs_pop1","mis_obs_pop2","mis_obs_pop3","mis_obs_pop4")
-NAs_per_marker_per_pop <- as.data.frame(NAs_per_marker_per_pop)
-
-rm(gt_pop,Shoepag_1,Shoepag_2,Shoepag_3,Shoepag_4)
-
-### Calculate the range of missing markers -------------------------------------
-################################################################################
-get_range_of_missingness <- function(i){
-  abs(range(NAs_per_marker_per_pop[i,2:5])[1]-range(NAs_per_marker_per_pop[i,2:5])[2])
-}
-
-markers_diff <- unlist(mclapply(1:nrow(NAs_per_marker_per_pop),get_range_of_missingness))
-NAs_per_marker_per_pop$range_of_missingness <- markers_diff
-
-cat("Calculation of missing observations per markers is done.","\n")
-
+NAs_per_marker_per_pop <- calculate_missingness_per_pop(data = vcf_S4,
+                              population_1 = "Shoepag_1",
+                              population_2 = "Shoepag_2",
+                              population_3 = "Shoepag_3",
+                              population_4 = "Shoepag_4",
+                              max_miss_obs = 40)
 ```
-
+In these steps the average read depth per sample is calculated. This function needs only be applied, when you want to **save the information about individual coverage** e.g. for plotting. 
+```{r}
+calculate_missingness_per_pop <- function(data, 
+                                          population_1,
+                                          population_2,
+                                          population_3,
+                                          population_4){
+  gt_pop <- extract.gt(vcf_S4, element = "GT", as.numeric=TRUE)
+  pop_1 <- gt_pop[,which(str_detect(colnames(gt_pop),population_1))]
+  pop_2 <- gt_pop[,which(str_detect(colnames(gt_pop),population_2))]
+  pop_3 <- gt_pop[,which(str_detect(colnames(gt_pop),population_3))]
+  pop_4 <- gt_pop[,which(str_detect(colnames(gt_pop),population_4))]
+  get_missing_obs_per_pop <- function(pop){
+    get_missing_obs <- function(i){
+      length(which(is.na(pop[i,])))
+    }
+    mis_obs_pop <- unlist(mclapply(1:nrow(pop), get_missing_obs))
+    return(mis_obs_pop)
+  }
+  mis_obs_pop1 <- get_missing_obs_per_pop(pop = pop_1)
+  mis_obs_pop2 <- get_missing_obs_per_pop(pop = pop_2)
+  mis_obs_pop3 <- get_missing_obs_per_pop(pop = pop_3)
+  mis_obs_pop4 <- get_missing_obs_per_pop(pop = pop_4)
+  NAs_per_marker_per_pop <- cbind(mis_obs_pop1,mis_obs_pop2,mis_obs_pop3,mis_obs_pop4)
+  NAs_per_marker_per_pop <- as.data.frame(NAs_per_marker_per_pop)
+  NAs_per_marker_per_pop <- cbind(rownames(gt_pop),NAs_per_marker_per_pop)
+  colnames(NAs_per_marker_per_pop) <- c("SNP_ID","mis_obs_pop1","mis_obs_pop2","mis_obs_pop3","mis_obs_pop4")
+  NAs_per_marker_per_pop <- as.data.frame(NAs_per_marker_per_pop)
+  get_range_of_missingness <- function(i){
+    abs(range(NAs_per_marker_per_pop[i,2:5])[1]-range(NAs_per_marker_per_pop[i,2:5])[2])
+  }
+  
+  markers_diff <- unlist(mclapply(1:nrow(NAs_per_marker_per_pop),get_range_of_missingness))
+  NAs_per_marker_per_pop$range_of_missingness <- markers_diff
+  return(NAs_per_marker_per_pop)
+}
+NAs_per_marker_per_pop <- calculate_missingness_per_pop(data = vcf_S4,
+                              population_1 = "Shoepag_1",
+                              population_2 = "Shoepag_2",
+                              population_3 = "Shoepag_3",
+                              population_4 = "Shoepag_4")
+```
+          
 #### Removal of non-diallelic and non-polymorphic markers
 ```{r}
 
