@@ -38,19 +38,19 @@ The pipeline consists out of several steps, which comprises:
 - [Generate pileup and SNP calling](https://github.com/dpwickland/GB-eaSy#step-5-and-6-generate-pileup-and-call-snps)
 - Filtering for quality parameters <br /> <br />
 
-This bash-script was run on every sequenced plate separately, since every sequenced plate had it's own adapters and the same set of barcodes was used for all sequenced plates in our case. The *Demultiplexing* and *Alignement to the reference genome* steps were conducted by the <Demultiplexing_and_alignement_to_the_reference_genome.bash> script. <br /> <br />
-The *Generate Pileup*,*SNP calling* and *Filtering for quality parameters* were run for all sequencing runs together. The *Filtering for quality parameters* was changed a lot and differed from the GB-eaSy pipline introduced by [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy). The  *Generate Pileup*,*SNP calling* and *Filtering for quality parameters* steps were conducted by the <Demultiplexing_and_alignement_to_the_reference_genome.bash> script.
+This bash-script was run on every sequenced plate separately, since every sequenced plate had it's own adapters and the same set of barcodes was used for all sequenced plates in our case. The *Demultiplexing* and *Alignement to the reference genome* steps were conducted by the `Demultiplexing_and_alignement_to_the_reference_genome.bash` script. <br /> <br />
+The *Generate Pileup*,*SNP calling* and *Filtering for quality parameters* were run for all sequencing runs together. The *Filtering for quality parameters* was changed a lot and differed from the GB-eaSy pipline introduced by [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy). The  *Generate Pileup*,*SNP calling* and *Filtering for quality parameters* steps were conducted by the `Pileup_SNP_calling_Filtering.bash` script.
           
 ## Filtering
 After the VCF file was created with the GB-eaSy pipeline from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy) and filtered for some quality parameters we did some additional filtering in R. 
-#### The filtering steps included:
+### The filtering steps included:
 - Filtering for individual samples with low coverage
 - Filtering for read depth per sample
 - Filtering for missingness
 - Removal of non-diallelic and non-polymorphic markers 
 
-#### Loading of required packages and the VCF file:
-Most of the function come from the <vcfR> package from [Knaus and Grünwald 2018](https://github.com/knausb/vcfR#:~:text=VcfR%20is%20an%20R%20package%20intended%20to%20allow,rapidly%20read%20from%20and%20write%20to%20VCF%20files.). The <vcfR> package from [Knaus and Grünwald 2018] works with S4 objects, therefore the syntax is quite different from "normal" R jargon. 
+### Loading of required packages and the VCF file:
+Most of the function come from the `vcfR` package from [Knaus and Grünwald 2018](https://github.com/knausb/vcfR#:~:text=VcfR%20is%20an%20R%20package%20intended%20to%20allow,rapidly%20read%20from%20and%20write%20to%20VCF%20files.). The <vcfR> package from [Knaus and Grünwald 2018] works with S4 objects, therefore the syntax is quite different from "normal" R jargon. 
 Most calculations and filtering steps over the entire set of markers were run by using the `mclapply()` function from the `parallel` package. We observed that the <mclapply()> function was extremly fast and efficient. 
 ```{r}
 library(stringr)
@@ -67,7 +67,7 @@ cat("VCF contains before anything was done:",nrow(vcf_S4@fix),"markers.","\n")
 ```
 The last command also tells you, how many markers the VCF file comprises.
 
-#### Generate a plot to check the quality parameters and if the previous filtering worked:
+### Generate a plot to check the quality parameters and if the previous filtering worked:
 ```{r}
 chrom <- create.chromR(name="Supercontig", vcf=vcf_S4, verbose=FALSE)
 png(file='101_Quality_plot_distribution_before_filtering_vcf.png',width = 480, height = 480, units = "px", pointsize=12)
@@ -117,10 +117,12 @@ coverage_per_individual <- function(data){
 }
 NAs_per_ind <- coverage_per_individual(data = vcf_S4)
 ```
-#### Filtering for read depth per sample
+### Filtering for read depth per sample
 In our case, we choosed a minimum average read depth of 1 and a maximum average read depth of 10 per marker. We choosed these thresholds based on the distribution of average read depth across all markers. 
 ```{r}
 filter_for_average_read_depth <- function(data, min_av_depth, max_av_depth){
+  cat("Filtering for average read depth started.","\n")
+  cat("VCF file before filtering contains:",nrow(data@fix),"markers.","\n")
   dp <- extract.info(data, element = "DP", as.numeric=TRUE)
   an <- extract.info(data, element = "AN", as.numeric=TRUE)
   obs <- (an/2)
@@ -136,10 +138,12 @@ filter_for_average_read_depth <- function(data, min_av_depth, max_av_depth){
   index_depth <- which(average_depth$average_depth > min_av_depth & average_depth$average_depth < max_av_depth)
   data@gt <- data@gt[index_depth,]
   data@fix <- data@fix[index_depth,]
+  cat(length(index_depth),"markers passed the threshold.","\n")
+  cat("VCF file before filtering contains:",nrow(data@fix),"markers.","\n")
   return(data)
 }
 vcf_S4 <- filter_for_average_read_depth(data = vcf_S4, min_av_depth = 1, 
-                                        max_av_depth = 10)              
+                                        max_av_depth = 10)   
 ``` 
 **Distribution of average read depth across all markers**
 ![GB1002 1_Average_read_depth](https://user-images.githubusercontent.com/63467079/149306207-62129755-9db6-473d-a1a9-dc2795ec84c6.png)
@@ -163,16 +167,19 @@ calulate_average_read_depth <- function(data){
 }
 average_depth <- calulate_average_read_depth(data = vcf_S4)
 ```
-
-#### Filtering for missingness
+### Filtering for missingness
+When we filter for missingness, we filter in every subpopulation for at least 40 observations. So that only markers pass the threshold, which have 40 observations in every subpopulation.          
 ```{r}
 filter_missingness_per_pop <- function(data, 
-                                          population_1,
-                                          population_2,
-                                          population_3,
-                                          population_4,
-                                          max_missing_obs){
+                                       population_1,
+                                       population_2,
+                                       population_3,
+                                       population_4,
+                                       max_missing_obs){
+  cat("Filtering for missing observations per markers started.","\n")
+  cat("VCF file contains before filtering for missingness:",nrow(vcf_S4@fix),"markers.","\n")
   gt_pop <- extract.gt(vcf_S4, element = "GT", as.numeric=TRUE)
+  dp <- extract.info(data, element = "DP", as.numeric=TRUE)
   pop_1 <- gt_pop[,which(str_detect(colnames(gt_pop),population_1))]
   pop_2 <- gt_pop[,which(str_detect(colnames(gt_pop),population_2))]
   pop_3 <- gt_pop[,which(str_detect(colnames(gt_pop),population_3))]
@@ -196,27 +203,28 @@ filter_missingness_per_pop <- function(data,
   get_range_of_missingness <- function(i){
     abs(range(NAs_per_marker_per_pop[i,2:5])[1]-range(NAs_per_marker_per_pop[i,2:5])[2])
   }
-  
   markers_diff <- unlist(mclapply(1:nrow(NAs_per_marker_per_pop),get_range_of_missingness))
   NAs_per_marker_per_pop$range_of_missingness <- markers_diff
   index_NA_markers_dp <- subset(rownames(dp),96-as.numeric(NAs_per_marker_per_pop[,2]) > max_missing_obs &
-                                96-as.numeric(NAs_per_marker_per_pop[,3]) > max_missing_obs &
-                                96-as.numeric(NAs_per_marker_per_pop[,4]) > max_missing_obs &
-                                96-as.numeric(NAs_per_marker_per_pop[,5]) > max_missing_obs)
-  index_NA_markers_gt <- subset(rownames(gt),96-as.numeric(NAs_per_marker_per_pop[,2]) > max_missing_obs &
-                                96-as.numeric(NAs_per_marker_per_pop[,3]) > max_missing_obs &
-                                96-as.numeric(NAs_per_marker_per_pop[,4]) > max_missing_obs &
-                                96-as.numeric(NAs_per_marker_per_pop[,5]) > max_missing_obs)
-  vcf_S4@gt <- vcf_S4@gt[match(index_NA_markers_gt, rownames(gt)),]
-  vcf_S4@fix <- vcf_S4@fix[match(index_NA_markers_dp, rownames(dp)),]
-  return(vcf_S4)
+                                  96-as.numeric(NAs_per_marker_per_pop[,3]) > max_missing_obs &
+                                  96-as.numeric(NAs_per_marker_per_pop[,4]) > max_missing_obs &
+                                  96-as.numeric(NAs_per_marker_per_pop[,5]) > max_missing_obs)
+  index_NA_markers_gt <- subset(rownames(gt_pop),96-as.numeric(NAs_per_marker_per_pop[,2]) > max_missing_obs &
+                                  96-as.numeric(NAs_per_marker_per_pop[,3]) > max_missing_obs &
+                                  96-as.numeric(NAs_per_marker_per_pop[,4]) > max_missing_obs &
+                                  96-as.numeric(NAs_per_marker_per_pop[,5]) > max_missing_obs)
+  cat(length(index_NA_markers_gt),"markers passed your threshold for missingness.","\n")
+  data@gt <- data@gt[match(index_NA_markers_gt, rownames(gt_pop)),]
+  data@fix <- data@fix[match(index_NA_markers_dp, rownames(dp)),]
+  cat("VCF file contains after filtering for missingness:",nrow(data@gt),"markers.","\n")
+  return(data)
 }
-NAs_per_marker_per_pop <- calculate_missingness_per_pop(data = vcf_S4,
-                              population_1 = "Shoepag_1",
-                              population_2 = "Shoepag_2",
-                              population_3 = "Shoepag_3",
-                              population_4 = "Shoepag_4",
-                              max_miss_obs = 40)
+vcf_S4_new <- filter_missingness_per_pop(data = vcf_S4, 
+                           population_1 = "Shoepag_1",
+                           population_2 = "Shoepag_2",
+                           population_3 = "Shoepag_3",
+                           population_4 = "Shoepag_4",
+                           max_missing_obs = 40)
 ```
 In these steps the average read depth per sample is calculated. This function needs only be applied, when you want to **save the information about individual coverage** e.g. for plotting. 
 ```{r}
@@ -226,6 +234,7 @@ calculate_missingness_per_pop <- function(data,
                                           population_3,
                                           population_4){
   gt_pop <- extract.gt(vcf_S4, element = "GT", as.numeric=TRUE)
+  dp <- extract.info(data, element = "DP", as.numeric=TRUE)
   pop_1 <- gt_pop[,which(str_detect(colnames(gt_pop),population_1))]
   pop_2 <- gt_pop[,which(str_detect(colnames(gt_pop),population_2))]
   pop_3 <- gt_pop[,which(str_detect(colnames(gt_pop),population_3))]
@@ -249,7 +258,6 @@ calculate_missingness_per_pop <- function(data,
   get_range_of_missingness <- function(i){
     abs(range(NAs_per_marker_per_pop[i,2:5])[1]-range(NAs_per_marker_per_pop[i,2:5])[2])
   }
-  
   markers_diff <- unlist(mclapply(1:nrow(NAs_per_marker_per_pop),get_range_of_missingness))
   NAs_per_marker_per_pop$range_of_missingness <- markers_diff
   return(NAs_per_marker_per_pop)
@@ -260,10 +268,27 @@ NAs_per_marker_per_pop <- calculate_missingness_per_pop(data = vcf_S4,
                               population_3 = "Shoepag_3",
                               population_4 = "Shoepag_4")
 ```
-          
-#### Removal of non-diallelic and non-polymorphic markers
-```{r}
+With this command we also calculate the range of missingness between the populations. The range of missingness can be evaluated to look for markers which are more abundant in one population than in the others, which could skew the results.      
+![GB1003_plot_missingness_02](https://user-images.githubusercontent.com/63467079/149474916-930cb3f0-bc73-4846-b334-f803ee950eb0.png)
 
+### Removal of non-diallelic and non-polymorphic markers
+```{r}
+filter_for_non_diallelic_non_polymorphic <- function(data){
+  cat("Filtering for diallelic markers started.","\n")
+  dp <- extract.gt(data, element = "DP", as.numeric=TRUE)
+  gt <- extract.gt(data, element = "GT", as.numeric=TRUE)
+  index_not_diallelic <- which(str_count(data@fix[,5])!=1)
+  cat(length(index_not_diallelic),"markers were not diallelic.","\n")
+  data@gt <- data@gt[-index_not_diallelic,]
+  data@fix <- data@fix[-index_not_diallelic,]
+  index_polymorphic_markers <- which(is.polymorphic(data, na.omit = TRUE))
+  data@gt <- data@gt[index_polymorphic_markers,]
+  data@fix <- data@fix[index_polymorphic_markers,]
+  cat(length(index_polymorphic_markers),"markers were polymorphic.","\n")
+  cat("The VCF file still contains:",nrow(vcf_S4@gt),"markers.","\n")
+  return(data)
+}
+vcf_S4_new <- filter_for_non_diallelic_non_polymorphic(data = vcf_S4)
 ```
 
 ## <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> with replicated selection
