@@ -1,16 +1,17 @@
-# Selection_signature_mapping_scripts_with_replicated_selection
+# Selection signature mapping scripts with replicated selection
 ## Table of contents
 #### 0 Introduction
 #### 1 Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy)
 #### 2 Filtering
-#### 3 <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> with replicated selection
-#### 4 Allele frequency differences
-#### 5 Significance threshold based on the FDR for selection
-#### 6 Significance thresholds based on drift simulations 
-#### 7 Significance thresholds based on the empiric distribution
-#### 8 Simulation of Drift
-#### 9 Sauron plot
-#### 10 Other plotting scripts
+#### 3 Selection signature mapping
+##### 3.1 <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection
+##### 3.2 Allele frequency differences
+#### 4 Significance thresholds
+##### 4.1 Based on the empiric distribution
+##### 4.2 Based on drift simulations 
+##### 4.3 Based on the FDR for selection
+#### 5 Sauron plot
+#### 6 Other plotting scripts
 
 
 ## Introduction
@@ -23,7 +24,7 @@ This was introduced by Turner and Miller (2012), but only tested on *Drospohila 
 In this approach two subpopulations are selected in the same direction. 
 By that we differentiate between changes caused by selection and changes caused by other factors like drift.
 The **replicated selection** is used to calculate a *FDR for selection*. 
-Turner and Miller (2012) applied this significance threshold only on the
+[Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1) applied this significance threshold only on the
 statistic based on the allele frequency differences. 
 Whereas we applied the this new significance threshold to the commonly used 
           <img src="https://render.githubusercontent.com/render/math?math=F_{ST}">
@@ -42,16 +43,18 @@ This bash-script was run on every sequenced plate separately, since every sequen
 The *Generate Pileup*,*SNP calling* and *Filtering for quality parameters* were run for all sequencing runs together. The *Filtering for quality parameters* was changed a lot and differed from the GB-eaSy pipline introduced by [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy). The  *Generate Pileup*,*SNP calling* and *Filtering for quality parameters* steps were conducted by the `Pileup_SNP_calling_Filtering.bash` script.
           
 ## Filtering
-After the VCF file was created with the GB-eaSy pipeline from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy) and filtered for some quality parameters we did some additional filtering in R. 
-### The filtering steps included:
+After the VCF file was created with the GB-eaSy pipeline from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy) and filtered for some quality parameters we did some additional filtering in R. All  listed *Filterung* steps were conducted by the `Filtering_for_coverage_average_RD_missingness.R` script. The Rscript contains the *Filtering* functions for the following filtering steps.  
+### The filtering steps:
 - Filtering for individual samples with low coverage
 - Filtering for read depth per sample
 - Filtering for missingness
 - Removal of non-diallelic and non-polymorphic markers 
+<br /> <br />
+The Rscript generates a new filter VCF file, when all filtering steps are passed. The script additionally contains functions which calculate the  filtering parameters per marker, so that these can be plotted or checked, if needed. Furthermore the script also creates plots with the quality parameters **total read depth**, **mapping quality**, and **phred-scaled quality** before and after filtering. This plot is created with a plotting function from the `vcfR` package from [Knaus and Grünwald 2018]
 
 ### Loading of required packages and the VCF file:
 Most of the function come from the `vcfR` package from [Knaus and Grünwald 2018](https://github.com/knausb/vcfR#:~:text=VcfR%20is%20an%20R%20package%20intended%20to%20allow,rapidly%20read%20from%20and%20write%20to%20VCF%20files.). The <vcfR> package from [Knaus and Grünwald 2018] works with S4 objects, therefore the syntax is quite different from "normal" R jargon. 
-Most calculations and filtering steps over the entire set of markers were run by using the `mclapply()` function from the `parallel` package. We observed that the <mclapply()> function was extremly fast and efficient. 
+Most calculations and filtering steps over the entire set of markers were run by using the `mclapply()` function from the `parallel` package. We observed that the `mclapply()` function was extremly fast and efficient. 
 ```{r}
 library(stringr)
 library(data.table)
@@ -65,23 +68,14 @@ setwd("/your/personal/working/directory/")
 vcf_S4 <- read.vcfR("DATA.vcf", verbose = FALSE)
 cat("VCF contains before anything was done:",nrow(vcf_S4@fix),"markers.","\n")
 ```
-The last command also tells you, how many markers the VCF file comprises.
 
-### Generate a plot to check the quality parameters and if the previous filtering worked:
-```{r}
-chrom <- create.chromR(name="Supercontig", vcf=vcf_S4, verbose=FALSE)
-png(file='101_Quality_plot_distribution_before_filtering_vcf.png',width = 480, height = 480, units = "px", pointsize=12)
-par(
-  family='sans',
-  cex.axis=1,
-  bg='white')
-chromoqc(chrom, dp.alpha = 66)
-dev.off()
-```
 #### Filtering for individual samples with low coverage
-In our case, we choosed a minimum coverage of 10% `(0.1)`> per individual sample.
+In our case, we choosed a minimum coverage of 10% per individual sample.
 ```{r}
 filter_for_ind_coverage <- function(data, threshold){
+  time_0 <- Sys.time()
+  cat("Filtering for low coverage individuals started.","\n")
+  cat("Before filtering the vcf_S4 file contained:",ncol(data@gt)-1,"individuals.","\n")
   gt <- extract.gt(data, element = "GT", as.numeric=TRUE)
   coverage_ind <- function(i){
     length(which(!is.na(gt[,i])))
@@ -97,25 +91,14 @@ filter_for_ind_coverage <- function(data, threshold){
   }
   index_vcf_S4 <- unlist(mclapply(1:length(index_ind),look_up_index))
   data@gt <- data@gt[,-index_vcf_S4]
+  cat("The vcf_S4 file still contains:",ncol(data@gt)-1,"individuals.","\n")
+  cat("Filtering for low coverage individuals is done.","\n")
+  time_1 <- Sys.time()
+  cat("This was done within",print(time_1 - time_0),"\n")
   return(data)
 }
-vcf_S4 <- filter_for_ind_coverage(data = vcf_S4, threshold = 0.1)
-```
-With the following function, the missing observation per individual sample are calculated. Additionally the relative coverage of an individual is calculated. This function needs only be applied, when you want to **save the information about individual coverage** e.g. for plotting. 
-```{r}
-coverage_per_individual <- function(data){
-  gt <- extract.gt(data, element = "GT", as.numeric=TRUE)
-  coverage_ind <- function(i){
-    length(which(!is.na(gt[,i])))
-  }
-  coverage_ind_tot <- mapply(coverage_ind,1:ncol(gt))
-  coverage_ind_rel <- coverage_ind_tot/NROW(gt)
-  NAs_per_ind <- cbind(coverage_ind_tot,coverage_ind_rel)
-  rownames(NAs_per_ind) <- colnames(gt)
-  NAs_per_ind <- as.data.frame(NAs_per_ind)
-  return(NAs_per_ind)
-}
-NAs_per_ind <- coverage_per_individual(data = vcf_S4)
+vcf_S4 <- filter_for_ind_coverage(data = vcf_S4,
+                                  threshold = 0.1)
 ```
 ### Filtering for read depth per sample
 In our case, we choosed a minimum average read depth of 1 and a maximum average read depth of 10 per marker. We choosed these thresholds based on the distribution of average read depth across all markers. 
@@ -142,31 +125,13 @@ filter_for_average_read_depth <- function(data, min_av_depth, max_av_depth){
   cat("VCF file before filtering contains:",nrow(data@fix),"markers.","\n")
   return(data)
 }
-vcf_S4 <- filter_for_average_read_depth(data = vcf_S4, min_av_depth = 1, 
-                                        max_av_depth = 10)   
+vcf_S4 <- filter_for_average_read_depth(data = vcf_S4, 
+                                        min_av_depth = 1, 
+                                        max_av_depth = 10)  
 ``` 
 **Distribution of average read depth across all markers**
 ![GB1002 1_Average_read_depth](https://user-images.githubusercontent.com/63467079/149306207-62129755-9db6-473d-a1a9-dc2795ec84c6.png)
 
-In these steps the average read depth per sample is calculated. Based on this data, the previous plot was created:
-```{r}
-calulate_average_read_depth <- function(data){
-  dp <- extract.info(data, element = "DP", as.numeric=TRUE)
-  an <- extract.info(data, element = "AN", as.numeric=TRUE)
-  obs <- (an/2)
-  average_depth <- dp/obs
-  average_depth <- as.data.frame(average_depth)
-  rownames(average_depth) <- paste(data@fix[,1],data@fix[,2], sep = "_")
-  average_depth$SNP_ID <- paste(data@fix[,1],data@fix[,2], sep = "_")
-  average_depth$tot_DP <- dp
-  average_depth$observations <- obs
-  average_depth$observations <- as.numeric(average_depth$observations)
-  average_depth$tot_DP <- as.numeric(average_depth$tot_DP)
-  average_depth$average_depth <- as.numeric(average_depth$average_depth)
-  return(average_depth)
-}
-average_depth <- calulate_average_read_depth(data = vcf_S4)
-```
 ### Filtering for missingness
 When we filter for missingness, we filter in every subpopulation for at least 40 observations. So that only markers pass the threshold, which have 40 observations in every subpopulation.          
 ```{r}
@@ -288,13 +253,21 @@ filter_for_non_diallelic_non_polymorphic <- function(data){
   cat("The VCF file still contains:",nrow(vcf_S4@gt),"markers.","\n")
   return(data)
 }
-vcf_S4_new <- filter_for_non_diallelic_non_polymorphic(data = vcf_S4)
+vcf_S4 <- filter_for_non_diallelic_non_polymorphic(data = vcf_S4)
 ```
-## <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> with replicated selection
-The function below will calculate the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> between all four subpopulations. <br /> <br />
-<img src="https://render.githubusercontent.com/render/math?math=F_{ST}=\frac{s^2}{\mu(p)*(1-\mu(p))+\frac{s^2}{4}}"> <br /> <br /> according to [Weir and Cockerham, 1984](https://doi.org/10.1111/j.1558-5646.1984.tb05657.x). <br /> <br />
-Additionally this function is calculating the absolute allele frequency difference between the subpopulations selected in opposite directions. The absolute allele frequency difference can be used to exclude markers with significant <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> values, but which did diverge between the subpopulations selected in opposite directions. Significant <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> values can be observed when one subpopulations was selected for specific environmental conditions. Therefore, we use this adjustment to identify truly selected sites. 
+### Save the filtered VCF file
+This function also comes from the `vcfR` package from [Knaus and Grünwald 2018](https://github.com/knausb/vcfR#:~:text=VcfR%20is%20an%20R%20package%20intended%20to%20allow,rapidly%20read%20from%20and%20write%20to%20VCF%20files.). 
+```{r}
+write.vcf(vcf_S4, file="path/to/your/working/directory/filtered_DATA.vcf.gz", mask=FALSE)          
+```          
+## Selection signature mapping
+The function for the calculation of the **<img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection** and the **allele frequency differences** are contained in the `selection_signature_mapping.R script`. 
+### <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection
+The function below will calculate the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> between all four subpopulations as: <br /> <br />
+<img src="https://render.githubusercontent.com/render/math?math=F_{ST}=\frac{s^2}{\mu(p)*(1-\mu(p))%2B(\frac{s^2}{4})}"> 
+<br /> <br /> according to [Weir and Cockerham, 1984](https://doi.org/10.1111/j.1558-5646.1984.tb05657.x). <br /> <br />
           
+Additionally this function is calculating the absolute allele frequency difference between the subpopulations selected in opposite directions. The absolute allele frequency difference can be used to exclude markers with significant <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> values, but which did diverge between the subpopulations selected in opposite directions. Significant <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> values can be observed when one subpopulations was selected for specific environmental conditions. Therefore, we use this adjustment to identify truly selected sites.   
 ```{r}
 calculate_FST_value <- function(data,
                                 pop_low_phenotype_sel_1,
@@ -370,29 +343,36 @@ calculate_FST_value <- function(data,
   cat("This was done within",print(time_1 - time_0),"\n")
   return(FST_value_dt)
 }
-Fst_value_all_pop <- calculate_FST_value(data = vcf_S4, 
+FST_value_all_pop <- calculate_FST_value(data = vcf_S4, 
                                          pop_low_phenotype_sel_1 = "Shoepag_1",
                                          pop_low_phenotype_sel_2 = "Shoepag_4",
                                          pop_high_phenotype_sel_1 = "Shoepag_3",
                                          pop_high_phenotype_sel_2 = "Shoepag_2")
 ```
 
-## Allele frequency differences
-          
+### Allele frequency differences
+The function below will calculate the allele frequency differences between the subpopulations selected in the same and opposite directions and the absolute allele frequency difference. The absolute allele frequency difference is calculated as: <br /> <br />
+<img src="https://render.githubusercontent.com/render/math?math=%7C(p_{Low1}%2Dp_{High1})%2B(p_{Low2}%2Dp_{High2})%7C">
+<br /> 
+whereas: <br /> <img src="https://render.githubusercontent.com/render/math?math=Low1"> = Population 1 selected for the low phenotype <br />
+        <img src="https://render.githubusercontent.com/render/math?math=Low1"> = Population 2 selected for the low phenotype <br />
+        <img src="https://render.githubusercontent.com/render/math?math=High1"> = Population 1 selected for the high phenotype <br />
+        <img src="https://render.githubusercontent.com/render/math?math=High2"> = Population 2 selected for the high phenotype <br />
+according to [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). <br />   
 ```{r}
 calculate_the_allele_freq_diff <- function(data,
-                                           population_name_1,
-                                           population_name_2,
-                                           population_name_3,
-                                           population_name_4){
+                                           pop_low_phenotype_sel_1,
+                                           pop_low_phenotype_sel_2,
+                                           pop_high_phenotype_sel_1,
+                                           pop_high_phenotype_sel_2){
   time_0 <- Sys.time()
-  cat("Calculation of the allele frequency spectrum started.","\n")
+  cat("Calculation of the allele frequency differences started.","\n")
   gt <- extract.gt(data, element = "GT", as.numeric = FALSE)
   gt_file <- gt
-  pop_1 <- gt_file[,which(str_detect(colnames(gt_file),population_name_1))]
-  pop_2 <- gt_file[,which(str_detect(colnames(gt_file),population_name_2))]
-  pop_3 <- gt_file[,which(str_detect(colnames(gt_file),population_name_3))]
-  pop_4 <- gt_file[,which(str_detect(colnames(gt_file),population_name_4))]
+  pop_1 <- gt_file[,which(str_detect(colnames(gt_file),pop_low_phenotype_sel_1))]
+  pop_2 <- gt_file[,which(str_detect(colnames(gt_file),pop_low_phenotype_sel_2))]
+  pop_3 <- gt_file[,which(str_detect(colnames(gt_file),pop_high_phenotype_sel_1))]
+  pop_4 <- gt_file[,which(str_detect(colnames(gt_file),pop_high_phenotype_sel_2))]
   dp <- extract.gt(data, element = "DP")
   SNP_IDs <- rownames(dp)
   get_allele_freq_per_marker_per_pop <- function(data, population_name){
@@ -424,55 +404,56 @@ calculate_the_allele_freq_diff <- function(data,
     rownames(marker_tab_pop) <- SNP_IDs
     return(marker_tab_pop)
   }
-  pop_1_dt <- get_allele_freq_per_marker_per_pop(data=pop_1, population_name = population_name_1)
-  pop_2_dt <- get_allele_freq_per_marker_per_pop(data=pop_2, population_name = population_name_2)
-  pop_3_dt <- get_allele_freq_per_marker_per_pop(data=pop_3, population_name = population_name_3)
-  pop_4_dt <- get_allele_freq_per_marker_per_pop(data=pop_4, population_name = population_name_4)
+  pop_1_dt <- get_allele_freq_per_marker_per_pop(data=pop_1, population_name = pop_low_phenotype_sel_1)
+  pop_2_dt <- get_allele_freq_per_marker_per_pop(data=pop_2, population_name = pop_low_phenotype_sel_2)
+  pop_3_dt <- get_allele_freq_per_marker_per_pop(data=pop_3, population_name = pop_high_phenotype_sel_1)
+  pop_4_dt <- get_allele_freq_per_marker_per_pop(data=pop_4, population_name = pop_high_phenotype_sel_2)
   marker_table_per_pop <- cbind(pop_1_dt,pop_2_dt,
                                 pop_3_dt,pop_4_dt)
   marker_table_per_pop <- as.data.frame(marker_table_per_pop)
-  cat("Pop 1: For",length(which(marker_table_per_pop[,3] < marker_table_per_pop[,7])),
-      "markers the observed heterozygosity was higher than the expected heterozygosity!","\n")
-  cat("Pop 2: For",length(which(marker_table_per_pop[,10] < marker_table_per_pop[,14])),
-      "markers the observed heterozygosity was higher than the expected heterozygosity!","\n")
-  cat("Pop 3: For",length(which(marker_table_per_pop[,17] < marker_table_per_pop[,21])),
-      "markers the observed heterozygosity was higher than the expected heterozygosity!","\n")
-  cat("Pop 4: For",length(which(marker_table_per_pop[,24] < marker_table_per_pop[,28])),
-      "markers the observed heterozygosity was higher than the expected heterozygosity!","\n")
-  cat("Pop 1:",length(which(marker_table_per_pop[,1] < marker_table_per_pop[,2])),"times the REF allele was the minor allele","\n")
-  cat("Pop 1:",length(which(marker_table_per_pop[,1] > marker_table_per_pop[,2])),"times the REF allele was the major allele","\n")
-  cat("Pop 2:",length(which(marker_table_per_pop[,8] < marker_table_per_pop[,9])),"times the REF allele was the minor allele","\n")
-  cat("Pop 2:",length(which(marker_table_per_pop[,8] > marker_table_per_pop[,9])),"times the REF allele was the major allele","\n")
-  cat("Pop 3:",length(which(marker_table_per_pop[,15] < marker_table_per_pop[,16])),"times the REF allele was the minor allele","\n")
-  cat("Pop 3:",length(which(marker_table_per_pop[,15] > marker_table_per_pop[,16])),"times the REF allele was the major allele","\n")
-  cat("Pop 4:",length(which(marker_table_per_pop[,21] < marker_table_per_pop[,22])),"times the REF allele was the minor allele","\n")
-  cat("Pop 4:",length(which(marker_table_per_pop[,21] > marker_table_per_pop[,22])),"times the REF allele was the major allele","\n")
-  cat("Calculation of the allele frequency spectrum is done.","\n")
+  selected_opposite_dir_1 <- as.numeric(marker_table_per_pop[,1] - marker_table_per_pop[,15])
+  selected_opposite_dir_2 <- as.numeric(marker_table_per_pop[,8] - marker_table_per_pop[,21])
+  selected_same_dir_1 <- as.numeric(marker_table_per_pop[,1] - marker_table_per_pop[,8])
+  selected_same_dir_2 <- as.numeric(marker_table_per_pop[,15] - marker_table_per_pop[,21])
+  od_stat <- abs(selected_opposite_dir_1 + selected_opposite_dir_2)
+  allele_freq_diff_REF <- cbind(data@fix[,c(1,2)],SNP_IDs,
+                                selected_opposite_dir_1,
+                                selected_opposite_dir_2,
+                                selected_same_dir_1,
+                                selected_same_dir_2,
+                                od_stat)
+  allele_freq_diff_REF <- as.data.frame(allele_freq_diff_REF)
+  colnames(allele_freq_diff_REF) <- c("Chromosome","Position","SNP_ID",
+                                      "Low1_vs_Low2","High1_vs_High2",
+                                      "Low1_vs_High1","Low2_vs_High2",
+                                      "Abs_allele_freq_diff")
+  cat("Calculation of the allele frequency differences is done.","\n")
   time_1 <- Sys.time()
   cat("This was done within",print(time_1 - time_0),"\n")
-  return(marker_table_per_pop)
+  return(allele_freq_diff_REF)
 }
-marker_table_per_pop <- calculate_the_allele_freq_diff(data = vcf_S4, 
-                                          population_name_1 = "Shoepag_1",
-                                          population_name_2 = "Shoepag_2",
-                                          population_name_3 = "Shoepag_3",
-                                          population_name_4 = "Shoepag_4")
+allele_freq_diff <- calculate_the_allele_freq_diff(data = vcf_S4, 
+                                                   pop_low_phenotype_sel_1 = "Shoepag_1",
+                                                   pop_low_phenotype_sel_2 = "Shoepag_4",
+                                                   pop_high_phenotype_sel_1 = "Shoepag_3",
+                                                   pop_high_phenotype_sel_2 = "Shoepag_2")
 ```
-
-## Significance threshold based on the FDR for selection
-
-
-## Significance thresholds based on drift simulations 
+## Significance thresholds
+### Based on the empiric distribution
 
 
-## Significance thresholds based on the empiric distribution
+### Based on drift simulations 
+
+### Simulation of Drift
+          
+### Based on the FDR for selection
 
 
-## Simulation of Drift
+
 
 
 ## Sauron plot
-
+          
 ![GB1006_Sauron_plots_combined_values_2021_12_17](https://user-images.githubusercontent.com/63467079/149146525-ce94e222-dff8-4ad4-8dcb-ad14f7530032.png)
 
 ## Other plotting scripts
