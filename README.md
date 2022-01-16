@@ -2,16 +2,21 @@
 ## Table of contents
 [0 Introduction](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#introduction) <br />
 1 Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy) <br />
-[2 Filtering] <br />
-[3 Selection signature mapping] <br />
-&emsp; [3.1 <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection] <br />
-&emsp; 3.2 Allele frequency differences <br />
-4 Significance thresholds <br />
-&emsp; 4.1 Based on the empiric distribution <br />
-&emsp; 4.2 Based on drift simulations <br />
-&emsp; 4.3 Based on the FDR for selection <br />
-5 Sauron plot <br />
-6 Other plotting scripts <br />
+[2 Filtering](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#filtering) <br />
+&emsp;[2.1 Filtering for individual samples with low coverage](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#21-filtering-for-individual-samples-with-low-coverage)
+&emsp;[2.2 Filtering for read depth per sample](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#22-filtering-for-read-depth-per-sample)
+&emsp;[2.3 Filtering for missingness](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#23-filtering-for-missingness)
+&emsp;[2.4 Removal of non-diallelic and non-polymorphic markers](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#24-removal-of-non-diallelic-and-non-polymorphic-markers)
+[3 Selection signature mapping](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#3-selection-signature-mapping) <br />
+&emsp; [3.1 <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#31--leveraging-replicated-selection) <br />
+&emsp; [3.2 Allele frequency differences](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#32-allele-frequency-differences) <br />
+[4 Significance thresholds](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#4-significance-thresholds) <br />
+&emsp; [4.1 Based on the empiric distribution](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#41-based-on-the-empiric-distribution) <br />
+&emsp; [4.2 Based on drift simulations](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#42-based-on-drift-simulations) <br />
+&emsp; [4.3 Simulation of drift](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#43-simulation-of-drift) <br />
+&emsp; [4.4 Based on the FDR for selection](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#44-based-on-the-fdr-for-selection)<br />
+[5 Sauron plot](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#5-sauron-plot) <br />
+[6 Other plotting scripts](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#6-other-plotting-scripts) <br />
 
 
 ## 0 Introduction
