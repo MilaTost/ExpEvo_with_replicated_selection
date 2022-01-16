@@ -14,7 +14,7 @@
 6 Other plotting scripts <br />
 
 
-## Introduction
+## 0 Introduction
 This repository contains scripts for selection signature mapping with replicated selection.
 Usually in experimental evolution studies a random-mating population is selected in divergent directions for one
 trait of interest. The highly divergent subpopulations are then scanned for signatures of selection.
@@ -30,7 +30,7 @@ Whereas we applied the this new significance threshold to the commonly used
           <img src="https://render.githubusercontent.com/render/math?math=F_{ST}">
 statistic.
 
-## Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy)
+## 1 Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy)
 For the analysis of our raw reads from paired-end genotyping-by-sequencing (GBS) with ApeKI according to [Elshire et al. 2011](https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0019379&type=printable), we used the GB-eaSy pipeline from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy). <br />
 The pipeline consists out of several steps, which comprises:
 - [Demultiplexing and trimming of the adapter sequence](https://github.com/dpwickland/GB-eaSy#step-2-demultiplex-raw-reads)
@@ -42,7 +42,7 @@ The pipeline consists out of several steps, which comprises:
 This bash-script was run on every sequenced plate separately, since every sequenced plate had it's own adapters and the same set of barcodes was used for all sequenced plates in our case. The *Demultiplexing* and *Alignement to the reference genome* steps were conducted by the `Demultiplexing_and_alignement_to_the_reference_genome.bash` script. <br /> <br />
 The *Generate Pileup*,*SNP calling* and *Filtering for quality parameters* were run for all sequencing runs together. The *Filtering for quality parameters* was changed a lot and differed from the GB-eaSy pipline introduced by [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy). The  *Generate Pileup*,*SNP calling* and *Filtering for quality parameters* steps were conducted by the `Pileup_SNP_calling_Filtering.bash` script.
           
-## Filtering
+## 2 Filtering
 After the VCF file was created with the GB-eaSy pipeline from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy) and filtered for some quality parameters we did some additional filtering in R. All  listed *Filterung* steps were conducted by the `Filtering_for_coverage_average_RD_missingness.R` script. The Rscript contains the *Filtering* functions for the following filtering steps.  
 ### The filtering steps:
 - Filtering for individual samples with low coverage
@@ -69,7 +69,7 @@ vcf_S4 <- read.vcfR("DATA.vcf", verbose = FALSE)
 cat("VCF contains before anything was done:",nrow(vcf_S4@fix),"markers.","\n")
 ```
 
-#### Filtering for individual samples with low coverage
+#### 2.1 Filtering for individual samples with low coverage
 In our case, we choosed a minimum coverage of 10% per individual sample.
 ```{r}
 filter_for_ind_coverage <- function(data, threshold){
@@ -100,7 +100,7 @@ filter_for_ind_coverage <- function(data, threshold){
 vcf_S4 <- filter_for_ind_coverage(data = vcf_S4,
                                   threshold = 0.1)
 ```
-### Filtering for read depth per sample
+### 2.2 Filtering for read depth per sample
 In our case, we choosed a minimum average read depth of 1 and a maximum average read depth of 10 per marker. We choosed these thresholds based on the distribution of average read depth across all markers. 
 ```{r}
 filter_for_average_read_depth <- function(data, min_av_depth, max_av_depth){
@@ -132,7 +132,7 @@ vcf_S4 <- filter_for_average_read_depth(data = vcf_S4,
 **Distribution of average read depth across all markers**
 ![GB1002 1_Average_read_depth](https://user-images.githubusercontent.com/63467079/149306207-62129755-9db6-473d-a1a9-dc2795ec84c6.png)
 
-### Filtering for missingness
+### 2.3 Filtering for missingness
 When we filter for missingness, we filter in every subpopulation for at least 40 observations. So that only markers pass the threshold, which have 40 observations in every subpopulation.          
 ```{r}
 filter_missingness_per_pop <- function(data, 
@@ -236,7 +236,7 @@ NAs_per_marker_per_pop <- calculate_missingness_per_pop(data = vcf_S4,
 With this command we also calculate the range of missingness between the populations. The range of missingness can be evaluated to look for markers which are more abundant in one population than in the others, which could skew the results.      
 ![GB1003_plot_missingness_02](https://user-images.githubusercontent.com/63467079/149474916-930cb3f0-bc73-4846-b334-f803ee950eb0.png)
 
-### Removal of non-diallelic and non-polymorphic markers
+### 2.4 Removal of non-diallelic and non-polymorphic markers
 ```{r}
 filter_for_non_diallelic_non_polymorphic <- function(data){
   cat("Filtering for diallelic markers started.","\n")
@@ -260,9 +260,9 @@ This function also comes from the `vcfR` package from [Knaus and Grünwald 2018]
 ```{r}
 write.vcf(vcf_S4, file="path/to/your/working/directory/filtered_DATA.vcf.gz", mask=FALSE)          
 ```          
-## 3 [Selection signature mapping](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#3-selection-signature-mapping])
+## 3 Selection signature mapping
 The function for the calculation of the **<img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection** and the **allele frequency differences** are contained in the `selection_signature_mapping.R script`. 
-### <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection
+### 3.1 <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection
 The function below will calculate the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> between all four subpopulations as: <br /> <br />
 <img src="https://render.githubusercontent.com/render/math?math=F_{ST}=\frac{s^2}{\mu(p)*(1-\mu(p))%2B(\frac{s^2}{4})}"> 
 <br /> <br /> according to [Weir and Cockerham, 1984](https://doi.org/10.1111/j.1558-5646.1984.tb05657.x). <br /> <br />
@@ -350,7 +350,7 @@ FST_value_all_pop <- calculate_FST_value(data = vcf_S4,
                                          pop_high_phenotype_sel_2 = "Shoepag_2")
 ```
 
-### Allele frequency differences
+### 3.2 Allele frequency differences
 The function below will calculate the allele frequency differences between the subpopulations selected in the same and opposite directions and the absolute allele frequency difference. The absolute allele frequency difference is calculated as: <br /> <br />
 <img src="https://render.githubusercontent.com/render/math?math=%7C(p_{Low1}%2Dp_{High1})%2B(p_{Low2}%2Dp_{High2})%7C">
 <br /> 
@@ -438,23 +438,23 @@ allele_freq_diff <- calculate_the_allele_freq_diff(data = vcf_S4,
                                                    pop_high_phenotype_sel_1 = "Shoepag_3",
                                                    pop_high_phenotype_sel_2 = "Shoepag_2")
 ```
-## Significance thresholds
-### Based on the empiric distribution
+## 4 Significance thresholds
+### 4.1 Based on the empiric distribution
 
 
-### Based on drift simulations 
+### 4.2 Based on drift simulations 
 
-### Simulation of Drift
+### 4.3 Simulation of Drift
           
-### Based on the FDR for selection
+### 4.4 Based on the FDR for selection
 
 
 
 
 
-## Sauron plot
+## 5 Sauron plot
           
 ![GB1006_Sauron_plots_combined_values_2021_12_17](https://user-images.githubusercontent.com/63467079/149146525-ce94e222-dff8-4ad4-8dcb-ad14f7530032.png)
 
-## Other plotting scripts
+## 6 Other plotting scripts
 
