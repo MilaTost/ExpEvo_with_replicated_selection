@@ -260,7 +260,7 @@ This function also comes from the `vcfR` package from [Knaus and Grünwald 2018]
 ```{r}
 write.vcf(vcf_S4, file="path/to/your/working/directory/filtered_DATA.vcf.gz", mask=FALSE)          
 ```          
-## Selection signature mapping
+## 3 [Selection signature mapping](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#3-selection-signature-mapping])
 The function for the calculation of the **<img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection** and the **allele frequency differences** are contained in the `selection_signature_mapping.R script`. 
 ### <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection
 The function below will calculate the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> between all four subpopulations as: <br /> <br />
