@@ -1,17 +1,17 @@
 # Selection signature mapping scripts with replicated selection
 ## Table of contents
-#### 0 Introduction
-#### 1 Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy)
-#### 2 Filtering
-#### 3 Selection signature mapping
-##### 3.1 <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection
-##### 3.2 Allele frequency differences
-#### 4 Significance thresholds
-##### 4.1 Based on the empiric distribution
-##### 4.2 Based on drift simulations 
-##### 4.3 Based on the FDR for selection
-#### 5 Sauron plot
-#### 6 Other plotting scripts
+[0 Introduction](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#introduction) <br />
+1 Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy) <br />
+[2 Filtering] <br />
+[3 Selection signature mapping] <br />
+&emsp; [3.1 <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection] <br />
+&emsp; 3.2 Allele frequency differences <br />
+4 Significance thresholds <br />
+&emsp; 4.1 Based on the empiric distribution <br />
+&emsp; 4.2 Based on drift simulations <br />
+&emsp; 4.3 Based on the FDR for selection <br />
+5 Sauron plot <br />
+6 Other plotting scripts <br />
 
 
 ## Introduction
