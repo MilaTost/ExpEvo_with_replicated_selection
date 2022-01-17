@@ -74,7 +74,7 @@ vcf_S4 <- read.vcfR("DATA.vcf", verbose = FALSE)
 cat("VCF contains before anything was done:",nrow(vcf_S4@fix),"markers.","\n")
 ```
 
-#### 2.1 Filtering for individual samples with low coverage
+### 2.1 Filtering for individual samples with low coverage
 In our case, we choosed a minimum coverage of 10% per individual sample.
 ```{r}
 filter_for_ind_coverage <- function(data, threshold){
@@ -455,7 +455,11 @@ AFD_sig_thres_2 <- quantile(allele_freq_diff$DiffStat, probs = 0.999, na.rm = TR
 ```          
 The significance threshold is stored, so it can be used later directly for plotting. <br />
 ### 4.2 Based on drift simulations 
-
+The significance thresholds based on drift simulations were calculated in the `Simulation_of_drift.R` and then only retrieved from this script. The simulation of drift is described below and the script is also available in the repository.
+```{r}
+AFD_drift_sim_sig_thres <- 0.4686
+FST_drift_sim_sig_thres <-  0.3540692
+```    
 ### 4.3 Simulation of Drift
           
 ### 4.4 Based on the FDR for selection
