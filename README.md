@@ -134,9 +134,9 @@ vcf_S4 <- filter_for_average_read_depth(data = vcf_S4,
                                         min_av_depth = 1, 
                                         max_av_depth = 10)  
 ``` 
-**Distribution of average read depth across all markers**
-![GB1002 1_Average_read_depth](https://user-images.githubusercontent.com/63467079/149306207-62129755-9db6-473d-a1a9-dc2795ec84c6.png)
-
+#### Distribution of average read depth across all markers
+<img src="https://user-images.githubusercontent.com/63467079/149306207-62129755-9db6-473d-a1a9-dc2795ec84c6.png" width="500" height="300">
+          
 ### 2.3 Filtering for missingness
 When we filter for missingness, we filter in every subpopulation for at least 40 observations. So that only markers pass the threshold, which have 40 observations in every subpopulation.          
 ```{r}
@@ -563,7 +563,7 @@ FST_FDR_for_sel_sig_thres <- get_FDR_for_selection_sign_thres(stat_opposite_dir1
 ```
 ## 5 Sauron plot
 The Sauron plot from [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1) can be used to visualize the scope of drift and the scope of selection. Sauron plots of genetic differentiation are created by plotting the FST statistics (A) and the allele frequency differences (B) observed in the subpopulations selected in the same direction (blue) and in opposite directions (red) against each other at each SNP marker. The transparent red colored edges correspond to a false discovery rate (FDR) for selection <10%. The diverged markers observed in the subpopulations selected in the same direction (blue) are provoked by drift and other factors, but not by selection. The diverged markers observed in the subpopulations selected in opposite directions (red) are provoked by drift, other factors and selection. Therefore the observations which exceed the cloud of blue points are expected to be provoked only by selection. The y- and x-axis correspond to the range of <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> and allele frequency differences.  
-![GB1006_Sauron_plots_combined_values_2021_12_17](https://user-images.githubusercontent.com/63467079/149146525-ce94e222-dff8-4ad4-8dcb-ad14f7530032.png)
+<img src="https://user-images.githubusercontent.com/63467079/149146525-ce94e222-dff8-4ad4-8dcb-ad14f7530032.png" width="700" height="350">
 ```{r}
 
 ```
