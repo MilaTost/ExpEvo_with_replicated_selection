@@ -1,22 +1,23 @@
 # Selection signature mapping scripts with replicated selection
 ## Table of contents
 [0 Introduction](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#introduction) <br />
-1 Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy) <br />
-[2 Filtering](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#filtering) <br />
-&emsp;[2.1 Filtering for individual samples with low coverage](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#21-filtering-for-individual-samples-with-low-coverage) <br />
-&emsp;[2.2 Filtering for read depth per sample](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#22-filtering-for-read-depth-per-sample) <br />
-&emsp;[2.3 Filtering for missingness](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#23-filtering-for-missingness) <br />
-&emsp;[2.4 Removal of non-diallelic and non-polymorphic markers](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#24-removal-of-non-diallelic-and-non-polymorphic-markers) <br />
-[3 Selection signature mapping](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#3-selection-signature-mapping) <br />
-&emsp; [3.1 FST leveraging replicated selection](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#31--leveraging-replicated-selection) <br />
-&emsp; [3.2 Allele frequency differences](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#32-allele-frequency-differences) <br />
-[4 Significance thresholds](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#4-significance-thresholds) <br />
-&emsp; [4.1 Based on the empirical distribution](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#41-based-on-the-empiric-distribution) <br />
-&emsp; [4.2 Based on drift simulations](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#42-based-on-drift-simulations) <br />
-&emsp; [4.3 Simulation of drift](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#43-simulation-of-drift) <br />
-&emsp; [4.4 Based on the FDR for selection](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#44-based-on-the-fdr-for-selection)<br />
-[5 Sauron plot](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#5-sauron-plot) <br />
-[6 Manhatten plots](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#6-other-plotting-scripts) <br />
+[1 Phenotypic data analysis]
+2 Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy) <br />
+[3 Filtering](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#filtering) <br />
+&emsp;[3.1 Filtering for individual samples with low coverage](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#21-filtering-for-individual-samples-with-low-coverage) <br />
+&emsp;[3.2 Filtering for read depth per sample](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#22-filtering-for-read-depth-per-sample) <br />
+&emsp;[3.3 Filtering for missingness](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#23-filtering-for-missingness) <br />
+&emsp;[3.4 Removal of non-diallelic and non-polymorphic markers](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#24-removal-of-non-diallelic-and-non-polymorphic-markers) <br />
+[4 Selection signature mapping](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#3-selection-signature-mapping) <br />
+&emsp; [4.1 FST leveraging replicated selection](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#31--leveraging-replicated-selection) <br />
+&emsp; [4.2 Allele frequency differences](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#32-allele-frequency-differences) <br />
+[5 Significance thresholds](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#4-significance-thresholds) <br />
+&emsp; [5.1 Based on the empirical distribution](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#41-based-on-the-empiric-distribution) <br />
+&emsp; [5.2 Based on drift simulations](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#42-based-on-drift-simulations) <br />
+&emsp; [5.3 Simulation of drift](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#43-simulation-of-drift) <br />
+&emsp; [5.4 Based on the FDR for selection](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#44-based-on-the-fdr-for-selection)<br />
+[6 Sauron plot](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#5-sauron-plot) <br />
+[7 Manhatten plots](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#6-other-plotting-scripts) <br />
 
 
 ## 0 Introduction
@@ -34,8 +35,9 @@ statistic based on the allele frequency differences.
 Whereas we applied the this new significance threshold to the commonly used 
           <img src="https://render.githubusercontent.com/render/math?math=F_{ST}">
 statistic.
+## 1 Phenotypic data analysis
 
-## 1 Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy)
+## 2 Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy)
 For the analysis of our raw reads from paired-end genotyping-by-sequencing (GBS) with ApeKI according to [Elshire et al. 2011](https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0019379&type=printable), we used the GB-eaSy pipeline from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy). <br />
 The pipeline consists out of several steps, which comprises:
 - [Demultiplexing and trimming of the adapter sequence](https://github.com/dpwickland/GB-eaSy#step-2-demultiplex-raw-reads)
@@ -47,7 +49,7 @@ The pipeline consists out of several steps, which comprises:
 This bash-script was run on every sequenced plate separately, since every sequenced plate had it's own adapters and the same set of barcodes was used for all sequenced plates in our case. The *Demultiplexing* and *Alignement to the reference genome* steps were conducted by the `Demultiplexing_and_alignement_to_the_reference_genome.bash` script. <br /> <br />
 The *Generate Pileup*,*SNP calling* and *Filtering for quality parameters* were run for all sequencing runs together. The *Filtering for quality parameters* was changed a lot and differed from the GB-eaSy pipline introduced by [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy). The  *Generate Pileup*,*SNP calling* and *Filtering for quality parameters* steps were conducted by the `Pileup_SNP_calling_Filtering.bash` script.
           
-## 2 Filtering
+## 3 Filtering
 After the VCF file was created with the GB-eaSy pipeline from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy) and filtered for some quality parameters we did some additional filtering in R. All  listed *Filterung* steps were conducted by the `Filtering_for_coverage_average_RD_missingness.R` script. The Rscript contains the *Filtering* functions for the following filtering steps.  
 ### The filtering steps:
 - Filtering for individual samples with low coverage
@@ -74,7 +76,7 @@ vcf_S4 <- read.vcfR("DATA.vcf", verbose = FALSE)
 cat("VCF contains before anything was done:",nrow(vcf_S4@fix),"markers.","\n")
 ```
 
-### 2.1 Filtering for individual samples with low coverage
+### 3.1 Filtering for individual samples with low coverage
 In our case, we choosed a minimum coverage of 10% per individual sample.
 ```{r}
 filter_for_ind_coverage <- function(data, threshold){
@@ -105,7 +107,7 @@ filter_for_ind_coverage <- function(data, threshold){
 vcf_S4 <- filter_for_ind_coverage(data = vcf_S4,
                                   threshold = 0.1)
 ```
-### 2.2 Filtering for read depth per sample
+### 3.2 Filtering for read depth per sample
 In our case, we choosed a minimum average read depth of 1 and a maximum average read depth of 10 per marker. We choosed these thresholds based on the distribution of average read depth across all markers. 
 ```{r}
 filter_for_average_read_depth <- function(data, min_av_depth, max_av_depth){
@@ -137,7 +139,7 @@ vcf_S4 <- filter_for_average_read_depth(data = vcf_S4,
 #### Distribution of average read depth across all markers
 <img src="https://user-images.githubusercontent.com/63467079/149306207-62129755-9db6-473d-a1a9-dc2795ec84c6.png" width="500" height="300">
           
-### 2.3 Filtering for missingness
+### 3.3 Filtering for missingness
 When we filter for missingness, we filter in every subpopulation for at least 40 observations. So that only markers pass the threshold, which have 40 observations in every subpopulation.          
 ```{r}
 filter_missingness_per_pop <- function(data, 
@@ -241,7 +243,7 @@ NAs_per_marker_per_pop <- calculate_missingness_per_pop(data = vcf_S4,
 With this command we also calculate the range of missingness between the populations. The range of missingness can be evaluated to look for markers which are more abundant in one population than in the others, which could skew the results.      
 ![GB1003_plot_missingness_02](https://user-images.githubusercontent.com/63467079/149474916-930cb3f0-bc73-4846-b334-f803ee950eb0.png)
 
-### 2.4 Removal of non-diallelic and non-polymorphic markers
+### 3.4 Removal of non-diallelic and non-polymorphic markers
 ```{r}
 filter_for_non_diallelic_non_polymorphic <- function(data){
   cat("Filtering for diallelic markers started.","\n")
@@ -265,9 +267,9 @@ This function also comes from the `vcfR` package from [Knaus and Grünwald 2018]
 ```{r}
 write.vcf(vcf_S4, file="path/to/your/working/directory/filtered_DATA.vcf.gz", mask=FALSE)          
 ```          
-## 3 Selection signature mapping
+## 4 Selection signature mapping
 The function for the calculation of the **<img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection** and the **allele frequency differences** are contained in the `selection_signature_mapping.R script`. 
-### 3.1 <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection
+### 4.1 <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection
 The function below will calculate the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> between all four subpopulations as: <br /> <br />
 <img src="https://render.githubusercontent.com/render/math?math=F_{ST}=\frac{s^2}{\mu(p)*(1-\mu(p))%2B(\frac{s^2}{4})}"> 
 <br /> <br /> according to [Weir and Cockerham, 1984](https://doi.org/10.1111/j.1558-5646.1984.tb05657.x). <br /> <br />
@@ -379,7 +381,7 @@ FST_values_od_cor <- calculate_FST_value(data = vcf_S4,
                                          pop_high_phenotype_sel_2 = "Shoepag_2")
 ```
 
-### 3.2 Allele frequency differences
+### 4.2 Allele frequency differences
 The function below will calculate the allele frequency differences between the subpopulations selected in the same and opposite directions and the absolute allele frequency difference. The absolute allele frequency difference is calculated as: <br /> <br />
 <img src="https://render.githubusercontent.com/render/math?math=%7C(p_{Low1}%2Dp_{High1})%2B(p_{Low2}%2Dp_{High2})%7C">
 <br /> 
@@ -467,9 +469,9 @@ allele_freq_diff <- calculate_the_allele_freq_diff(data = vcf_S4,
                                                    pop_high_phenotype_sel_1 = "Shoepag_3",
                                                    pop_high_phenotype_sel_2 = "Shoepag_2")
 ```                    
-## 4 Significance thresholds
+## 5 Significance thresholds
 The calculation of significance thresholds and the plotting functions are contained in the `Significance_thresholds_and_plotting.R`. The `Filtering_for_coverage_average_RD_missingness.R` and `selection_signature_mapping.R script` can or should be run on a inactive Linux session on a high-throughput computing device. These scripts are usually run on extremly large data sets (raw sequence data or large VCF files). The `Significance_thresholds_and_plotting.R` is usually run on a much smaller data set, since many markers were removed in the filtering procedure. Furthermore, when windows font types want to be used,  the script needs to be run on a windows device. <br />   
-### 4.1 Based on the empirical distribution
+### 5.1 Based on the empirical distribution
 The significance thresholds based on the empirical distribution, were calculated by taking the 99.9th and 99.99th percentile of the empirical distribution of the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> and absolute allele frequency differences:
 ```{r}
 FST_sig_thres_1 <- quantile(FST_values_od_cor$Fst, probs = 0.9999, na.rm = TRUE)
@@ -478,15 +480,15 @@ AFD_sig_thres_1 <- quantile(allele_freq_diff$DiffStat, probs = 0.9999, na.rm = T
 AFD_sig_thres_2 <- quantile(allele_freq_diff$DiffStat, probs = 0.999, na.rm = TRUE)
 ```          
 The significance threshold is stored, so it can be used later directly for plotting. <br />
-### 4.2 Based on drift simulations 
+### 5.2 Based on drift simulations 
 The significance thresholds based on drift simulations were calculated in the `Simulation_of_drift.R` and then only retrieved from this script. The simulation of drift is described below and the script is also available in the repository.
 ```{r}
 AFD_drift_sim_sig_thres <- 0.4686
 FST_drift_sim_sig_thres <-  0.3540692
 ```    
-### 4.3 Simulation of Drift
+### 5.3 Simulation of Drift
           
-### 4.4 Based on the FDR for selection
+### 5.4 Based on the FDR for selection
 **FDR for selection for all possible values of the statistics**
 The function `calculate_FDR_for_selection()` generates a table to show all posible values of a statistic and the number of observed markers diverged between subpopulation selected in the same and opposite directions at a certain value. The FDR for selection is received by dividing the number of observed markers diverged between subpopulation selected in the same direction by the number of observed markers diverged between subpopulation selected in opposite directions. <br /> <br />
 ```{r}
@@ -561,13 +563,13 @@ FST_FDR_for_sel_sig_thres <- get_FDR_for_selection_sign_thres(stat_opposite_dir1
                                                               stat_same_dir2 = allele_freq_diff$Tall1_vs_Tall2,
                                                               statistic = "FST")   
 ```
-## 5 Sauron plot
+## 6 Sauron plot
 The Sauron plot from [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1) can be used to visualize the scope of drift and the scope of selection. Sauron plots of genetic differentiation are created by plotting the FST statistics (A) and the allele frequency differences (B) observed in the subpopulations selected in the same direction (blue) and in opposite directions (red) against each other at each SNP marker. The transparent red colored edges correspond to a false discovery rate (FDR) for selection <10%. The diverged markers observed in the subpopulations selected in the same direction (blue) are provoked by drift and other factors, but not by selection. The diverged markers observed in the subpopulations selected in opposite directions (red) are provoked by drift, other factors and selection. Therefore the observations which exceed the cloud of blue points are expected to be provoked only by selection. The y- and x-axis correspond to the range of <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> and allele frequency differences.  
 <img src="https://user-images.githubusercontent.com/63467079/149146525-ce94e222-dff8-4ad4-8dcb-ad14f7530032.png" width="700" height="350">
 ```{r}
 
 ```
-## 6 Manhatten plots
+## 7 Manhatten plots
 
 ![2021_new_combined_manhatten_plots](https://user-images.githubusercontent.com/63467079/149943665-fdedbd0f-cb06-44f4-a2d2-c3ffd53b258a.png)
 
