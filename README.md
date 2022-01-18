@@ -1,7 +1,7 @@
 # Selection signature mapping scripts with replicated selection
 ## Table of contents
 [0 Introduction](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#introduction) <br />
-[1 Phenotypic data analysis]
+[1 Phenotypic data analysis](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#1-phenotypic-data-analysis)
 2 Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy) <br />
 [3 Filtering](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#filtering) <br />
 &emsp;[3.1 Filtering for individual samples with low coverage](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#21-filtering-for-individual-samples-with-low-coverage) <br />
