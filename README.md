@@ -271,8 +271,11 @@ The function for the calculation of the **<img src="https://render.githubusercon
 The function below will calculate the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> between all four subpopulations as: <br /> <br />
 <img src="https://render.githubusercontent.com/render/math?math=F_{ST}=\frac{s^2}{\mu(p)*(1-\mu(p))%2B(\frac{s^2}{4})}"> 
 <br /> <br /> according to [Weir and Cockerham, 1984](https://doi.org/10.1111/j.1558-5646.1984.tb05657.x). <br /> <br />
-          
-Additionally this function is calculating the absolute allele frequency difference between the subpopulations selected in opposite directions. The absolute allele frequency difference can be used to exclude markers with significant <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> values, but which did diverge between the subpopulations selected in opposite directions. Significant <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> values can be observed when one subpopulations was selected for specific environmental conditions. Therefore, we use this adjustment to identify truly selected sites.   
+
+The function also calculates the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> only between the subpopulations selected in same direction and only between the subpopulations selected in opposite directions. This values are required for the calculation of the FDR for selection. <br /> <br />            
+ 
+Additionally this function is calculating the absolute sum of <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> between the subpopulations selected in opposite directions. This value can be used to exclude markers with a significant <img src="https://render.githubusercontent.com/render/math?math=F_{ST}">, but which diverge between subpopulation selected in the same direction. This could have happend due to selection for specific environmental conditions. Therefore, we use this adjustment to identify truly selected sites. <br /> <br />
+
 ```{r}
 calculate_FST_value <- function(data,
                                 pop_low_phenotype_sel_1,
@@ -335,20 +338,41 @@ calculate_FST_value <- function(data,
                               population_2 = marker_table_per_pop[,8],
                               population_3 = marker_table_per_pop[,15],
                               population_4 = marker_table_per_pop[,21])
-  selected_opposite_dir_1 <- as.numeric(marker_table_per_pop[,1] - marker_table_per_pop[,15])
-  selected_opposite_dir_2 <- as.numeric(marker_table_per_pop[,8] - marker_table_per_pop[,21])
-  od_stat <- abs(selected_opposite_dir_1 + selected_opposite_dir_2)
+  fst_value_calc <- function(population_1,population_2){
+    mean <- (population_1+population_2) / 2
+    var <- (population_1-mean)^2 + (population_2-mean)^2
+    fst_pop <- var / (mean*(1-mean)+(var/2))
+    return(fst_pop)
+  }
+  Fst_value_sd_1 <- fst_value_calc(population_1 = marker_table_per_pop[,1], 
+                                   population_2 = marker_table_per_pop[,21])
+  Fst_value_sd_2 <- fst_value_calc(population_1 = marker_table_per_pop[,15], 
+                                   population_2 = marker_table_per_pop[,8])
+  Fst_value_od_1 <- fst_value_calc(population_1 = marker_table_per_pop[,1], 
+                                   population_2 = marker_table_per_pop[,15])
+  Fst_value_od_2 <- fst_value_calc(population_1 = marker_table_per_pop[,21], 
+                                   population_2 = marker_table_per_pop[,8])
+  od_stat <- abs(Fst_value_sd_1 + Fst_value_sd_2)
   FST_value_dt <- cbind(data@fix[,c(1,2)],SNP_IDs,
-                        FST_value,od_stat)
+                        FST_value,
+                        Fst_value_sd_1,
+                        Fst_value_sd_2,
+                        Fst_value_od_1,
+                        Fst_value_od_2,
+                        od_stat)
   FST_value_dt <- as.data.frame(FST_value_dt)
   colnames(FST_value_dt) <- c("Chromosome","Position","SNP_ID",
-                              "FST_value","Abs_allele_freq_diff")
+                              "FST_value","FST_value_opposite_dir1",
+                              "FST_value_opposite_dir2",
+                              "FST_value_same_dir1",
+                              "FST_value_same_dir2",
+                              "Abs_allele_freq_diff")
   cat("Calculation of the FST value is done.","\n")
   time_1 <- Sys.time()
   cat("This was done within",print(time_1 - time_0),"\n")
   return(FST_value_dt)
 }
-FST_value_all_pop <- calculate_FST_value(data = vcf_S4, 
+FST_values_od_cor <- calculate_FST_value(data = vcf_S4, 
                                          pop_low_phenotype_sel_1 = "Shoepag_1",
                                          pop_low_phenotype_sel_2 = "Shoepag_4",
                                          pop_high_phenotype_sel_1 = "Shoepag_3",
@@ -463,14 +487,87 @@ FST_drift_sim_sig_thres <-  0.3540692
 ### 4.3 Simulation of Drift
           
 ### 4.4 Based on the FDR for selection
-
-
-
-
-
+**FDR for selection for all possible values of the statistics**
+The function `calculate_FDR_for_selection()` generates a table to show all posible values of a statistic and the number of observed markers diverged between subpopulation selected in the same and opposite directions at a certain value. The FDR for selection is received by dividing the number of observed markers diverged between subpopulation selected in the same direction by the number of observed markers diverged between subpopulation selected in opposite directions. <br /> <br />
+```{r}
+calculate_FDR_for_selection <- function(stat_opposite_dir1,
+                                        stat_opposite_dir2,
+                                        stat_same_dir1,
+                                        stat_same_dir2,
+                                        statistic){
+  if(statistic == "AFD"){
+    dt_abs <- matrix(data = seq(0,2,0.01), nrow = length(seq(0,2,0.01)), ncol = 3)
+  }
+  if(statistic == "FST"){
+    dt_abs <- matrix(data = seq(0,1,0.01), nrow = length(seq(0,1,0.01)), ncol = 3)
+  }
+  for (i in 1:nrow(dt_abs)) {
+    dt_abs[i,2] <- length(which(abs(stat_same_dir1 + stat_same_dir2)>=dt_abs[i,1]))
+    dt_abs[i,3] <- length(which(abs(stat_opposite_dir1 + stat_opposite_dir2)>=dt_abs[i,1]))
+  }
+  dt_abs <- as.data.frame(dt_abs)
+  colnames(dt_abs) <- c("Statistic","Markers diverged same dir","Markers diverged opposite dir")
+  dt_abs$FDR_for_selection <- dt_abs[,2]/dt_abs[,3]
+  sig_threshold <- min(dt_abs[which(dt_abs$FDR_for_selection < 0.1),1])
+  cat("The significance threshold based on the FDR for selection < 10%","\n",
+      "corresponds to an statistic of",sig_threshold, "\n")
+  return(dt_abs)
+}
+dt_FDR_for_selection_AFD <- calculate_FDR_for_selection(stat_opposite_dir1 = allele_freq_diff$Short1_vs_Tall1,
+                                                        stat_opposite_dir2 = allele_freq_diff$Short2_vs_Tall2,
+                                                        stat_same_dir1 = allele_freq_diff$Short1_vs_Short2,
+                                                        stat_same_dir2 = allele_freq_diff$Tall1_vs_Tall2,
+                                                        statistic = "AFD")
+dt_FDR_for_selection_FST <- calculate_FDR_for_selection(stat_opposite_dir1 = allele_freq_diff$Short1_vs_Tall1,
+                                                        stat_opposite_dir2 = allele_freq_diff$Short2_vs_Tall2,
+                                                        stat_same_dir1 = allele_freq_diff$Short1_vs_Short2,
+                                                        stat_same_dir2 = allele_freq_diff$Tall1_vs_Tall2,
+                                                        statistic = "FST")
+```
+Even though, the significance threshold based on the FDR for selection is already printed by the previous function, the following function returns the threshold so it can be used directly in the Manhatten plot or to check the overlap between all the different statistics. 
+```{r}
+get_FDR_for_selection_sign_thres <- function(stat_opposite_dir1,
+                                             stat_opposite_dir2,
+                                             stat_same_dir1,
+                                             stat_same_dir2,
+                                             statistic){
+  if(statistic == "AFD"){
+    dt_abs <- matrix(data = seq(0,2,0.01), nrow = length(seq(0,2,0.01)), ncol = 3)
+  }
+  if(statistic == "FST"){
+    dt_abs <- matrix(data = seq(0,1,0.01), nrow = length(seq(0,1,0.01)), ncol = 3)
+  }
+  for (i in 1:nrow(dt_abs)) {
+    dt_abs[i,2] <- length(which(abs(stat_same_dir1 + stat_same_dir2)>=dt_abs[i,1]))
+    dt_abs[i,3] <- length(which(abs(stat_opposite_dir1 + stat_opposite_dir2)>=dt_abs[i,1]))
+  }
+  dt_abs <- as.data.frame(dt_abs)
+  colnames(dt_abs) <- c("Statistic","Markers diverged same dir","Markers diverged opposite dir")
+  dt_abs$FDR_for_selection <- dt_abs[,2]/dt_abs[,3]
+  sig_threshold <- min(dt_abs[which(dt_abs$FDR_for_selection < 0.1),1])
+  cat("The significance threshold based on the FDR for selection < 10%","\n",
+      "corresponds to an statistic of",sig_threshold, "\n")
+  return(sig_threshold)
+}
+AFD_FDR_for_sel_sig_thres <- get_FDR_for_selection_sign_thres(stat_opposite_dir1 = allele_freq_diff$Short1_vs_Tall1,
+                                                              stat_opposite_dir2 = allele_freq_diff$Short2_vs_Tall2,
+                                                              stat_same_dir1 = allele_freq_diff$Short1_vs_Short2,
+                                                              stat_same_dir2 = allele_freq_diff$Tall1_vs_Tall2,
+                                                              statistic = "AFD")
+## this still needs to be adjusted!!!!
+FST_FDR_for_sel_sig_thres <- get_FDR_for_selection_sign_thres(stat_opposite_dir1 = allele_freq_diff$Short1_vs_Tall1,
+                                                              stat_opposite_dir2 = allele_freq_diff$Short2_vs_Tall2,
+                                                              stat_same_dir1 = allele_freq_diff$Short1_vs_Short2,
+                                                              stat_same_dir2 = allele_freq_diff$Tall1_vs_Tall2,
+                                                              statistic = "FST")   
+```
 ## 5 Sauron plot
-          
+The Sauron plot from [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1) can be used to visualize the scope of drift and the scope of selection. Sauron plots of genetic differentiation are created by plotting the FST statistics (A) and the allele frequency differences (B) observed in the subpopulations selected in the same direction (blue) and in opposite directions (red) against each other at each SNP marker. The transparent red colored edges correspond to a false discovery rate (FDR) for selection <10%. The diverged markers observed in the subpopulations selected in the same direction (blue) are provoked by drift and other factors, but not by selection. The diverged markers observed in the subpopulations selected in opposite directions (red) are provoked by drift, other factors and selection. Therefore the observations which exceed the cloud of blue points are expected to be provoked only by selection. The y- and x-axis correspond to the range of <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> and allele frequency differences.  
 ![GB1006_Sauron_plots_combined_values_2021_12_17](https://user-images.githubusercontent.com/63467079/149146525-ce94e222-dff8-4ad4-8dcb-ad14f7530032.png)
+```{r}
 
+```
 ## 6 Manhatten plots
+
+![2021_new_combined_manhatten_plots](https://user-images.githubusercontent.com/63467079/149943665-fdedbd0f-cb06-44f4-a2d2-c3ffd53b258a.png)
 
