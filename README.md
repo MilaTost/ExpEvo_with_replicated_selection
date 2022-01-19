@@ -303,13 +303,13 @@ calculate_FST_value <- function(data,
     return(fst_pop)
   }
   Fst_value_sd_1 <- fst_value_calc(population_1 = marker_table_per_pop[,1], 
-                                   population_2 = marker_table_per_pop[,21])
-  Fst_value_sd_2 <- fst_value_calc(population_1 = marker_table_per_pop[,15], 
                                    population_2 = marker_table_per_pop[,8])
+  Fst_value_sd_2 <- fst_value_calc(population_1 = marker_table_per_pop[,15], 
+                                   population_2 = marker_table_per_pop[,21])
   Fst_value_od_1 <- fst_value_calc(population_1 = marker_table_per_pop[,1], 
                                    population_2 = marker_table_per_pop[,15])
-  Fst_value_od_2 <- fst_value_calc(population_1 = marker_table_per_pop[,21], 
-                                   population_2 = marker_table_per_pop[,8])
+  Fst_value_od_2 <- fst_value_calc(population_1 = marker_table_per_pop[,8], 
+                                   population_2 = marker_table_per_pop[,21])
   od_stat <- abs(Fst_value_sd_1 + Fst_value_sd_2)
   FST_value_dt <- cbind(data@fix[,c(1,2)],SNP_IDs,
                         FST_value,
@@ -324,7 +324,7 @@ calculate_FST_value <- function(data,
                               "FST_value_opposite_dir2",
                               "FST_value_same_dir1",
                               "FST_value_same_dir2",
-                              "Abs_allele_freq_diff")
+                              "Abs_sum_FST")
   cat("Calculation of the FST value is done.","\n")
   time_1 <- Sys.time()
   cat("This was done within",print(time_1 - time_0),"\n")
@@ -476,11 +476,7 @@ dt_FDR_for_selection_AFD <- calculate_FDR_for_selection(stat_opposite_dir1 = all
                                                         stat_same_dir1 = allele_freq_diff$Short1_vs_Short2,
                                                         stat_same_dir2 = allele_freq_diff$Tall1_vs_Tall2,
                                                         statistic = "AFD")
-dt_FDR_for_selection_FST <- calculate_FDR_for_selection(stat_opposite_dir1 = allele_freq_diff$Short1_vs_Tall1,
-                                                        stat_opposite_dir2 = allele_freq_diff$Short2_vs_Tall2,
-                                                        stat_same_dir1 = allele_freq_diff$Short1_vs_Short2,
-                                                        stat_same_dir2 = allele_freq_diff$Tall1_vs_Tall2,
-                                                        statistic = "FST")
+!!! FST is missing
 ```
 Even though, the significance threshold based on the FDR for selection is already printed by the previous function, the following function returns the threshold so it can be used directly in the Manhatten plot or to check the overlap between all the different statistics. 
 ```{r}
@@ -513,11 +509,7 @@ AFD_FDR_for_sel_sig_thres <- get_FDR_for_selection_sign_thres(stat_opposite_dir1
                                                               stat_same_dir2 = allele_freq_diff$Tall1_vs_Tall2,
                                                               statistic = "AFD")
 ## this still needs to be adjusted!!!!
-FST_FDR_for_sel_sig_thres <- get_FDR_for_selection_sign_thres(stat_opposite_dir1 = allele_freq_diff$Short1_vs_Tall1,
-                                                              stat_opposite_dir2 = allele_freq_diff$Short2_vs_Tall2,
-                                                              stat_same_dir1 = allele_freq_diff$Short1_vs_Short2,
-                                                              stat_same_dir2 = allele_freq_diff$Tall1_vs_Tall2,
-                                                              statistic = "FST")   
+
 ```
 ## 6 Sauron plot
 The Sauron plot from [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1) can be used to visualize the scope of drift and the scope of selection. Sauron plots of genetic differentiation are created by plotting the FST statistics (A) and the allele frequency differences (B) observed in the subpopulations selected in the same direction (blue) and in opposite directions (red) against each other at each SNP marker. The transparent red colored edges correspond to a false discovery rate (FDR) for selection <10%. The diverged markers observed in the subpopulations selected in the same direction (blue) are provoked by drift and other factors, but not by selection. The diverged markers observed in the subpopulations selected in opposite directions (red) are provoked by drift, other factors and selection. Therefore the observations which exceed the cloud of blue points are expected to be provoked only by selection. The y- and x-axis correspond to the range of <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> and allele frequency differences.  
