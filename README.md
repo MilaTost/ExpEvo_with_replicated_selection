@@ -34,8 +34,18 @@ The **replicated selection** is used to calculate a *FDR for selection*.
 statistic based on the allele frequency differences. 
 Whereas we applied the this new significance threshold to the commonly used 
           <img src="https://render.githubusercontent.com/render/math?math=F_{ST}">
-statistic.
+statistic. <br /> <br /> 
+**Experimental design** <br />
+<img src="https://user-images.githubusercontent.com/63467079/150107509-3f984ca3-3a61-4338-87d5-d920a5673727.png" width="500" height="555.7324841">
+
 ## 1 Phenotypic data analysis
+The phenotypic data analysis was conducted to evaluate the effect of selection on the phenotype. Therefore, the trait measurements in the subpopulations selected in opposite directions can be compared. We conducted a t-test between the subpopulations selected in opposite directions to test for significance.  <br /> 
+```{r}
+
+```
+Additionally we also used the trait measurments from the base population and all generations of selection to show the decrease and increase in the selected trait. In our case the selected trait was plant height. <br /> <br /> 
+**Measured plant height in all years in the subpopulations selected for short plant (green) and tall plant height (purple).**
+<img src="https://user-images.githubusercontent.com/63467079/150105713-a27b5365-4822-483e-abe4-6fff10332bc7.png" width="600" height="360">
 
 ## 2 Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy)
 For the analysis of our raw reads from paired-end genotyping-by-sequencing (GBS) with ApeKI according to [Elshire et al. 2011](https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0019379&type=printable), we used the GB-eaSy pipeline from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy). <br />
@@ -566,8 +576,105 @@ FST_FDR_for_sel_sig_thres <- get_FDR_for_selection_sign_thres(stat_opposite_dir1
 ## 6 Sauron plot
 The Sauron plot from [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1) can be used to visualize the scope of drift and the scope of selection. Sauron plots of genetic differentiation are created by plotting the FST statistics (A) and the allele frequency differences (B) observed in the subpopulations selected in the same direction (blue) and in opposite directions (red) against each other at each SNP marker. The transparent red colored edges correspond to a false discovery rate (FDR) for selection <10%. The diverged markers observed in the subpopulations selected in the same direction (blue) are provoked by drift and other factors, but not by selection. The diverged markers observed in the subpopulations selected in opposite directions (red) are provoked by drift, other factors and selection. Therefore the observations which exceed the cloud of blue points are expected to be provoked only by selection. The y- and x-axis correspond to the range of <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> and allele frequency differences.  
 <img src="https://user-images.githubusercontent.com/63467079/149146525-ce94e222-dff8-4ad4-8dcb-ad14f7530032.png" width="700" height="350">
+The Sauron plots for the allele frequency differences and <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> are created by two different functions, since they plotting areas are different from each other. The "Sauron plot" for the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> does not even look like the eye of [Sauron](https://twitter.com/strnr/status/457201981007073280) anymore. The Sauron plot for the allele frequency difference is created by the `create_sauron_plot_allele_freq_diff()` function, which is shown above:
 ```{r}
-
+create_sauron_plot_allele_freq_diff <- function(data_table,
+                                                sig_threshold,
+                                                stat_opposite_dir1,
+                                                stat_opposite_dir2,
+                                                stat_same_dir1,
+                                                stat_same_dir2){
+  windowsFonts(my = windowsFont('Calibri'))
+  create_FDR_below_10_per_neg_area <- function(x){
+    sig_threshold[1]+-1*x
+  }
+  y_coord_value <- create_FDR_below_10_per_neg_area(x = seq(-1,0,0.01))
+  dt_coords_neg_area <- cbind(y_coord_value,seq(-1,0,0.01))
+  dt_coords_neg_area <- as.data.frame(dt_coords_neg_area)
+  dt_coords_neg_area$z <- rep(sig_threshold[1],nrow(dt_coords_neg_area))
+  colnames(dt_coords_neg_area) <- c("x_coord_value","y_coord_value","threshold_value")
+  dt_coords_neg_area <- dt_coords_neg_area[which(dt_coords_neg_area$y_coord_value > sig_threshold[1]),]
+  #### Negative area of the Sauron plot
+  create_FDR_below_10_per_pos_area <- function(x){
+    sig_threshold[2]+-1*x
+  }
+  y_coord_value <- create_FDR_below_10_per_pos_area(x = 1-seq(0,1,0.01))
+  dt_coords_pos_area <- cbind(y_coord_value,1-seq(0,1,0.01))
+  dt_coords_pos_area <- as.data.frame(dt_coords_pos_area)
+  dt_coords_pos_area$z <- rep(sig_threshold[2],nrow(dt_coords_pos_area))
+  colnames(dt_coords_pos_area) <- c("x_coord_value","y_coord_value","threshold_value")
+  dt_coords_pos_area <- dt_coords_pos_area[which(dt_coords_pos_area$y_coord_value < sig_threshold[2]),]
+  sauron_1 <- ggplot()+
+    geom_area(data = dt_coords_pos_area, aes(x=x_coord_value, y=threshold_value), alpha = 0.1, fill = "tomato")+
+    geom_area(data = dt_coords_pos_area, aes(x=x_coord_value, y=y_coord_value), fill = "white")+
+    geom_area(data = dt_coords_neg_area, aes(x=x_coord_value, y=threshold_value), alpha = 0.1, fill = "tomato")+
+    geom_area(data = dt_coords_neg_area, aes(x=x_coord_value, y=y_coord_value),  fill = "white")+
+    geom_point(data = data_table, aes(x = stat_same_dir1,y = stat_same_dir1),shape=1, colour = "royalblue3")+
+    geom_point(data = data_table, aes(x = stat_opposite_dir1,y = stat_opposite_dir2),shape=1, colour = "firebrick")+
+    theme(text = element_text(size =14, family = "my"),
+          panel.background = element_rect(fill = "white"),
+          axis.line = element_line(colour = "black"),
+          axis.title.y = element_text(size =14, family = "my", colour = "royalblue3", face = "bold"),
+          axis.title.x = element_text(size =14, family = "my", colour = "royalblue3", face = "bold"),
+          axis.line.x = element_line(color = "black"),
+          axis.text = element_text(size =14, family = "my", colour = "black"))+
+    labs(x=paste("\t","\t","\t","\t","\t","\t","\t","\t","Low pheno 1 vs Low pheno 2"),
+         y=paste("\t","\t","\t","High pheno 1 vs High pheno 2"))+
+    ylim(-1,1)+
+    xlim(-1,1)
+  d11 <-  ggplot_build(sauron_1)$data[[1]]
+  empty_plot <- ggplot()+
+    theme(panel.background = element_rect(fill = "white"))
+  get_xaxis<-function(myggplot){
+    tmp <- ggplot_gtable(ggplot_build(myggplot))
+    legend <- tmp$grobs[[12]]
+    return(legend)
+  }
+  xaxis_sauron <- get_xaxis(sauron_1)
+  get_yaxis<-function(myggplot){
+    tmp <- ggplot_gtable(ggplot_build(myggplot))
+    legend <- tmp$grobs[[13]]
+    return(legend)
+  }
+  yaxis_sauron <- get_yaxis(sauron_1)
+  sauron_2 <- ggplot()+
+    geom_area(data = dt_coords_pos_area, aes(x=x_coord_value, y=threshold_value), alpha = 0.1, fill = "tomato")+
+    geom_area(data = dt_coords_pos_area, aes(x=x_coord_value, y=y_coord_value), fill = "white")+
+    geom_area(data = dt_coords_neg_area, aes(x=x_coord_value, y=threshold_value), alpha = 0.1, fill = "tomato")+
+    geom_area(data = dt_coords_neg_area, aes(x=x_coord_value, y=y_coord_value),  fill = "white")+
+    geom_point(data = data_table, aes(x = stat_opposite_dir1,y = stat_opposite_dir2),shape=1, colour = "firebrick")+
+    geom_point(data = data_table, aes(x = stat_same_dir1,y = stat_same_dir2),shape=1, colour = "royalblue3")+
+    theme(text = element_text(size =14, family = "my"),
+          panel.background = element_rect(fill = "white"),
+          panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
+                                          colour = "grey81"),
+          panel.grid.major = element_line(size = 0.5, linetype = 'solid',
+                                          colour = "grey100"),
+          axis.line = element_line(colour = "black"),
+          axis.title.y = element_text(size =14, family = "my", colour = "firebrick", face = "bold"),
+          axis.title.x = element_text(size =14, family = "my", colour = "firebrick", face = "bold"),
+          axis.line.x = element_line(color = "black"),
+          axis.text = element_text(size =14, family = "my", colour = "black"))+
+    labs(x=  "Low pheno 1 vs High pheno 1",
+         y= "Low pheno 2 vs High pheno 2",
+         tag = "B")+
+    geom_abline(intercept = sig_threshold[1], slope = -1, size = 1, alpha = 0.2, colour = "firebrick")+
+    geom_abline(intercept = sig_threshold[2], slope = -1, size = 1, alpha = 0.2, colour = "firebrick")+
+    xlim(sig_threshold[1],sig_threshold[2])+
+    ylim(sig_threshold[1],sig_threshold[2])
+  sauron_2
+  sauron_plot_all_afd <- grid.arrange(yaxis_sauron,sauron_2, xaxis_sauron,empty_plot,
+                                      ncol=2, nrow = 2, 
+                                      layout_matrix = rbind(c(1,2),c(4,3)),
+                                      widths = c(0.2, 4), heights = c(4,0.2))
+  return(sauron_plot_all_afd)
+}
+create_sauron_plot_allele_freq_diff(data_table = allele_freq_diff,
+                                    sig_threshold = AFD_FDR_for_sel_sig_thres,
+                                    stat_opposite_dir1 = allele_freq_diff$Short1_vs_Tall1,
+                                    stat_opposite_dir2 = allele_freq_diff$Short2_vs_Tall2,
+                                    stat_same_dir1 = allele_freq_diff$Short1_vs_Short2,
+                                    stat_same_dir2 = allele_freq_diff$Tall1_vs_Tall2)
 ```
 ## 7 Manhatten plots
 ![2021_new_combined_manhatten_plots](https://user-images.githubusercontent.com/63467079/149943665-fdedbd0f-cb06-44f4-a2d2-c3ffd53b258a.png)
