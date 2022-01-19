@@ -152,61 +152,7 @@ vcf_S4 <- filter_for_average_read_depth(data = vcf_S4,
 ### 3.3 Filtering for missingness
 When we filter for missingness, we filter in every subpopulation for at least 40 observations. So that only markers pass the threshold, which have 40 observations in every subpopulation.          
 ```{r}
-filter_missingness_per_pop <- function(data, 
-                                       population_1,
-                                       population_2,
-                                       population_3,
-                                       population_4,
-                                       max_missing_obs){
-  cat("Filtering for missing observations per markers started.","\n")
-  cat("VCF file contains before filtering for missingness:",nrow(vcf_S4@fix),"markers.","\n")
-  gt_pop <- extract.gt(vcf_S4, element = "GT", as.numeric=TRUE)
-  dp <- extract.info(data, element = "DP", as.numeric=TRUE)
-  pop_1 <- gt_pop[,which(str_detect(colnames(gt_pop),population_1))]
-  pop_2 <- gt_pop[,which(str_detect(colnames(gt_pop),population_2))]
-  pop_3 <- gt_pop[,which(str_detect(colnames(gt_pop),population_3))]
-  pop_4 <- gt_pop[,which(str_detect(colnames(gt_pop),population_4))]
-  get_missing_obs_per_pop <- function(pop){
-    get_missing_obs <- function(i){
-      length(which(is.na(pop[i,])))
-    }
-    mis_obs_pop <- unlist(mclapply(1:nrow(pop), get_missing_obs))
-    return(mis_obs_pop)
-  }
-  mis_obs_pop1 <- get_missing_obs_per_pop(pop = pop_1)
-  mis_obs_pop2 <- get_missing_obs_per_pop(pop = pop_2)
-  mis_obs_pop3 <- get_missing_obs_per_pop(pop = pop_3)
-  mis_obs_pop4 <- get_missing_obs_per_pop(pop = pop_4)
-  NAs_per_marker_per_pop <- cbind(mis_obs_pop1,mis_obs_pop2,mis_obs_pop3,mis_obs_pop4)
-  NAs_per_marker_per_pop <- as.data.frame(NAs_per_marker_per_pop)
-  NAs_per_marker_per_pop <- cbind(rownames(gt_pop),NAs_per_marker_per_pop)
-  colnames(NAs_per_marker_per_pop) <- c("SNP_ID","mis_obs_pop1","mis_obs_pop2","mis_obs_pop3","mis_obs_pop4")
-  NAs_per_marker_per_pop <- as.data.frame(NAs_per_marker_per_pop)
-  get_range_of_missingness <- function(i){
-    abs(range(NAs_per_marker_per_pop[i,2:5])[1]-range(NAs_per_marker_per_pop[i,2:5])[2])
-  }
-  markers_diff <- unlist(mclapply(1:nrow(NAs_per_marker_per_pop),get_range_of_missingness))
-  NAs_per_marker_per_pop$range_of_missingness <- markers_diff
-  index_NA_markers_dp <- subset(rownames(dp),96-as.numeric(NAs_per_marker_per_pop[,2]) > max_missing_obs &
-                                  96-as.numeric(NAs_per_marker_per_pop[,3]) > max_missing_obs &
-                                  96-as.numeric(NAs_per_marker_per_pop[,4]) > max_missing_obs &
-                                  96-as.numeric(NAs_per_marker_per_pop[,5]) > max_missing_obs)
-  index_NA_markers_gt <- subset(rownames(gt_pop),96-as.numeric(NAs_per_marker_per_pop[,2]) > max_missing_obs &
-                                  96-as.numeric(NAs_per_marker_per_pop[,3]) > max_missing_obs &
-                                  96-as.numeric(NAs_per_marker_per_pop[,4]) > max_missing_obs &
-                                  96-as.numeric(NAs_per_marker_per_pop[,5]) > max_missing_obs)
-  cat(length(index_NA_markers_gt),"markers passed your threshold for missingness.","\n")
-  data@gt <- data@gt[match(index_NA_markers_gt, rownames(gt_pop)),]
-  data@fix <- data@fix[match(index_NA_markers_dp, rownames(dp)),]
-  cat("VCF file contains after filtering for missingness:",nrow(data@gt),"markers.","\n")
-  return(data)
-}
-vcf_S4_new <- filter_missingness_per_pop(data = vcf_S4, 
-                           population_1 = "Shoepag_1",
-                           population_2 = "Shoepag_2",
-                           population_3 = "Shoepag_3",
-                           population_4 = "Shoepag_4",
-                           max_missing_obs = 40)
+
 ```
 In these steps the average read depth per sample is calculated. This function needs only be applied, when you want to **save the information about individual coverage** e.g. for plotting. 
 ```{r}
@@ -251,7 +197,7 @@ NAs_per_marker_per_pop <- calculate_missingness_per_pop(data = vcf_S4,
                               population_4 = "Shoepag_4")
 ```
 With this command we also calculate the range of missingness between the populations. The range of missingness can be evaluated to look for markers which are more abundant in one population than in the others, which could skew the results.      
-![GB1003_plot_missingness_02](https://user-images.githubusercontent.com/63467079/149474916-930cb3f0-bc73-4846-b334-f803ee950eb0.png)
+<img src="https://user-images.githubusercontent.com/63467079/149474916-930cb3f0-bc73-4846-b334-f803ee950eb0.png" width="800" height="320">
 
 ### 3.4 Removal of non-diallelic and non-polymorphic markers
 ```{r}
@@ -278,7 +224,7 @@ This function also comes from the `vcfR` package from [Knaus and Grünwald 2018]
 write.vcf(vcf_S4, file="path/to/your/working/directory/filtered_DATA.vcf.gz", mask=FALSE)          
 ```          
 ## 4 Selection signature mapping
-The function for the calculation of the **<img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection** and the **allele frequency differences** are contained in the `selection_signature_mapping.R script`. 
+The function for the calculation of the **<img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection** and the **allele frequency differences** are contained in the `selection_signature_mapping.R` script. 
 ### 4.1 <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection
 The function below will calculate the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> between all four subpopulations as: <br /> <br />
 <img src="https://render.githubusercontent.com/render/math?math=F_{ST}=\frac{s^2}{\mu(p)*(1-\mu(p))%2B(\frac{s^2}{4})}"> 
