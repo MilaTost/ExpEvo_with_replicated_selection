@@ -32,10 +32,10 @@ By that we differentiate between changes caused by selection and changes caused 
 The **replicated selection** is used to calculate a *FDR for selection*. 
 [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1) applied this significance threshold only on the
 statistic based on the allele frequency differences. 
-Whereas we applied the this new significance threshold to the commonly used 
+Whereas we applied this new significance threshold to the commonly used 
           <img src="https://render.githubusercontent.com/render/math?math=F_{ST}">
 statistic. <br /> <br /> 
-**Experimental design** <br />
+**Experimental design of an experimental evolution study with replicated selection** <br />
 <img src="https://user-images.githubusercontent.com/63467079/150107509-3f984ca3-3a61-4338-87d5-d920a5673727.png" width="500" height="555.7324841">
 
 ## 1 Phenotypic data analysis
@@ -152,7 +152,65 @@ vcf_S4 <- filter_for_average_read_depth(data = vcf_S4,
 ### 3.3 Filtering for missingness
 When we filter for missingness, we filter in every subpopulation for at least 40 observations. So that only markers pass the threshold, which have 40 observations in every subpopulation.          
 ```{r}
-
+filter_missingness_per_pop <- function(data, 
+                                       population_1,
+                                       population_2,
+                                       population_3,
+                                       population_4,
+                                       max_missing_obs){
+  cat("Filtering for missing observations per markers started.","\n")
+  time_0 <- Sys.time()
+  cat("VCF file contains before filtering for missingness:",nrow(vcf_S4@fix),"markers.","\n")
+  gt_pop <- extract.gt(vcf_S4, element = "GT", as.numeric=TRUE)
+  dp <- extract.info(data, element = "DP", as.numeric=TRUE)
+  pop_1 <- gt_pop[,which(str_detect(colnames(gt_pop),population_1))]
+  pop_2 <- gt_pop[,which(str_detect(colnames(gt_pop),population_2))]
+  pop_3 <- gt_pop[,which(str_detect(colnames(gt_pop),population_3))]
+  pop_4 <- gt_pop[,which(str_detect(colnames(gt_pop),population_4))]
+  get_missing_obs_per_pop <- function(pop){
+    get_missing_obs <- function(i){
+      length(which(is.na(pop[i,])))
+    }
+    mis_obs_pop <- unlist(mclapply(1:nrow(pop), get_missing_obs))
+    return(mis_obs_pop)
+  }
+  mis_obs_pop1 <- get_missing_obs_per_pop(pop = pop_1)
+  mis_obs_pop2 <- get_missing_obs_per_pop(pop = pop_2)
+  mis_obs_pop3 <- get_missing_obs_per_pop(pop = pop_3)
+  mis_obs_pop4 <- get_missing_obs_per_pop(pop = pop_4)
+  NAs_per_marker_per_pop <- cbind(mis_obs_pop1,mis_obs_pop2,mis_obs_pop3,mis_obs_pop4)
+  NAs_per_marker_per_pop <- as.data.frame(NAs_per_marker_per_pop)
+  NAs_per_marker_per_pop <- cbind(rownames(gt_pop),NAs_per_marker_per_pop)
+  colnames(NAs_per_marker_per_pop) <- c("SNP_ID","mis_obs_pop1","mis_obs_pop2","mis_obs_pop3","mis_obs_pop4")
+  NAs_per_marker_per_pop <- as.data.frame(NAs_per_marker_per_pop)
+  get_range_of_missingness <- function(i){
+    abs(range(NAs_per_marker_per_pop[i,2:5])[1]-range(NAs_per_marker_per_pop[i,2:5])[2])
+  }
+  markers_diff <- unlist(mclapply(1:nrow(NAs_per_marker_per_pop),get_range_of_missingness))
+  NAs_per_marker_per_pop$range_of_missingness <- markers_diff
+  index_NA_markers_dp <- subset(rownames(dp),96-as.numeric(NAs_per_marker_per_pop[,2]) > max_missing_obs &
+                                  96-as.numeric(NAs_per_marker_per_pop[,3]) > max_missing_obs &
+                                  96-as.numeric(NAs_per_marker_per_pop[,4]) > max_missing_obs &
+                                  96-as.numeric(NAs_per_marker_per_pop[,5]) > max_missing_obs)
+  index_NA_markers_gt <- subset(rownames(gt_pop),96-as.numeric(NAs_per_marker_per_pop[,2]) > max_missing_obs &
+                                  96-as.numeric(NAs_per_marker_per_pop[,3]) > max_missing_obs &
+                                  96-as.numeric(NAs_per_marker_per_pop[,4]) > max_missing_obs &
+                                  96-as.numeric(NAs_per_marker_per_pop[,5]) > max_missing_obs)
+  cat(length(index_NA_markers_gt),"markers passed your threshold for missingness.","\n")
+  data@gt <- data@gt[match(index_NA_markers_gt, rownames(gt_pop)),]
+  data@fix <- data@fix[match(index_NA_markers_dp, rownames(dp)),]
+  cat("VCF file contains after filtering for missingness:",nrow(data@gt),"markers.","\n")
+  cat("Filtering for missingness is finished.","\n")
+  time_1 <- Sys.time()
+  cat("This was done within",print(time_1 - time_0),"\n")
+  return(data)
+}
+vcf_S4 <- filter_missingness_per_pop(data = vcf_S4, 
+                                     population_1 = "Shoepag_1",
+                                     population_2 = "Shoepag_2",
+                                     population_3 = "Shoepag_3",
+                                     population_4 = "Shoepag_4",
+                                     max_missing_obs = 40)
 ```
 In these steps the average read depth per sample is calculated. This function needs only be applied, when you want to **save the information about individual coverage** e.g. for plotting. 
 ```{r}
@@ -235,106 +293,7 @@ The function also calculates the <img src="https://render.githubusercontent.com/
 Additionally this function is calculating the absolute sum of <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> between the subpopulations selected in opposite directions. This value can be used to exclude markers with a significant <img src="https://render.githubusercontent.com/render/math?math=F_{ST}">, but which diverge between subpopulation selected in the same direction. This could have happend due to selection for specific environmental conditions. Therefore, we use this adjustment to identify truly selected sites. <br /> <br />
 
 ```{r}
-calculate_FST_value <- function(data,
-                                pop_low_phenotype_sel_1,
-                                pop_low_phenotype_sel_2,
-                                pop_high_phenotype_sel_1,
-                                pop_high_phenotype_sel_2){
-  time_0 <- Sys.time()
-  cat("Calculation of the FST value started.","\n")
-  gt <- extract.gt(data, element = "GT", as.numeric = FALSE)
-  gt_file <- gt
-  pop_1 <- gt_file[,which(str_detect(colnames(gt_file),pop_low_phenotype_sel_1))]
-  pop_2 <- gt_file[,which(str_detect(colnames(gt_file),pop_low_phenotype_sel_2))]
-  pop_3 <- gt_file[,which(str_detect(colnames(gt_file),pop_high_phenotype_sel_1))]
-  pop_4 <- gt_file[,which(str_detect(colnames(gt_file),pop_high_phenotype_sel_2))]
-  dp <- extract.gt(data, element = "DP")
-  SNP_IDs <- rownames(dp)
-  get_allele_freq_per_marker_per_pop <- function(data, population_name){
-    get_allele_freq_per_marker <- function(i){
-      N_alleles_total <- 2*length(which(!is.na(data[i,])))
-      N_ALT_alleles <- 2*length(which(data[i,] == "1|1")) + 2*length(which(data[i,] == "1/1"))
-      N_REF_alleles <- 2*length(which(data[i,] == "0|0")) + 2*length(which(data[i,] == "0/0"))
-      N_HET_alleles <- length(which(data[i,] == "1|0")) + length(which(data[i,] == "1/0")) +
-        length(which(data[i,] == "0|1")) + length(which(data[i,] == "0/1"))
-      N_GT_tot <- length(which(!is.na(data[i,])))
-      N_P_GT <- length(which(data[i,] == "0|0")) + length(which(data[i,] == "0/0"))
-      N_Q_GT <- length(which(data[i,] == "1|1")) + length(which(data[i,] == "1/1"))
-      freq_REF <- (N_REF_alleles + N_HET_alleles)/N_alleles_total
-      freq_ALT <- (N_ALT_alleles + N_HET_alleles)/N_alleles_total
-      freq_HET <- N_HET_alleles/N_GT_tot
-      freq_P <- N_P_GT/N_GT_tot
-      freq_Q <- N_Q_GT/N_GT_tot
-      Exp_Het <- 2*N_P_GT/N_GT_tot*N_Q_GT/N_GT_tot
-      marker_info <- cbind(freq_REF,freq_ALT,freq_HET,freq_P,freq_Q,N_GT_tot,Exp_Het)
-      return(marker_info)
-    }
-    af_per_Marker_pop <- unlist(mclapply(1:nrow(data),get_allele_freq_per_marker))
-    marker_tab_pop <- matrix(af_per_Marker_pop, ncol = 7, byrow = TRUE)
-    marker_tab_pop <- as.data.frame(marker_tab_pop)
-    colnames(marker_tab_pop) <- c(paste("freq_REF",population_name,sep="_"),paste("freq_ALT",population_name,sep="_"),
-                                  paste("freq_HET",population_name,sep="_"),paste("freq_P",population_name,sep="_"),
-                                  paste("freq_Q",population_name,sep="_"),paste("N_GT_tot",population_name,sep="_"),
-                                  paste("Exp_HET",population_name,sep="_"))
-    rownames(marker_tab_pop) <- SNP_IDs
-    return(marker_tab_pop)
-  }
-  pop_1_dt <- get_allele_freq_per_marker_per_pop(data=pop_1, population_name = pop_low_phenotype_sel_1)
-  pop_2_dt <- get_allele_freq_per_marker_per_pop(data=pop_2, population_name = pop_low_phenotype_sel_2)
-  pop_3_dt <- get_allele_freq_per_marker_per_pop(data=pop_3, population_name = pop_high_phenotype_sel_1)
-  pop_4_dt <- get_allele_freq_per_marker_per_pop(data=pop_4, population_name = pop_high_phenotype_sel_2)
-  marker_table_per_pop <- cbind(pop_1_dt,pop_2_dt,
-                                pop_3_dt,pop_4_dt)
-  marker_table_per_pop <- as.data.frame(marker_table_per_pop)
-  fst_value_calc <- function(population_1,population_2,population_3,population_4){
-    mean <- (population_1+population_2+population_3+population_4) / 4
-    var <- (population_1-mean)^2 + (population_2-mean)^2 + (population_3-mean)^2 + (population_4-mean)^2
-    fst_pop <- var / (mean*(1-mean)+(var/4))
-    return(fst_pop)
-  }
-  FST_value <- fst_value_calc(population_1 = marker_table_per_pop[,1], 
-                              population_2 = marker_table_per_pop[,8],
-                              population_3 = marker_table_per_pop[,15],
-                              population_4 = marker_table_per_pop[,21])
-  fst_value_calc <- function(population_1,population_2){
-    mean <- (population_1+population_2) / 2
-    var <- (population_1-mean)^2 + (population_2-mean)^2
-    fst_pop <- var / (mean*(1-mean)+(var/2))
-    return(fst_pop)
-  }
-  Fst_value_sd_1 <- fst_value_calc(population_1 = marker_table_per_pop[,1], 
-                                   population_2 = marker_table_per_pop[,8])
-  Fst_value_sd_2 <- fst_value_calc(population_1 = marker_table_per_pop[,15], 
-                                   population_2 = marker_table_per_pop[,21])
-  Fst_value_od_1 <- fst_value_calc(population_1 = marker_table_per_pop[,1], 
-                                   population_2 = marker_table_per_pop[,15])
-  Fst_value_od_2 <- fst_value_calc(population_1 = marker_table_per_pop[,8], 
-                                   population_2 = marker_table_per_pop[,21])
-  od_stat <- abs(Fst_value_sd_1 + Fst_value_sd_2)
-  FST_value_dt <- cbind(data@fix[,c(1,2)],SNP_IDs,
-                        FST_value,
-                        Fst_value_sd_1,
-                        Fst_value_sd_2,
-                        Fst_value_od_1,
-                        Fst_value_od_2,
-                        od_stat)
-  FST_value_dt <- as.data.frame(FST_value_dt)
-  colnames(FST_value_dt) <- c("Chromosome","Position","SNP_ID",
-                              "FST_value","FST_value_opposite_dir1",
-                              "FST_value_opposite_dir2",
-                              "FST_value_same_dir1",
-                              "FST_value_same_dir2",
-                              "Abs_sum_FST")
-  cat("Calculation of the FST value is done.","\n")
-  time_1 <- Sys.time()
-  cat("This was done within",print(time_1 - time_0),"\n")
-  return(FST_value_dt)
-}
-FST_values_od_cor <- calculate_FST_value(data = vcf_S4, 
-                                         pop_low_phenotype_sel_1 = "Shoepag_1",
-                                         pop_low_phenotype_sel_2 = "Shoepag_4",
-                                         pop_high_phenotype_sel_1 = "Shoepag_3",
-                                         pop_high_phenotype_sel_2 = "Shoepag_2")
+
 ```
 
 ### 4.2 Allele frequency differences
@@ -347,83 +306,7 @@ whereas: <br /> <img src="https://render.githubusercontent.com/render/math?math=
         <img src="https://render.githubusercontent.com/render/math?math=High2"> = Population 2 selected for the high phenotype <br />
 according to [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). <br />   
 ```{r}
-calculate_the_allele_freq_diff <- function(data,
-                                           pop_low_phenotype_sel_1,
-                                           pop_low_phenotype_sel_2,
-                                           pop_high_phenotype_sel_1,
-                                           pop_high_phenotype_sel_2){
-  time_0 <- Sys.time()
-  cat("Calculation of the allele frequency differences started.","\n")
-  gt <- extract.gt(data, element = "GT", as.numeric = FALSE)
-  gt_file <- gt
-  pop_1 <- gt_file[,which(str_detect(colnames(gt_file),pop_low_phenotype_sel_1))]
-  pop_2 <- gt_file[,which(str_detect(colnames(gt_file),pop_low_phenotype_sel_2))]
-  pop_3 <- gt_file[,which(str_detect(colnames(gt_file),pop_high_phenotype_sel_1))]
-  pop_4 <- gt_file[,which(str_detect(colnames(gt_file),pop_high_phenotype_sel_2))]
-  dp <- extract.gt(data, element = "DP")
-  SNP_IDs <- rownames(dp)
-  get_allele_freq_per_marker_per_pop <- function(data, population_name){
-    get_allele_freq_per_marker <- function(i){
-      N_alleles_total <- 2*length(which(!is.na(data[i,])))
-      N_ALT_alleles <- 2*length(which(data[i,] == "1|1")) + 2*length(which(data[i,] == "1/1"))
-      N_REF_alleles <- 2*length(which(data[i,] == "0|0")) + 2*length(which(data[i,] == "0/0"))
-      N_HET_alleles <- length(which(data[i,] == "1|0")) + length(which(data[i,] == "1/0")) +
-        length(which(data[i,] == "0|1")) + length(which(data[i,] == "0/1"))
-      N_GT_tot <- length(which(!is.na(data[i,])))
-      N_P_GT <- length(which(data[i,] == "0|0")) + length(which(data[i,] == "0/0"))
-      N_Q_GT <- length(which(data[i,] == "1|1")) + length(which(data[i,] == "1/1"))
-      freq_REF <- (N_REF_alleles + N_HET_alleles)/N_alleles_total
-      freq_ALT <- (N_ALT_alleles + N_HET_alleles)/N_alleles_total
-      freq_HET <- N_HET_alleles/N_GT_tot
-      freq_P <- N_P_GT/N_GT_tot
-      freq_Q <- N_Q_GT/N_GT_tot
-      Exp_Het <- 2*N_P_GT/N_GT_tot*N_Q_GT/N_GT_tot
-      marker_info <- cbind(freq_REF,freq_ALT,freq_HET,freq_P,freq_Q,N_GT_tot,Exp_Het)
-      return(marker_info)
-    }
-    af_per_Marker_pop <- unlist(mclapply(1:nrow(data),get_allele_freq_per_marker))
-    marker_tab_pop <- matrix(af_per_Marker_pop, ncol = 7, byrow = TRUE)
-    marker_tab_pop <- as.data.frame(marker_tab_pop)
-    colnames(marker_tab_pop) <- c(paste("freq_REF",population_name,sep="_"),paste("freq_ALT",population_name,sep="_"),
-                                  paste("freq_HET",population_name,sep="_"),paste("freq_P",population_name,sep="_"),
-                                  paste("freq_Q",population_name,sep="_"),paste("N_GT_tot",population_name,sep="_"),
-                                  paste("Exp_HET",population_name,sep="_"))
-    rownames(marker_tab_pop) <- SNP_IDs
-    return(marker_tab_pop)
-  }
-  pop_1_dt <- get_allele_freq_per_marker_per_pop(data=pop_1, population_name = pop_low_phenotype_sel_1)
-  pop_2_dt <- get_allele_freq_per_marker_per_pop(data=pop_2, population_name = pop_low_phenotype_sel_2)
-  pop_3_dt <- get_allele_freq_per_marker_per_pop(data=pop_3, population_name = pop_high_phenotype_sel_1)
-  pop_4_dt <- get_allele_freq_per_marker_per_pop(data=pop_4, population_name = pop_high_phenotype_sel_2)
-  marker_table_per_pop <- cbind(pop_1_dt,pop_2_dt,
-                                pop_3_dt,pop_4_dt)
-  marker_table_per_pop <- as.data.frame(marker_table_per_pop)
-  selected_opposite_dir_1 <- as.numeric(marker_table_per_pop[,1] - marker_table_per_pop[,15])
-  selected_opposite_dir_2 <- as.numeric(marker_table_per_pop[,8] - marker_table_per_pop[,21])
-  selected_same_dir_1 <- as.numeric(marker_table_per_pop[,1] - marker_table_per_pop[,8])
-  selected_same_dir_2 <- as.numeric(marker_table_per_pop[,15] - marker_table_per_pop[,21])
-  od_stat <- abs(selected_opposite_dir_1 + selected_opposite_dir_2)
-  allele_freq_diff_REF <- cbind(data@fix[,c(1,2)],SNP_IDs,
-                                selected_opposite_dir_1,
-                                selected_opposite_dir_2,
-                                selected_same_dir_1,
-                                selected_same_dir_2,
-                                od_stat)
-  allele_freq_diff_REF <- as.data.frame(allele_freq_diff_REF)
-  colnames(allele_freq_diff_REF) <- c("Chromosome","Position","SNP_ID",
-                                      "Low1_vs_Low2","High1_vs_High2",
-                                      "Low1_vs_High1","Low2_vs_High2",
-                                      "Abs_allele_freq_diff")
-  cat("Calculation of the allele frequency differences is done.","\n")
-  time_1 <- Sys.time()
-  cat("This was done within",print(time_1 - time_0),"\n")
-  return(allele_freq_diff_REF)
-}
-allele_freq_diff <- calculate_the_allele_freq_diff(data = vcf_S4, 
-                                                   pop_low_phenotype_sel_1 = "Shoepag_1",
-                                                   pop_low_phenotype_sel_2 = "Shoepag_4",
-                                                   pop_high_phenotype_sel_1 = "Shoepag_3",
-                                                   pop_high_phenotype_sel_2 = "Shoepag_2")
+
 ```                    
 ## 5 Significance thresholds
 The calculation of significance thresholds and the plotting functions are contained in the `Significance_thresholds_and_plotting.R`. The `Filtering_for_coverage_average_RD_missingness.R` and `selection_signature_mapping.R script` can or should be run on a inactive Linux session on a high-throughput computing device. These scripts are usually run on extremly large data sets (raw sequence data or large VCF files). The `Significance_thresholds_and_plotting.R` is usually run on a much smaller data set, since many markers were removed in the filtering procedure. Furthermore, when windows font types want to be used,  the script needs to be run on a windows device. <br />   
@@ -443,40 +326,17 @@ AFD_drift_sim_sig_thres <- 0.4686
 FST_drift_sim_sig_thres <-  0.3540692
 ```    
 ### 5.3 Simulation of Drift
-          
+The simulation of drift was conducted by using the `DriftSimulator.R` from [Beissinger (2021)](http://beissingerlab.github.io/Software/). The `DriftSimulator.R` script was run with a drift simulation script from [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219), which enables the implementation of the drift simulator over a large set of markers. The script, which enables the simulation of drift over a large set of markers is available as `Run_drift_simulator.R`. We ran the `DriftSimulator.R` over a data set consisting out of 4,226,822 simulated SNP markers <br /> <br />
+```{r}
+
+```
+The drift simulator samples the initial allele frequencies for 10 cycles, with a population size of 20,000 individuals with equal number of males and females to simulate random mating under "normal" conditions. Afterwards drift is simulated with a lower number of males and females to simulate the field conditions subdivision into subpopulations which led to limited spatial pollen distribution for three generations. Finally, sampling of 96 individuals out of 5000 for genotyping is simulated as well and included into the drift simulator [Turner et al., 2011](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). Additionally, the marker coverage was also sampled, the minimal marker coverage was set to at least 40 out of 96 observations at a marker, so that the marker coverage was always sampled between 40 to 96 observations per marker. The script can be repeatably run. We ran the script for 10 simulations. <br /> <br /> src="https://render.githubusercontent.com/render/math?math=F_{ST}"> and allele frequency differences were calculated for all simulated markers, which corresponded in our case to 42,000,000 markers. We choosed then among the 42,000,000 markers the most extreme value as significance threshold.
+
 ### 5.4 Based on the FDR for selection
 **FDR for selection for all possible values of the statistics**
 The function `calculate_FDR_for_selection()` generates a table to show all posible values of a statistic and the number of observed markers diverged between subpopulation selected in the same and opposite directions at a certain value. The FDR for selection is received by dividing the number of observed markers diverged between subpopulation selected in the same direction by the number of observed markers diverged between subpopulation selected in opposite directions. <br /> <br />
 ```{r}
-calculate_FDR_for_selection <- function(stat_opposite_dir1,
-                                        stat_opposite_dir2,
-                                        stat_same_dir1,
-                                        stat_same_dir2,
-                                        statistic){
-  if(statistic == "AFD"){
-    dt_abs <- matrix(data = seq(0,2,0.01), nrow = length(seq(0,2,0.01)), ncol = 3)
-  }
-  if(statistic == "FST"){
-    dt_abs <- matrix(data = seq(0,1,0.01), nrow = length(seq(0,1,0.01)), ncol = 3)
-  }
-  for (i in 1:nrow(dt_abs)) {
-    dt_abs[i,2] <- length(which(abs(stat_same_dir1 + stat_same_dir2)>=dt_abs[i,1]))
-    dt_abs[i,3] <- length(which(abs(stat_opposite_dir1 + stat_opposite_dir2)>=dt_abs[i,1]))
-  }
-  dt_abs <- as.data.frame(dt_abs)
-  colnames(dt_abs) <- c("Statistic","Markers diverged same dir","Markers diverged opposite dir")
-  dt_abs$FDR_for_selection <- dt_abs[,2]/dt_abs[,3]
-  sig_threshold <- min(dt_abs[which(dt_abs$FDR_for_selection < 0.1),1])
-  cat("The significance threshold based on the FDR for selection < 10%","\n",
-      "corresponds to an statistic of",sig_threshold, "\n")
-  return(dt_abs)
-}
-dt_FDR_for_selection_AFD <- calculate_FDR_for_selection(stat_opposite_dir1 = allele_freq_diff$Short1_vs_Tall1,
-                                                        stat_opposite_dir2 = allele_freq_diff$Short2_vs_Tall2,
-                                                        stat_same_dir1 = allele_freq_diff$Short1_vs_Short2,
-                                                        stat_same_dir2 = allele_freq_diff$Tall1_vs_Tall2,
-                                                        statistic = "AFD")
-!!! FST is missing
+
 ```
 Even though, the significance threshold based on the FDR for selection is already printed by the previous function, the following function returns the threshold so it can be used directly in the Manhatten plot or to check the overlap between all the different statistics. 
 ```{r}
