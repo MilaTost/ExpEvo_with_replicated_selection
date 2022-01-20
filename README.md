@@ -18,7 +18,7 @@
 &emsp; [5.4 Based on the FDR for selection](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#44-based-on-the-fdr-for-selection)<br />
 [6 Sauron plot](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#5-sauron-plot) <br />
 [7 Manhatten plots](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#6-other-plotting-scripts) <br />
-
+[8 LD decay]
 
 ## 0 Introduction
 This repository contains scripts for selection signature mapping with replicated selection.
@@ -517,11 +517,45 @@ AFD_drift_sim_sig_thres <- 0.4686
 FST_drift_sim_sig_thres <-  0.3540692
 ```    
 ### 5.3 Simulation of Drift
-The simulation of drift was conducted by using the `DriftSimulator.R` from [Beissinger (2021)](http://beissingerlab.github.io/Software/). The `DriftSimulator.R` script was run with a drift simulation script from [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219), which enables the implementation of the drift simulator over a large set of markers. The script, which enables the simulation of drift over a large set of markers is available as `Run_drift_simulator.R`. We ran the `DriftSimulator.R` over a data set consisting out of 4,226,822 simulated SNP markers <br /> <br />
-```{r}
+The simulation of drift was conducted by using the `DriftSimulator.R` from [Beissinger (2021)](http://beissingerlab.github.io/Software/). The `DriftSimulator.R` script was run with a drift simulation script from [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219), which enables the implementation of the drift simulator over a large set of markers. The script, which enables the simulation of drift over a large set of markers is available as `Run_drift_simulator_over_many_markers.R`. We ran the `DriftSimulator.R` over a data set consisting out of 4,226,822 simulated SNP markers <br /> <br />
 
+The drift simulator samples the initial allele frequencies for 10 cycles, with a population size of 20,000 individuals with equal number of males and females to simulate random mating under "normal" conditions. Afterwards drift is simulated with a lower number of males and females to simulate the field conditions subdivision into subpopulations which led to limited spatial pollen distribution for three generations. Finally, sampling of 96 individuals out of 5000 for genotyping is simulated as well and included into the drift simulator [Turner et al., 2011](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). Additionally, the marker coverage was also sampled, the minimal marker coverage was set to at least 40 out of 96 observations at a marker, so that the marker coverage was always sampled between 40 to 96 observations per marker. The script can be repeatably run. We ran the script for 10 simulations. <br /> <br /> 
+```{r}
+fs<-round(seq(step,1-step,by=step),digits) ##create a vector of allele frequencies with step; exclude 0 and 1.
+
+### Sample the possible range of allele frequencies
+sample_af <- function(i){
+  i = 1
+  sample(fs,i,replace = TRUE)
+}
+fs_sampled <- unlist(mclapply(1:markers,sample_af))
+
+sample_initial_af_base_pop <- unlist(mclapply(1:length(fs_sampled),sample_initial_allele_freq))
+cat("Sampling of initial allele frequencies is done","\n")
+
+run_simulations_pop1 <- function(i){
+  unlist(mclapply(1:length(sample_initial_af_base_pop),seq_drifted_ind_pop1))
+}
+sampled_seq_ind_pop1 <- unlist(mclapply(1:sim,run_simulations_pop1))
+cat("Simulation pop 1 is done","\n")
+run_simulations_pop2 <- function(i){
+  unlist(mclapply(1:length(sample_initial_af_base_pop),seq_drifted_ind_pop234))
+}
+sampled_seq_ind_pop2 <- unlist(mclapply(1:sim,run_simulations_pop2))
+cat("Simulation pop 2 is done","\n")
+run_simulations_pop3 <- function(i){
+  unlist(mclapply(1:length(sample_initial_af_base_pop),seq_drifted_ind_pop234))
+}
+sampled_seq_ind_pop3 <- unlist(mclapply(1:sim,run_simulations_pop3))
+cat("Simulation pop 3 is done","\n")
+run_simulations_pop4 <- function(i){
+  unlist(mclapply(1:length(sample_initial_af_base_pop),seq_drifted_ind_pop234))
+}
+sampled_seq_ind_pop4 <- unlist(mclapply(1:sim,run_simulations_pop4))
+cat("Simulation pop 4 is done","\n")
+cat("Simulation of drift is done","\n")
 ```
-The drift simulator samples the initial allele frequencies for 10 cycles, with a population size of 20,000 individuals with equal number of males and females to simulate random mating under "normal" conditions. Afterwards drift is simulated with a lower number of males and females to simulate the field conditions subdivision into subpopulations which led to limited spatial pollen distribution for three generations. Finally, sampling of 96 individuals out of 5000 for genotyping is simulated as well and included into the drift simulator [Turner et al., 2011](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). Additionally, the marker coverage was also sampled, the minimal marker coverage was set to at least 40 out of 96 observations at a marker, so that the marker coverage was always sampled between 40 to 96 observations per marker. The script can be repeatably run. We ran the script for 10 simulations. <br /> <br /> <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> and allele frequency differences were calculated for all simulated markers, which corresponded in our case to 42,000,000 markers. We choosed then among the 42,000,000 markers the most extreme value as significance threshold.
+<img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> and allele frequency differences were calculated for all simulated markers, which corresponded in our case to 42,000,000 markers. We choosed then among the 42,000,000 markers the most extreme value as significance threshold, similar to [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219).  
 
 ### 5.4 Based on the FDR for selection
 **FDR for selection for all possible values of the statistics**
@@ -1051,3 +1085,5 @@ AFD_manhatten_plot <- create_manhatten_plot_per_chr_one_stat(data = AFD_Chr_3,
                                                              sign_thres_drift_sim = AFD_drift_sim_sig_thres,
                                                              sign_thres_FDR = abs_AFD_FDR_for_sel_sig_thres) 
 ```
+         
+## 8 LD decay
