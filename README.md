@@ -41,7 +41,6 @@ statistic. <br /> <br />
 ## 1 Phenotypic data analysis
 The phenotypic data analysis was conducted to evaluate the effect of selection on the phenotype. Therefore, the trait measurements in the subpopulations selected in opposite directions can be compared. We conducted a t-test between the subpopulations selected in opposite directions to test for significance.  <br /> 
 ```{r}
-### Test for significance regarding the differences in plant height ------------
 Short_plants_2016 <- data[PlantHeight_group == "Selected for short plant height" & year == "2016",]
 Tall_plants_2016 <- data[PlantHeight_group == "Selected for tall plant height" & year == "2016",]
 
