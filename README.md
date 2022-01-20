@@ -41,12 +41,29 @@ statistic. <br /> <br />
 ## 1 Phenotypic data analysis
 The phenotypic data analysis was conducted to evaluate the effect of selection on the phenotype. Therefore, the trait measurements in the subpopulations selected in opposite directions can be compared. We conducted a t-test between the subpopulations selected in opposite directions to test for significance.  <br /> 
 ```{r}
+### Test for significance regarding the differences in plant height ------------
+Short_plants_2016 <- data[PlantHeight_group == "Selected for short plant height" & year == "2016",]
+Tall_plants_2016 <- data[PlantHeight_group == "Selected for tall plant height" & year == "2016",]
+
+Short_plants_2020 <- data[PlantHeight_group == "Selected for short plant height" & year == "2020",]
+Tall_plants_2020 <- data[PlantHeight_group == "Selected for tall plant height" & year == "2020",]
+
+t.test(Short_plants_2020$PlantHeight,Short_plants_2016$PlantHeight,
+       alternative = "less",
+       paired = TRUE)
+t.test(Tall_plants_2020$PlantHeight,Tall_plants_2016$PlantHeight,
+       alternative = "greater",
+       paired = TRUE)
+t.test(Short_plants_2020$PlantHeight,Tall_plants_2020$PlantHeight,
+       alternative = "less",
+       paired = TRUE)
 
 ```
 Additionally we also used the trait measurments from the base population and all generations of selection to show the decrease and increase in the selected trait. In our case the selected trait was plant height. <br /> <br /> 
 **Measured plant height in all years in the subpopulations selected for short plant (green) and tall plant height (purple).**
 <img src="https://user-images.githubusercontent.com/63467079/150105713-a27b5365-4822-483e-abe4-6fff10332bc7.png" width="600" height="360">
-
+The computation of the t-test statistic and the script for plotting the measured phenotypes across all years are available in the `Phenotypic_data_analysis.R` script. 
+       
 ## 2 Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy)
 For the analysis of our raw reads from paired-end genotyping-by-sequencing (GBS) with ApeKI according to [Elshire et al. 2011](https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0019379&type=printable), we used the GB-eaSy pipeline from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy). <br />
 The pipeline consists out of several steps, which comprises:
