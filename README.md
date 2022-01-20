@@ -18,7 +18,7 @@
 &emsp; [5.4 Based on the FDR for selection](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#44-based-on-the-fdr-for-selection)<br />
 [6 Sauron plot](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#5-sauron-plot) <br />
 [7 Manhatten plots](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#6-other-plotting-scripts) <br />
-[8 LD decay]
+[8 LD decay](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#8-ld-decay)
 
 ## 0 Introduction
 This repository contains scripts for selection signature mapping with replicated selection.
@@ -1087,3 +1087,5 @@ AFD_manhatten_plot <- create_manhatten_plot_per_chr_one_stat(data = AFD_Chr_3,
 ```
          
 ## 8 LD decay
+The extent of linkage disequilibrium (LD) was estimated based on all 4,029,092 SNP markers with the PLINK software  v1.90 as squared correlation between markers as R2 [(Purcell et al., 2007)](https://www.cell.com/ajhg/fulltext/S0002-9297(07)61352-4). The script for the computation of LD decay between markers is available as `LD_decay_calculation_with_plink.bash`.
+![2021_V3_LD_decay_ggplot](https://user-images.githubusercontent.com/63467079/150421503-dcebed82-9f2c-45f0-9457-f8db16320ec7.png)
