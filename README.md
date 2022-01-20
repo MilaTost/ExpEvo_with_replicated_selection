@@ -293,7 +293,106 @@ The function also calculates the <img src="https://render.githubusercontent.com/
 Additionally this function is calculating the absolute sum of <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> between the subpopulations selected in opposite directions. This value can be used to exclude markers with a significant <img src="https://render.githubusercontent.com/render/math?math=F_{ST}">, but which diverge between subpopulation selected in the same direction. This could have happend due to selection for specific environmental conditions. Therefore, we use this adjustment to identify truly selected sites. <br /> <br />
 
 ```{r}
-
+calculate_FST_value <- function(data,
+                                pop_low_phenotype_sel_1,
+                                pop_low_phenotype_sel_2,
+                                pop_high_phenotype_sel_1,
+                                pop_high_phenotype_sel_2){
+  time_0 <- Sys.time()
+  cat("Calculation of the FST value started.","\n")
+  gt <- extract.gt(data, element = "GT", as.numeric = FALSE)
+  gt_file <- gt
+  dt_pop_low_phenotype_1 <- gt_file[,which(str_detect(colnames(gt_file),pop_low_phenotype_sel_1))]
+  dt_pop_low_phenotype_2 <- gt_file[,which(str_detect(colnames(gt_file),pop_low_phenotype_sel_2))]
+  dt_pop_high_phenotype_1 <- gt_file[,which(str_detect(colnames(gt_file),pop_high_phenotype_sel_1))]
+  dt_pop_high_phenotype_2 <- gt_file[,which(str_detect(colnames(gt_file),pop_high_phenotype_sel_2))]
+  dp <- extract.gt(data, element = "DP")
+  SNP_IDs <- rownames(dp)
+  get_allele_freq_per_marker_per_pop <- function(data, population_name){
+    get_allele_freq_per_marker <- function(i){
+      N_alleles_total <- 2*length(which(!is.na(data[i,])))
+      N_ALT_alleles <- 2*length(which(data[i,] == "1|1")) + 2*length(which(data[i,] == "1/1"))
+      N_REF_alleles <- 2*length(which(data[i,] == "0|0")) + 2*length(which(data[i,] == "0/0"))
+      N_HET_alleles <- length(which(data[i,] == "1|0")) + length(which(data[i,] == "1/0")) +
+        length(which(data[i,] == "0|1")) + length(which(data[i,] == "0/1"))
+      N_GT_tot <- length(which(!is.na(data[i,])))
+      N_P_GT <- length(which(data[i,] == "0|0")) + length(which(data[i,] == "0/0"))
+      N_Q_GT <- length(which(data[i,] == "1|1")) + length(which(data[i,] == "1/1"))
+      freq_REF <- (N_REF_alleles + N_HET_alleles)/N_alleles_total
+      freq_ALT <- (N_ALT_alleles + N_HET_alleles)/N_alleles_total
+      freq_HET <- N_HET_alleles/N_GT_tot
+      freq_P <- N_P_GT/N_GT_tot
+      freq_Q <- N_Q_GT/N_GT_tot
+      Exp_Het <- 2*N_P_GT/N_GT_tot*N_Q_GT/N_GT_tot
+      marker_info <- cbind(freq_REF,freq_ALT,freq_HET,freq_P,freq_Q,N_GT_tot,Exp_Het)
+      return(marker_info)
+    }
+    af_per_Marker_pop <- unlist(mclapply(1:nrow(data),get_allele_freq_per_marker))
+    marker_tab_pop <- matrix(af_per_Marker_pop, ncol = 7, byrow = TRUE)
+    marker_tab_pop <- as.data.frame(marker_tab_pop)
+    colnames(marker_tab_pop) <- c(paste("freq_REF",population_name,sep="_"),paste("freq_ALT",population_name,sep="_"),
+                                  paste("freq_HET",population_name,sep="_"),paste("freq_P",population_name,sep="_"),
+                                  paste("freq_Q",population_name,sep="_"),paste("N_GT_tot",population_name,sep="_"),
+                                  paste("Exp_HET",population_name,sep="_"))
+    rownames(marker_tab_pop) <- SNP_IDs
+    return(marker_tab_pop)
+  }
+  dt_pop_low_phenotype_1_dt <- get_allele_freq_per_marker_per_pop(data=dt_pop_low_phenotype_1, population_name = pop_low_phenotype_sel_1)
+  dt_pop_low_phenotype_2_dt <- get_allele_freq_per_marker_per_pop(data=dt_pop_low_phenotype_2, population_name = pop_low_phenotype_sel_2)
+  dt_pop_high_phenotype_1_dt <- get_allele_freq_per_marker_per_pop(data=dt_pop_high_phenotype_1, population_name = pop_high_phenotype_sel_1)
+  dt_pop_high_phenotype_2_dt <- get_allele_freq_per_marker_per_pop(data=dt_pop_high_phenotype_2, population_name = pop_high_phenotype_sel_2)
+  marker_table_per_pop <- cbind(dt_pop_low_phenotype_1_dt,dt_pop_low_phenotype_2_dt,
+                                dt_pop_high_phenotype_1_dt,dt_pop_high_phenotype_2_dt)
+  marker_table_per_pop <- as.data.frame(marker_table_per_pop)
+  fst_value_calc <- function(population_1,population_2,population_3,population_4){
+    mean <- (population_1+population_2+population_3+population_4) / 4
+    var <- (population_1-mean)^2 + (population_2-mean)^2 + (population_3-mean)^2 + (population_4-mean)^2
+    fst_pop <- var / (mean*(1-mean)+(var/4))
+    return(fst_pop)
+  }
+  FST_value <- fst_value_calc(population_1 = marker_table_per_pop[,1], 
+                              population_2 = marker_table_per_pop[,8],
+                              population_3 = marker_table_per_pop[,15],
+                              population_4 = marker_table_per_pop[,22])
+  fst_value_calc <- function(population_1,population_2){
+    mean <- (population_1+population_2) / 2
+    var <- (population_1-mean)^2 + (population_2-mean)^2
+    fst_pop <- var / (mean*(1-mean)+(var/2))
+    return(fst_pop)
+  }
+  Fst_value_sd_1 <- fst_value_calc(population_1 = marker_table_per_pop[,1], 
+                                   population_2 = marker_table_per_pop[,22])
+  Fst_value_sd_2 <- fst_value_calc(population_1 = marker_table_per_pop[,15], 
+                                   population_2 = marker_table_per_pop[,8])
+  Fst_value_od_1 <- fst_value_calc(population_1 = marker_table_per_pop[,1], 
+                                   population_2 = marker_table_per_pop[,15])
+  Fst_value_od_2 <- fst_value_calc(population_1 = marker_table_per_pop[,22], 
+                                   population_2 = marker_table_per_pop[,8])
+  od_stat <- abs(Fst_value_sd_1 + Fst_value_sd_2)
+  FST_value_dt <- cbind(data@fix[,c(1,2)],SNP_IDs,
+                        FST_value,
+                        Fst_value_sd_1,
+                        Fst_value_sd_2,
+                        Fst_value_od_1,
+                        Fst_value_od_2,
+                        od_stat)
+  FST_value_dt <- as.data.frame(FST_value_dt)
+  colnames(FST_value_dt) <- c("Chromosome","Position","SNP_ID",
+                              "FST_value","FST_value_opposite_dir1",
+                              "FST_value_opposite_dir2",
+                              "FST_value_same_dir1",
+                              "FST_value_same_dir2",
+                              "Abs_sum_FST")
+  cat("Calculation of the FST value is done.","\n")
+  time_1 <- Sys.time()
+  cat("This was done within",print(time_1 - time_0),"\n")
+  return(FST_value_dt)
+}
+FST_values_od_cor <- calculate_FST_value(data = vcf_S4, 
+                                         pop_low_phenotype_sel_1 = "Shoepag_1",
+                                         pop_low_phenotype_sel_2 = "Shoepag_4",
+                                         pop_high_phenotype_sel_1 = "Shoepag_3",
+                                         pop_high_phenotype_sel_2 = "Shoepag_2")
 ```
 
 ### 4.2 Allele frequency differences
@@ -306,7 +405,83 @@ whereas: <br /> <img src="https://render.githubusercontent.com/render/math?math=
         <img src="https://render.githubusercontent.com/render/math?math=High2"> = Population 2 selected for the high phenotype <br />
 according to [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). <br />   
 ```{r}
-
+calculate_the_allele_freq_diff <- function(data,
+                                           pop_low_phenotype_sel_1,
+                                           pop_low_phenotype_sel_2,
+                                           pop_high_phenotype_sel_1,
+                                           pop_high_phenotype_sel_2){
+  time_0 <- Sys.time()
+  cat("Calculation of the allele frequency differences started.","\n")
+  gt <- extract.gt(data, element = "GT", as.numeric = FALSE)
+  gt_file <- gt
+  dt_pop_low_phenotype_1 <- gt_file[,which(str_detect(colnames(gt_file),pop_low_phenotype_sel_1))]
+  dt_pop_low_phenotype_2 <- gt_file[,which(str_detect(colnames(gt_file),pop_low_phenotype_sel_2))]
+  dt_pop_high_phenotype_1 <- gt_file[,which(str_detect(colnames(gt_file),pop_high_phenotype_sel_1))]
+  dt_pop_high_phenotype_2 <- gt_file[,which(str_detect(colnames(gt_file),pop_high_phenotype_sel_2))]
+  dp <- extract.gt(data, element = "DP")
+  SNP_IDs <- rownames(dp)
+  get_allele_freq_per_marker_per_pop <- function(data, population_name){
+    get_allele_freq_per_marker <- function(i){
+      N_alleles_total <- 2*length(which(!is.na(data[i,])))
+      N_ALT_alleles <- 2*length(which(data[i,] == "1|1")) + 2*length(which(data[i,] == "1/1"))
+      N_REF_alleles <- 2*length(which(data[i,] == "0|0")) + 2*length(which(data[i,] == "0/0"))
+      N_HET_alleles <- length(which(data[i,] == "1|0")) + length(which(data[i,] == "1/0")) +
+        length(which(data[i,] == "0|1")) + length(which(data[i,] == "0/1"))
+      N_GT_tot <- length(which(!is.na(data[i,])))
+      N_P_GT <- length(which(data[i,] == "0|0")) + length(which(data[i,] == "0/0"))
+      N_Q_GT <- length(which(data[i,] == "1|1")) + length(which(data[i,] == "1/1"))
+      freq_REF <- (N_REF_alleles + N_HET_alleles)/N_alleles_total
+      freq_ALT <- (N_ALT_alleles + N_HET_alleles)/N_alleles_total
+      freq_HET <- N_HET_alleles/N_GT_tot
+      freq_P <- N_P_GT/N_GT_tot
+      freq_Q <- N_Q_GT/N_GT_tot
+      Exp_Het <- 2*N_P_GT/N_GT_tot*N_Q_GT/N_GT_tot
+      marker_info <- cbind(freq_REF,freq_ALT,freq_HET,freq_P,freq_Q,N_GT_tot,Exp_Het)
+      return(marker_info)
+    }
+    af_per_Marker_pop <- unlist(mclapply(1:nrow(data),get_allele_freq_per_marker))
+    marker_tab_pop <- matrix(af_per_Marker_pop, ncol = 7, byrow = TRUE)
+    marker_tab_pop <- as.data.frame(marker_tab_pop)
+    colnames(marker_tab_pop) <- c(paste("freq_REF",population_name,sep="_"),paste("freq_ALT",population_name,sep="_"),
+                                  paste("freq_HET",population_name,sep="_"),paste("freq_P",population_name,sep="_"),
+                                  paste("freq_Q",population_name,sep="_"),paste("N_GT_tot",population_name,sep="_"),
+                                  paste("Exp_HET",population_name,sep="_"))
+    rownames(marker_tab_pop) <- SNP_IDs
+    return(marker_tab_pop)
+  }
+  dt_pop_low_phenotype_1_dt <- get_allele_freq_per_marker_per_pop(data=dt_pop_low_phenotype_1, population_name = pop_low_phenotype_sel_1)
+  dt_pop_low_phenotype_2_dt <- get_allele_freq_per_marker_per_pop(data=dt_pop_low_phenotype_2, population_name = pop_low_phenotype_sel_2)
+  dt_pop_high_phenotype_1_dt <- get_allele_freq_per_marker_per_pop(data=dt_pop_high_phenotype_1, population_name = pop_high_phenotype_sel_1)
+  dt_pop_high_phenotype_2_dt <- get_allele_freq_per_marker_per_pop(data=dt_pop_high_phenotype_2, population_name = pop_high_phenotype_sel_2)
+  marker_table_per_pop <- cbind(dt_pop_low_phenotype_1_dt,dt_pop_low_phenotype_2_dt,
+                                dt_pop_high_phenotype_1_dt,dt_pop_high_phenotype_2_dt)
+  marker_table_per_pop <- as.data.frame(marker_table_per_pop)
+  selected_opposite_dir_1 <- as.numeric(marker_table_per_pop[,1] - marker_table_per_pop[,15])
+  selected_opposite_dir_2 <- as.numeric(marker_table_per_pop[,8] - marker_table_per_pop[,22])
+  selected_same_dir_1 <- as.numeric(marker_table_per_pop[,1] - marker_table_per_pop[,8])
+  selected_same_dir_2 <- as.numeric(marker_table_per_pop[,15] - marker_table_per_pop[,22])
+  od_stat <- abs(selected_opposite_dir_1 + selected_opposite_dir_2)
+  allele_freq_diff_REF <- cbind(data@fix[,c(1,2)],SNP_IDs,
+                                selected_opposite_dir_1,
+                                selected_opposite_dir_2,
+                                selected_same_dir_1,
+                                selected_same_dir_2,
+                                od_stat)
+  allele_freq_diff_REF <- as.data.frame(allele_freq_diff_REF)
+  colnames(allele_freq_diff_REF) <- c("Chromosome","Position","SNP_ID",
+                                      "Low1_vs_Low2","High1_vs_High2",
+                                      "Low1_vs_High1","Low2_vs_High2",
+                                      "Abs_allele_freq_diff")
+  cat("Calculation of the allele frequency differences is done.","\n")
+  time_1 <- Sys.time()
+  cat("This was done within",print(time_1 - time_0),"\n")
+  return(allele_freq_diff_REF)
+}
+allele_freq_diff <- calculate_the_allele_freq_diff(data = vcf_S4, 
+                                                   pop_low_phenotype_sel_1 = "Shoepag_1",
+                                                   pop_low_phenotype_sel_2 = "Shoepag_4",
+                                                   pop_high_phenotype_sel_1 = "Shoepag_3",
+                                                   pop_high_phenotype_sel_2 = "Shoepag_2")
 ```                    
 ## 5 Significance thresholds
 The calculation of significance thresholds and the plotting functions are contained in the `Significance_thresholds_and_plotting.R`. The `Filtering_for_coverage_average_RD_missingness.R` and `selection_signature_mapping.R script` can or should be run on a inactive Linux session on a high-throughput computing device. These scripts are usually run on extremly large data sets (raw sequence data or large VCF files). The `Significance_thresholds_and_plotting.R` is usually run on a much smaller data set, since many markers were removed in the filtering procedure. Furthermore, when windows font types want to be used,  the script needs to be run on a windows device. <br />   
@@ -330,7 +505,7 @@ The simulation of drift was conducted by using the `DriftSimulator.R` from [Beis
 ```{r}
 
 ```
-The drift simulator samples the initial allele frequencies for 10 cycles, with a population size of 20,000 individuals with equal number of males and females to simulate random mating under "normal" conditions. Afterwards drift is simulated with a lower number of males and females to simulate the field conditions subdivision into subpopulations which led to limited spatial pollen distribution for three generations. Finally, sampling of 96 individuals out of 5000 for genotyping is simulated as well and included into the drift simulator [Turner et al., 2011](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). Additionally, the marker coverage was also sampled, the minimal marker coverage was set to at least 40 out of 96 observations at a marker, so that the marker coverage was always sampled between 40 to 96 observations per marker. The script can be repeatably run. We ran the script for 10 simulations. <br /> <br /> src="https://render.githubusercontent.com/render/math?math=F_{ST}"> and allele frequency differences were calculated for all simulated markers, which corresponded in our case to 42,000,000 markers. We choosed then among the 42,000,000 markers the most extreme value as significance threshold.
+The drift simulator samples the initial allele frequencies for 10 cycles, with a population size of 20,000 individuals with equal number of males and females to simulate random mating under "normal" conditions. Afterwards drift is simulated with a lower number of males and females to simulate the field conditions subdivision into subpopulations which led to limited spatial pollen distribution for three generations. Finally, sampling of 96 individuals out of 5000 for genotyping is simulated as well and included into the drift simulator [Turner et al., 2011](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). Additionally, the marker coverage was also sampled, the minimal marker coverage was set to at least 40 out of 96 observations at a marker, so that the marker coverage was always sampled between 40 to 96 observations per marker. The script can be repeatably run. We ran the script for 10 simulations. <br /> <br /> <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> and allele frequency differences were calculated for all simulated markers, which corresponded in our case to 42,000,000 markers. We choosed then among the 42,000,000 markers the most extreme value as significance threshold.
 
 ### 5.4 Based on the FDR for selection
 **FDR for selection for all possible values of the statistics**
@@ -340,35 +515,7 @@ The function `calculate_FDR_for_selection()` generates a table to show all posib
 ```
 Even though, the significance threshold based on the FDR for selection is already printed by the previous function, the following function returns the threshold so it can be used directly in the Manhatten plot or to check the overlap between all the different statistics. 
 ```{r}
-get_FDR_for_selection_sign_thres <- function(stat_opposite_dir1,
-                                             stat_opposite_dir2,
-                                             stat_same_dir1,
-                                             stat_same_dir2,
-                                             statistic){
-  if(statistic == "AFD"){
-    dt_abs <- matrix(data = seq(0,2,0.01), nrow = length(seq(0,2,0.01)), ncol = 3)
-  }
-  if(statistic == "FST"){
-    dt_abs <- matrix(data = seq(0,1,0.01), nrow = length(seq(0,1,0.01)), ncol = 3)
-  }
-  for (i in 1:nrow(dt_abs)) {
-    dt_abs[i,2] <- length(which(abs(stat_same_dir1 + stat_same_dir2)>=dt_abs[i,1]))
-    dt_abs[i,3] <- length(which(abs(stat_opposite_dir1 + stat_opposite_dir2)>=dt_abs[i,1]))
-  }
-  dt_abs <- as.data.frame(dt_abs)
-  colnames(dt_abs) <- c("Statistic","Markers diverged same dir","Markers diverged opposite dir")
-  dt_abs$FDR_for_selection <- dt_abs[,2]/dt_abs[,3]
-  sig_threshold <- min(dt_abs[which(dt_abs$FDR_for_selection < 0.1),1])
-  cat("The significance threshold based on the FDR for selection < 10%","\n",
-      "corresponds to an statistic of",sig_threshold, "\n")
-  return(sig_threshold)
-}
-AFD_FDR_for_sel_sig_thres <- get_FDR_for_selection_sign_thres(stat_opposite_dir1 = allele_freq_diff$Short1_vs_Tall1,
-                                                              stat_opposite_dir2 = allele_freq_diff$Short2_vs_Tall2,
-                                                              stat_same_dir1 = allele_freq_diff$Short1_vs_Short2,
-                                                              stat_same_dir2 = allele_freq_diff$Tall1_vs_Tall2,
-                                                              statistic = "AFD")
-## this still needs to be adjusted!!!!
+
 
 ```
 ## 6 Sauron plot
@@ -475,5 +622,71 @@ create_sauron_plot_allele_freq_diff(data_table = allele_freq_diff,
                                     stat_same_dir2 = allele_freq_diff$Tall1_vs_Tall2)
 ```
 ## 7 Manhatten plots
+In these [Manhatten plot](https://en.wikipedia.org/wiki/Manhattan_plot#:~:text=A%20Manhattan%20plot%20is%20a%20type%20of%20scatter,genome-wide%20association%20studies%20%28GWAS%29%20to%20display%20significant%20SNPs.) the positions of the markers are plotted against the statistical value observed at this marker. Here the Manhatten plots are only shown for Chromosome 3, which showed in our study the most interesting results. The different significance thresholds are also plotted. <br /> 
+**Differentiation along Chromosome 3 expressed by the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> (A) and absolute allele frequency differences (B) 
 ![2021_new_combined_manhatten_plots](https://user-images.githubusercontent.com/63467079/149943665-fdedbd0f-cb06-44f4-a2d2-c3ffd53b258a.png)
-
+<br /> 
+Because we plot the different signifcance thresholds and we observed quite much recombination the Manhatten plots were created for the different chromosomes separately. Therefore the data set first needs to divided into the markers observed at the different chromosomes. This can be easly done by a function from the `data.table` package.  
+```{r}
+Fst_tab <- as.data.table(FST_values_od_cor)
+Fst_Chr_1 <- Fst_tab[Chromosome=="chr1",]
+Fst_Chr_2 <- Fst_tab[Chromosome=="chr2",]
+Fst_Chr_3 <- Fst_tab[Chromosome=="chr3",]
+Fst_Chr_4 <- Fst_tab[Chromosome=="chr4",]
+Fst_Chr_5 <- Fst_tab[Chromosome=="chr5",]
+Fst_Chr_6 <- Fst_tab[Chromosome=="chr6",]
+Fst_Chr_7 <- Fst_tab[Chromosome=="chr7",]
+Fst_Chr_8 <- Fst_tab[Chromosome=="chr8",]
+Fst_Chr_9 <- Fst_tab[Chromosome=="chr9",]
+Fst_Chr_10 <- Fst_tab[Chromosome=="chr10",]          
+```
+The combined Manhatten plots for both statistics are created per chromosome separately by the following function:
+```{r}
+          
+```
+In case one wants to plot only one statistic in the Manhatten plot, this function creates the only one Manhatten plot:
+```{r}
+create_manhatten_plot_per_chr_one_stat <- function(data,
+                                          statistic, 
+                                          SNP_position,
+                                          sign_thres_emp_dis_999,
+                                          sign_thres_emp_dis_9999,
+                                          sign_thres_drift_sim,
+                                          sign_thres_FDR){
+  windowsFonts(my = windowsFont('Calibri'))
+  chr_plot <- ggplot(data = data)+
+    geom_point(aes(x = SNP_position,y = statistic), colour = "black")+
+    theme(text = element_text(size =12, family = "my"),
+          panel.background = element_rect(fill = "white"),
+          panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
+                                          colour = "grey81"),
+          panel.grid.major = element_line(size = 0.5, linetype = 'solid',
+                                          colour = "grey100"),
+          panel.border = element_blank(),
+          axis.line.y = element_line(colour = "black"),
+          axis.line.x = element_line(colour = "black"),
+          axis.ticks = element_blank(),
+          axis.title.y = element_text(size =12, family = "my", colour = "black", face = "bold"),
+          axis.text.y = element_text(size =12, family = "my", colour = "black"),
+          axis.title.x = element_text(size =12, family = "my", colour = "black", face = "bold"),
+          axis.text.x = element_blank(),
+          legend.text = element_text(size =10, family = "my", colour = "black"),
+          legend.title = element_text(size =10, family = "my", colour = "black", face = "bold"))+
+    labs(y = "Fst value",x = "Position", tag = "A")+
+  geom_hline(aes(yintercept = sign_thres_emp_dis_999, linetype=str_wrap("99.9th percentile",10)), colour="darkred", size = 1)+
+    geom_hline(aes(yintercept = sign_thres_emp_dis_9999, linetype=str_wrap("99.99th",10)), colour="tomato", size = 1)+
+    geom_hline(aes(yintercept = drift_simulation_based_sig_thresold, linetype=str_wrap("drift simulations",10)), colour="purple", size = 1)+
+    geom_hline(aes(yintercept = FDR_of_selection_significance_threshold, linetype=str_wrap("FDR",10)), colour="gold", size = 1)+
+    scale_linetype_manual(name = str_wrap("Significance threshold",10), values = c(1,1,1,1), 
+                          guide = guide_legend(override.aes = list(color = c("darkred", "tomato",
+                                                                             "purple","gold"))))
+  return(chr_plot)
+}
+manhatten_plot <- create_manhatten_plot_per_chr_one_stat(data = Fst_Chr_1,
+                              statistic = Fst_Chr_1$Fst,
+                              SNP_position = Fst_Chr_1$Position,
+                              sign_thres_emp_dis_999 = sign_thres_emp_dis_999,
+                              sign_thres_emp_dis_9999 = sign_thres_emp_dis_9999,
+                              sign_thres_drift_sim = sign_thres_drift_sim,
+                              sign_thres_FDR = sign_thres_FDR)       
+```
