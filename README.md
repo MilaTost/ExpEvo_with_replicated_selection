@@ -8,8 +8,8 @@
 &emsp;[3.2 Filtering for read depth per sample](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#22-filtering-for-read-depth-per-sample) <br />
 &emsp;[3.3 Filtering for missingness](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#23-filtering-for-missingness) <br />
 &emsp;[3.4 Removal of non-diallelic and non-polymorphic markers](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#24-removal-of-non-diallelic-and-non-polymorphic-markers) <br />
-[4 Selection signature mapping](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#3-selection-signature-mapping) <br />
-&emsp; [4 FST leveraging replicated selection](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#31--leveraging-replicated-selection) <br />
+[4 Selection signature mapping with FST leveraging replicated selection](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#3-selection-signature-mapping) <br />
+
 [5 Significance thresholds](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#4-significance-thresholds) <br />
 &emsp; [5.1 Based on the empirical distribution](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#41-based-on-the-empiric-distribution) <br />
 &emsp; [5.2 Based on drift simulations](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#42-based-on-drift-simulations) <br />
@@ -296,16 +296,15 @@ This function also comes from the `vcfR` package from [Knaus and Grünwald 2018]
 ```{r}
 write.vcf(vcf_S4, file="path/to/your/working/directory/filtered_DATA.vcf.gz", mask=FALSE)          
 ```          
-## 4 Selection signature mapping
-The function for the calculation of the **<img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection** and the **allele frequency differences** are contained in the `selection_signature_mapping.R` script. 
-### 4.1 <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection
-The function below will calculate the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> between all four subpopulations as: <br /> <br />
-<img src="https://render.githubusercontent.com/render/math?math=F_{ST}=\frac{s^2}{\mu(p)*(1-\mu(p))%2B(\frac{s^2}{4})}"> 
+## 4 Selection signature mapping with FST leveraging replicated selection
+The function for the calculation of the **<img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection** is contained in the `selection_signature_mapping.R` script. 
+<br /> <br /> 
+The function below will calculate the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> between all possible and non-redundant comparisons between the subpopulations selected in the same and opposite directions as: <br /> <br />
+<img src="https://render.githubusercontent.com/render/math?math=F_{ST}=\frac{s^2}{\mu(p)*(1-\mu(p))%2B(\frac{s^2}{2})}"> 
 <br /> <br /> according to [Weir and Cockerham, 1984](https://doi.org/10.1111/j.1558-5646.1984.tb05657.x). <br /> <br />
 
-The function also calculates the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> only between the subpopulations selected in same direction and only between the subpopulations selected in opposite directions. This values are required for the calculation of the FDR for selection. <br /> <br />            
+The function also calculates the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}Sum"> between the subpopulations selected in same and opposite directions. This values are required for the calculation of the FDR for selection. In this statistic observation which only occured in one comparison are then excluded. Those observations might have been caused by drift. Selection is a repeatable force, so that we should be able to observe the same pattern in both comparisons. <br /> <br />            
  
-Additionally this function is calculating the absolute sum of <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> between the subpopulations selected in opposite directions. This value can be used to exclude markers with a significant <img src="https://render.githubusercontent.com/render/math?math=F_{ST}">, but which diverge between subpopulation selected in the same direction. This could have happend due to selection for specific environmental conditions. Therefore, we use this adjustment to identify truly selected sites. <br /> <br />
 
 ```{r}
 calculate_FST_value <- function(data,
@@ -409,95 +408,7 @@ FST_values_od_cor <- calculate_FST_value(data = vcf_S4,
                                          pop_high_phenotype_sel_1 = "Shoepag_3",
                                          pop_high_phenotype_sel_2 = "Shoepag_2")
 ```
-
-### 4.2 Allele frequency differences
-The function below will calculate the allele frequency differences between the subpopulations selected in the same and opposite directions and the absolute allele frequency difference. The absolute allele frequency difference is calculated as: <br /> <br />
-<img src="https://render.githubusercontent.com/render/math?math=%7C(p_{Low1}%2Dp_{High1})%2B(p_{Low2}%2Dp_{High2})%7C">
-<br /> 
-whereas: <br /> <img src="https://render.githubusercontent.com/render/math?math=Low1"> = Population 1 selected for the low phenotype <br />
-        <img src="https://render.githubusercontent.com/render/math?math=Low1"> = Population 2 selected for the low phenotype <br />
-        <img src="https://render.githubusercontent.com/render/math?math=High1"> = Population 1 selected for the high phenotype <br />
-        <img src="https://render.githubusercontent.com/render/math?math=High2"> = Population 2 selected for the high phenotype <br />
-according to [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). <br />   
-```{r}
-calculate_the_allele_freq_diff <- function(data,
-                                           pop_low_phenotype_sel_1,
-                                           pop_low_phenotype_sel_2,
-                                           pop_high_phenotype_sel_1,
-                                           pop_high_phenotype_sel_2){
-  time_0 <- Sys.time()
-  cat("Calculation of the allele frequency differences started.","\n")
-  gt <- extract.gt(data, element = "GT", as.numeric = FALSE)
-  gt_file <- gt
-  dt_pop_low_phenotype_1 <- gt_file[,which(str_detect(colnames(gt_file),pop_low_phenotype_sel_1))]
-  dt_pop_low_phenotype_2 <- gt_file[,which(str_detect(colnames(gt_file),pop_low_phenotype_sel_2))]
-  dt_pop_high_phenotype_1 <- gt_file[,which(str_detect(colnames(gt_file),pop_high_phenotype_sel_1))]
-  dt_pop_high_phenotype_2 <- gt_file[,which(str_detect(colnames(gt_file),pop_high_phenotype_sel_2))]
-  dp <- extract.gt(data, element = "DP")
-  SNP_IDs <- rownames(dp)
-  get_allele_freq_per_marker_per_pop <- function(data, population_name){
-    get_allele_freq_per_marker <- function(i){
-      N_alleles_total <- 2*length(which(!is.na(data[i,])))
-      N_ALT_alleles <- 2*length(which(data[i,] == "1|1")) + 2*length(which(data[i,] == "1/1"))
-      N_REF_alleles <- 2*length(which(data[i,] == "0|0")) + 2*length(which(data[i,] == "0/0"))
-      N_HET_alleles <- length(which(data[i,] == "1|0")) + length(which(data[i,] == "1/0")) +
-        length(which(data[i,] == "0|1")) + length(which(data[i,] == "0/1"))
-      N_GT_tot <- length(which(!is.na(data[i,])))
-      N_P_GT <- length(which(data[i,] == "0|0")) + length(which(data[i,] == "0/0"))
-      N_Q_GT <- length(which(data[i,] == "1|1")) + length(which(data[i,] == "1/1"))
-      freq_REF <- (N_REF_alleles + N_HET_alleles)/N_alleles_total
-      freq_ALT <- (N_ALT_alleles + N_HET_alleles)/N_alleles_total
-      freq_HET <- N_HET_alleles/N_GT_tot
-      freq_P <- N_P_GT/N_GT_tot
-      freq_Q <- N_Q_GT/N_GT_tot
-      Exp_Het <- 2*N_P_GT/N_GT_tot*N_Q_GT/N_GT_tot
-      marker_info <- cbind(freq_REF,freq_ALT,freq_HET,freq_P,freq_Q,N_GT_tot,Exp_Het)
-      return(marker_info)
-    }
-    af_per_Marker_pop <- unlist(mclapply(1:nrow(data),get_allele_freq_per_marker))
-    marker_tab_pop <- matrix(af_per_Marker_pop, ncol = 7, byrow = TRUE)
-    marker_tab_pop <- as.data.frame(marker_tab_pop)
-    colnames(marker_tab_pop) <- c(paste("freq_REF",population_name,sep="_"),paste("freq_ALT",population_name,sep="_"),
-                                  paste("freq_HET",population_name,sep="_"),paste("freq_P",population_name,sep="_"),
-                                  paste("freq_Q",population_name,sep="_"),paste("N_GT_tot",population_name,sep="_"),
-                                  paste("Exp_HET",population_name,sep="_"))
-    rownames(marker_tab_pop) <- SNP_IDs
-    return(marker_tab_pop)
-  }
-  dt_pop_low_phenotype_1_dt <- get_allele_freq_per_marker_per_pop(data=dt_pop_low_phenotype_1, population_name = pop_low_phenotype_sel_1)
-  dt_pop_low_phenotype_2_dt <- get_allele_freq_per_marker_per_pop(data=dt_pop_low_phenotype_2, population_name = pop_low_phenotype_sel_2)
-  dt_pop_high_phenotype_1_dt <- get_allele_freq_per_marker_per_pop(data=dt_pop_high_phenotype_1, population_name = pop_high_phenotype_sel_1)
-  dt_pop_high_phenotype_2_dt <- get_allele_freq_per_marker_per_pop(data=dt_pop_high_phenotype_2, population_name = pop_high_phenotype_sel_2)
-  marker_table_per_pop <- cbind(dt_pop_low_phenotype_1_dt,dt_pop_low_phenotype_2_dt,
-                                dt_pop_high_phenotype_1_dt,dt_pop_high_phenotype_2_dt)
-  marker_table_per_pop <- as.data.frame(marker_table_per_pop)
-  selected_opposite_dir_1 <- as.numeric(marker_table_per_pop[,1] - marker_table_per_pop[,15])
-  selected_opposite_dir_2 <- as.numeric(marker_table_per_pop[,8] - marker_table_per_pop[,22])
-  selected_same_dir_1 <- as.numeric(marker_table_per_pop[,1] - marker_table_per_pop[,8])
-  selected_same_dir_2 <- as.numeric(marker_table_per_pop[,15] - marker_table_per_pop[,22])
-  od_stat <- abs(selected_opposite_dir_1 + selected_opposite_dir_2)
-  allele_freq_diff_REF <- cbind(data@fix[,c(1,2)],SNP_IDs,
-                                selected_opposite_dir_1,
-                                selected_opposite_dir_2,
-                                selected_same_dir_1,
-                                selected_same_dir_2,
-                                od_stat)
-  allele_freq_diff_REF <- as.data.frame(allele_freq_diff_REF)
-  colnames(allele_freq_diff_REF) <- c("Chromosome","Position","SNP_ID",
-                                      "Low1_vs_Low2","High1_vs_High2",
-                                      "Low1_vs_High1","Low2_vs_High2",
-                                      "Abs_allele_freq_diff")
-  cat("Calculation of the allele frequency differences is done.","\n")
-  time_1 <- Sys.time()
-  cat("This was done within",print(time_1 - time_0),"\n")
-  return(allele_freq_diff_REF)
-}
-allele_freq_diff <- calculate_the_allele_freq_diff(data = vcf_S4, 
-                                                   pop_low_phenotype_sel_1 = "Shoepag_1",
-                                                   pop_low_phenotype_sel_2 = "Shoepag_4",
-                                                   pop_high_phenotype_sel_1 = "Shoepag_3",
-                                                   pop_high_phenotype_sel_2 = "Shoepag_2")
-```                    
+             
 ## 5 Significance thresholds
 The calculation of significance thresholds and the plotting functions are contained in the `Significance_thresholds_and_plotting.R`. The `Filtering_for_coverage_average_RD_missingness.R` and `selection_signature_mapping.R` script can or should be run on a inactive Linux session on a high-throughput computing device. These scripts are usually run on extremly large data sets (raw sequence data or large VCF files). The `Significance_thresholds_and_plotting.R` is usually run on a much smaller data set, since many markers were removed in the filtering procedure. Furthermore, when windows font types want to be used,  the script needs to be run on a windows device. <br />   
 ### 5.1 Based on the empirical distribution
@@ -505,20 +416,17 @@ The significance thresholds based on the empirical distribution, were calculated
 ```{r}
 FST_sig_thres_1 <- quantile(FST_values_od_cor$Fst, probs = 0.9999, na.rm = TRUE)
 FST_sig_thres_2 <- quantile(FST_values_od_cor$Fst, probs = 0.999, na.rm = TRUE)    
-AFD_sig_thres_1 <- quantile(allele_freq_diff$DiffStat, probs = 0.9999, na.rm = TRUE)
-AFD_sig_thres_2 <- quantile(allele_freq_diff$DiffStat, probs = 0.999, na.rm = TRUE)
 ```          
 The significance threshold is stored, so it can be used later directly for plotting. <br />
 ### 5.2 Based on drift simulations 
 The significance thresholds based on drift simulations were calculated in the `Simulation_of_drift.R` and then only retrieved from this script. The simulation of drift is described below and the script is also available in the repository.
 ```{r}
-AFD_drift_sim_sig_thres <- 0.4686
-FST_drift_sim_sig_thres <-  0.3540692
+FST_drift_sim_sig_thres <-  2*0.3540692
 ```    
 ### 5.3 Simulation of Drift
 The simulation of drift was conducted by using the `DriftSimulator.R` from [Beissinger (2021)](http://beissingerlab.github.io/Software/). The `DriftSimulator.R` script was run with a drift simulation script from [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219), which enables the implementation of the drift simulator over a large set of markers. The script, which enables the simulation of drift over a large set of markers is available as `Run_drift_simulator_over_many_markers.R`. We ran the `DriftSimulator.R` over a data set consisting out of 4,226,822 simulated SNP markers <br /> <br />
 
-The drift simulator samples the initial allele frequencies for 10 cycles, with a population size of 20,000 individuals with equal number of males and females to simulate random mating under "normal" conditions. Afterwards drift is simulated with a lower number of males and females to simulate the field conditions subdivision into subpopulations which led to limited spatial pollen distribution for three generations. Finally, sampling of 96 individuals out of 5000 for genotyping is simulated as well and included into the drift simulator [Turner et al., 2011](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). Additionally, the marker coverage was also sampled, the minimal marker coverage was set to at least 40 out of 96 observations at a marker, so that the marker coverage was always sampled between 40 to 96 observations per marker. The script can be repeatably run. We ran the script for 10 simulations. <br /> <br /> 
+The drift simulator uses the real intital allele frequencies observed in generation 0. Drift is simulated with 250 females and 5000 males and a total population size of 5000 individual plants every season. We assumed that every cob has 500 kernels, which can be pollinated by all those 5000 plants. Drift was simulated for 3 generations in total. Finally, sampling of 96 individuals out of 5000 for genotyping is simulated as well and included into the drift simulator [Turner et al., 2011](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). Additionally, the marker coverage was also sampled, the minimal marker coverage was set to at least 40 out of 96 observations at a marker, so that the marker coverage was always sampled between 40 to 96 observations per marker. The drift simulator was run  <br /> <br /> 
 ```{r}
 fs<-round(seq(step,1-step,by=step),digits) ##create a vector of allele frequencies with step; exclude 0 and 1.
 
@@ -556,8 +464,8 @@ cat("Simulation of drift is done","\n")
 ```
 <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> and allele frequency differences were calculated for all simulated markers, which corresponded in our case to 42,000,000 markers. We choosed then among the 42,000,000 markers the most extreme value as significance threshold, similar to [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219).  
 
-### 5.4 Based on the FDR for selection
-**FDR for selection for all possible values of the statistics**
+### 5.4 Based on the FDRfS
+**FDRfS for all possible values of the statistics**
 The function `calculate_FDR_for_selection()` generates a table to show all posible values of a statistic and the number of observed markers diverged between subpopulation selected in the same and opposite directions at a certain value. The FDR for selection is received by dividing the number of observed markers diverged between subpopulation selected in the same direction by the number of observed markers diverged between subpopulation selected in opposite directions. <br />
 The calculation of the FDR for selection is also demonstrated with the following table which shows for different statistics the number of markers diverged between subpopulations selected in the same and opposite directions and the corresponding FDR for selections:          
 |Statistic|Markers diverged same direction|Markers diverged opposite directions|FDR for selection|
