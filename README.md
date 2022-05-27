@@ -423,41 +423,274 @@ The significance threshold is stored, so it can be used later directly for plott
 The significance thresholds based on drift simulations were calculated in the `Simulation_of_drift.R` and then only retrieved from this script. The simulation of drift is described below and the script is also available in the repository.
   
 ### 5.3 Simulation of Drift
-The simulation of drift was conducted by using the `DriftSimulator.R` from [Beissinger (2021)](http://beissingerlab.github.io/Software/). The `DriftSimulator.R` script was run with a drift simulation script similar to the one from [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219), which enables the implementation of the drift simulator over a large set of markers. The script, which enables the simulation of drift over a large set of markers is available as `Run_drift_simulator_over_many_markers.R`. The `Run_drift_simulator_over_many_markers.R` script contains a function which simulates drift acting a single locus. We ran 5,000,000 simulations. For each simulation, initial allele frequencies were set based on allele frequency spectrum observed in generation 0 (Gyawali et al., 2019). Drift was simulated with a population size of 5000 individuals with 250 female and 5000 male individuals for three generations. We assumed that every ear contributed ~500 kernels. Every kernel could have been pollinated by one of the male parents, which resulted in much higher harvest than 5000 kernels. Therefore, 5000 kernels were randomly drawn from the entire harvest to represent the seeds planted for the next generation. In the third generation, 96 individuals out of 5000 were sampled to represent the individuals that were actually genotyped (Turner et al., 2011; Kumar et al., 2021). Variable marker coverage was also simulated; marker coverage was sampled from a uniform distribution between 40 and 96 observations per marker to match our filtering process [Turner et al., 2011](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). Additionally, the marker coverage was also sampled, the minimal marker coverage was set to at least 40 out of 96 observations at a marker, so that the marker coverage was always sampled between 40 to 96 observations per marker. The drift simulator was run [Turner et al., 2011](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). <br /> <br /> 
+The simulation of drift was conducted by using the `DriftSimulator.R` from [Beissinger (2021)](http://beissingerlab.github.io/Software/). The `DriftSimulator.R` script was run with a drift simulation script similar to the one from [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219), which enables the implementation of the drift simulator over a large set of markers. The script, which enables the simulation of drift over a large set of markers is available as `Run_drift_simulator_over_many_markers.R`. The `Run_drift_simulator_over_many_markers.R` script contains a function which simulates drift acting a single locus. We ran 5,000,000 simulations. For each simulation, initial allele frequencies were set based on allele frequency spectrum observed in generation 0 (Gyawali et al., 2019). Drift was simulated with a population size of 5000 individuals with 250 female and 5000 male individuals for three generations. We assumed that every ear contributed ~500 kernels. Every kernel could have been pollinated by one of the male parents, which resulted in much higher harvest than 5000 kernels. Therefore, 5000 kernels were randomly drawn from the entire harvest to represent the seeds planted for the next generation. In the third generation, 96 individuals out of 5000 were sampled to represent the individuals that were actually genotyped (Turner et al., 2011; Kumar et al., 2021). Variable marker coverage was also simulated; marker coverage was sampled from a uniform distribution between 40 and 96 observations per marker to match our filtering process [Turner et al., 2011](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). Additionally, the marker coverage was also sampled, the minimal marker coverage was set to at least 40 out of 96 observations at a marker, so that the marker coverage was always sampled between 40 to 96 observations per marker [Turner et al., 2011](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). <br /> <br />. The drift simulator was run as: <br />
+          
 ```{r}
-fs<-round(seq(step,1-step,by=step),digits) ##create a vector of allele frequencies with step; exclude 0 and 1.
+rm(list = ls())
+library(plyr)
+library(foreach)
+library(parallel)
+library(data.table)
+library(doMC)
 
-### Sample the possible range of allele frequencies
-sample_af <- function(i){
-  i = 1
-  sample(fs,i,replace = TRUE)
-}
-fs_sampled <- unlist(mclapply(1:markers,sample_af))
+cores <- as.integer(Sys.getenv('SLURM_CPUS_PER_TASK'))
+cores <- detectCores(all.tests = FALSE, logical = TRUE)
+registerDoMC(cores)
+setwd("/usr/users/mtost/new_drift_simulations/")
+          
+# use the real allele frequencies from generation 0
+real_data <- read.table("/usr/users/mtost/wd_test_GB_easy_rerun/R_analysis_20162020/GB1307_Allele_and_GT_freq_per_pop_after_MAF005_filt.txt",
+                        header = TRUE)
+initial_Short1 <- real_data$freq_P_Short1Shoe0
+initial_Short2 <- real_data$freq_P_Short2Shoe0
+initial_Tall1 <- real_data$freq_P_Tall1Shoe0
+initial_Tall2 <- real_data$freq_P_Tall2Shoe0
 
-sample_initial_af_base_pop <- unlist(mclapply(1:length(fs_sampled),sample_initial_allele_freq))
-cat("Sampling of initial allele frequencies is done","\n")
+total_pop <- 5000
+males_pop <- 5000
+females_pop <- 250
+sim <- 5000000
+cycles <- 3
+kernels_per_plant <- 500
 
-run_simulations_pop1 <- function(i){
-  unlist(mclapply(1:length(sample_initial_af_base_pop),seq_drifted_ind_pop1))
+initial_Short1_new <- sample(initial_Short1, sim, replace = TRUE)
+initial_Short2_new <- sample(initial_Short2, sim, replace = TRUE)
+initial_Tall1_new <- sample(initial_Short1, sim, replace = TRUE)
+initial_Tall2_new <- sample(initial_Short1, sim, replace = TRUE)
+
+drift_simulations <- function(total_pop_size,
+                              no_males,
+                              no_females,
+                              simulations,
+                              cycles,
+                              kernels_per_plant,
+                              initial_freq){
+  drift_many_loci <- function(a){
+    maleprog <- c()
+    femaleprog <- c()
+    frequency <- c()
+    initial_frequency <- as.numeric(initial_freq[a])
+    drift_cycles <- function(i){
+      prog <- c(rep("A",initial_frequency*total_pop_size*2),rep("B",(1-initial_frequency)*total_pop_size*2))
+      maleprog <- sample(prog, size = no_males, replace=T)  #sample male alleles from total population
+      femaleprog <- sample(prog,size = no_females,replace=F) #sample females from total population
+      kernels_from_female_mother_plants <- rep(femaleprog,kernels_per_plant)
+      pollen_father_plants <- sample(maleprog, length(kernels_from_female_mother_plants),replace = TRUE)
+      progenies <- c(kernels_from_female_mother_plants, pollen_father_plants)
+      prog_1 <- sample(progenies, total_pop_size, replace = FALSE) #from all harvested ears, only 5000 are sown
+      frequency <- length(which(prog_1=="A"))/(2*total_pop_size)
+      return(frequency)
+    }
+    drifted_freq_over_cycles <- mclapply(1:cycles, drift_cycles)
+    drifted_freq_over_cycles <- unlist(drifted_freq_over_cycles)
+    frequency_0 <- initial_frequency
+    drifted_freq <- c(frequency_0, drifted_freq_over_cycles)
+    return(drifted_freq)
+  }
+  drift_many_loci_freq <- mclapply(1:sim, drift_many_loci)
+  data <- unlist(drift_many_loci_freq)
+  dt <- matrix(data = data, ncol={cycles+1},nrow=sim, byrow = TRUE)
+  colnames(dt) <- 0:cycles
+  return(dt)
 }
-sampled_seq_ind_pop1 <- unlist(mclapply(1:sim,run_simulations_pop1))
-cat("Simulation pop 1 is done","\n")
-run_simulations_pop2 <- function(i){
-  unlist(mclapply(1:length(sample_initial_af_base_pop),seq_drifted_ind_pop234))
+### RUN ----------------------------------------------------------------------
+simulated_drift_Short1 <- drift_simulations(total_pop_size = total_pop,
+                                     no_males = males_pop,
+                                     no_females = females_pop,
+                                     simulations = sim,
+                                     cycles = cycles,
+                                     kernels_per_plant = kernels_per_plant,
+                                     initial_freq = initial_Short1_new)
+simulated_drift_Short2 <- drift_simulations(total_pop_size = total_pop,
+                                     no_males = males_pop,
+                                     no_females = females_pop,
+                                     simulations = sim,
+                                     cycles = cycles,
+                                     kernels_per_plant = kernels_per_plant,
+                                     initial_freq = initial_Short2_new)
+simulated_drift_Tall1 <- drift_simulations(total_pop_size = total_pop,
+                                     no_males = males_pop,
+                                     no_females = females_pop,
+                                     simulations = sim,
+                                     cycles = cycles,
+                                     kernels_per_plant = kernels_per_plant,
+                                     initial_freq = initial_Tall1_new)
+simulated_drift_Tall2 <- drift_simulations(total_pop_size = total_pop,
+                                     no_males = males_pop,
+                                     no_females = females_pop,
+                                     simulations = sim,
+                                     cycles = cycles,
+                                     kernels_per_plant = kernels_per_plant,
+                                     initial_freq = initial_Tall2_new)
+
+dt_drift_sim <- rbind(simulated_drift_Short1,
+                      simulated_drift_Short2,
+                      simulated_drift_Tall1,
+                      simulated_drift_Tall2)
+write.table(dt_drift_sim, "2022_05_27_Simulated_drift_Allele_freq_distribution_V4R1.txt", 
+            row.names = TRUE, sep = "  ",
+            quote = FALSE)
+### Calculate FST values -------------------------------------------------------
+fst_value_calc <- function(population_1,population_2){
+  population_1 <- as.numeric(population_1)
+  population_2 <- as.numeric(population_2)
+  mean <- (population_1+population_2) / 2
+  var <- (population_1-mean)^2 + (population_2-mean)^2
+  fst_pop <- var / (mean*(1-mean)+(var/2))
+  return(fst_pop)
 }
-sampled_seq_ind_pop2 <- unlist(mclapply(1:sim,run_simulations_pop2))
-cat("Simulation pop 2 is done","\n")
-run_simulations_pop3 <- function(i){
-  unlist(mclapply(1:length(sample_initial_af_base_pop),seq_drifted_ind_pop234))
+Fst_value_sd_1 <- fst_value_calc(population_1 = simulated_drift_Short1, 
+                                 population_2 = simulated_drift_Short2)
+Fst_value_sd_2 <- fst_value_calc(population_1 = simulated_drift_Tall1, 
+                                 population_2 = simulated_drift_Tall2)
+Fst_value_od_1 <- fst_value_calc(population_1 = simulated_drift_Short1, 
+                                 population_2 = simulated_drift_Tall1)
+Fst_value_od_2 <- fst_value_calc(population_1 = simulated_drift_Short2, 
+                                 population_2 = simulated_drift_Tall2)
+all_FST_values <- rbind(Fst_value_sd_1,
+                        Fst_value_sd_2,
+                        Fst_value_od_1,
+                        Fst_value_od_2,
+                        sum(Fst_value_sd_1,Fst_value_sd_2),
+                        sum(Fst_value_od_1,Fst_value_od_2),
+                        sum(Fst_value_od_1,Fst_value_sd_2),
+                        sum(Fst_value_sd_1,Fst_value_od_2))
+threshold <- quantile(all_FST_values, probs = 0.999999, na.rm = TRUE)
+write.table(all_FST_values, "2022_05_27_Simulated_drift_FST_values_V4R1.txt", 
+            row.names = TRUE, sep = "  ",
+            quote = FALSE)
+cat("The significance threshold based on drift simulations is:",threshold)
+
+### Add sequencing -------------------------------------------------------------
+drift_simulations_with_sequencing <- function(total_pop_size,
+                                              no_males,
+                                              no_females,
+                                              simulations,
+                                              cycles,
+                                              kernels_per_plant,
+                                              initial_freq,
+                                              minobs,
+                                              seqind){
+  seed <- sample(1000,1)
+  set.seed(seed)
+  drift_many_loci <- function(a){
+    seed <- sample(1000,1)
+    set.seed(seed)
+    maleprog <- c()
+    femaleprog <- c()
+    frequency <- c()
+    initial_frequency <- initial_freq[a]
+    drift_cycles <- function(i){
+      seed <- sample(1000,1)
+      set.seed(seed)
+      prog <- c(rep("A",initial_frequency*total_pop_size*2),rep("B",(1-initial_frequency)*total_pop_size*2))
+      maleprog <- sample(prog, size = no_males, replace=T)  #sample male alleles from total population
+      femaleprog <- sample(prog,size = no_females,replace=F) #sample females from total population
+      kernels_from_female_mother_plants <- rep(femaleprog,kernels_per_plant)
+      pollen_father_plants <- sample(maleprog, length(kernels_from_female_mother_plants),replace = TRUE)
+      progenies <- c(kernels_from_female_mother_plants, pollen_father_plants)
+      prog_1 <- sample(progenies, total_pop_size, replace = FALSE) #from all harvested ears, only 5000 are sown
+      frequency <- length(which(prog_1=="A"))/(2*total_pop_size)
+      return(frequency)
+    }
+    drifted_freq_over_cycles <- mclapply(1:cycles, drift_cycles)
+    drifted_freq_over_cycles <- unlist(drifted_freq_over_cycles)
+    frequency_0 <- initial_frequency
+    drifted_freq <- c(frequency_0, drifted_freq_over_cycles)
+    return(drifted_freq)
+  }
+  drift_many_loci_freq <- mclapply(1:sim, drift_many_loci)
+  data <- unlist(drift_many_loci_freq)
+  dt <- matrix(data = data, ncol={cycles+1},nrow=sim, byrow = TRUE)
+  coverage_sampling <- function(i){
+    seed <- sample(1000,1)
+    set.seed(seed)
+    allele_freq <- dt[i,cycles+1]
+    alleles <- c(rep("A",allele_freq*2*total_pop_size),rep("B",2*total_pop_size-(allele_freq*2*total_pop_size)))
+    possible_marker_coverages <- seq(minobs, seqind)
+    marker_coverage <- sample(possible_marker_coverages, 1, replace = TRUE)
+    seq_sample <- sample(alleles, marker_coverage, replace = FALSE)
+    allele_freq_after_seq <- length(which(seq_sample=="A"))/length(seq_sample)
+    return(allele_freq_after_seq)
+  }
+  sequenced_frequencies <- mclapply(1:sim, coverage_sampling)
+  dt_all <- cbind(dt,sequenced_frequencies)
+  return(dt_all)
 }
-sampled_seq_ind_pop3 <- unlist(mclapply(1:sim,run_simulations_pop3))
-cat("Simulation pop 3 is done","\n")
-run_simulations_pop4 <- function(i){
-  unlist(mclapply(1:length(sample_initial_af_base_pop),seq_drifted_ind_pop234))
+
+### RUN ----------------------------------------------------------------------
+simulated_drift_Short1 <- drift_simulations_with_sequencing(total_pop_size = total_pop,
+                                                 no_males = males_pop,
+                                                 no_females = females_pop,
+                                                 simulations = sim,
+                                                 cycles = cycles,
+                                                 kernels_per_plant = kernels_per_plant,
+                                                 initial_freq = initial_Short1_new,
+                                                 minobs = 40,
+                                                 seqind = 96)
+simulated_drift_Short2 <- drift_simulations_with_sequencing(total_pop_size = total_pop,
+                                                 no_males = males_pop,
+                                                 no_females = females_pop,
+                                                 simulations = sim,
+                                                 cycles = cycles,
+                                                 kernels_per_plant = kernels_per_plant,
+                                                 initial_freq = initial_Short2_new,
+                                                 minobs = 40,
+                                                 seqind = 96)
+simulated_drift_Tall1 <- drift_simulations_with_sequencing(total_pop_size = total_pop,
+                                                no_males = males_pop,
+                                                no_females = females_pop,
+                                                simulations = sim,
+                                                cycles = cycles,
+                                                kernels_per_plant = kernels_per_plant,
+                                                initial_freq = initial_Tall1_new,
+                                                minobs = 40,
+                                                seqind = 96)
+simulated_drift_Tall2 <- drift_simulations_with_sequencing(total_pop_size = total_pop,
+                                                no_males = males_pop,
+                                                no_females = females_pop,
+                                                simulations = sim,
+                                                cycles = cycles,
+                                                kernels_per_plant = kernels_per_plant,
+                                                initial_freq = initial_Tall2_new,
+                                                minobs = 40,
+                                                seqind = 96)
+### Combine the different simulations to one data set ----------------------
+dt_drift_sim <- rbind(simulated_drift_Short1,
+                      simulated_drift_Short2,
+                      simulated_drift_Tall1,
+                      simulated_drift_Tall2)
+write.table(dt_drift_sim, "2022_02_16_new_simulated_drift_with_sequencing_af_dist_V3R1.txt", 
+            row.names = TRUE, sep = "  ",
+            quote = FALSE)
+
+fst_value_calc <- function(population_1,population_2){
+  mean <- (population_1+population_2) / 2
+  var <- (population_1-mean)^2 + (population_2-mean)^2
+  fst_pop <- var / (mean*(1-mean)+(var/2))
+  return(fst_pop)
 }
-sampled_seq_ind_pop4 <- unlist(mclapply(1:sim,run_simulations_pop4))
-cat("Simulation pop 4 is done","\n")
-cat("Simulation of drift is done","\n")
+Fst_value_sd_1 <- fst_value_calc(population_1 = simulated_drift_Short1, 
+                                 population_2 = simulated_drift_Short2)
+Fst_value_sd_2 <- fst_value_calc(population_1 = simulated_drift_Tall1, 
+                                 population_2 = simulated_drift_Tall2)
+Fst_value_od_1 <- fst_value_calc(population_1 = simulated_drift_Short1, 
+                                 population_2 = simulated_drift_Tall1)
+Fst_value_od_2 <- fst_value_calc(population_1 = simulated_drift_Short2, 
+                                 population_2 = simulated_drift_Tall2)
+all_FST_values <- rbind(Fst_value_sd_1,
+                        Fst_value_sd_2,
+                        Fst_value_od_1,
+                        Fst_value_od_2,
+                        sum(Fst_value_sd_1,Fst_value_sd_2),
+                        sum(Fst_value_od_1,Fst_value_od_2),
+                        sum(Fst_value_od_1,Fst_value_sd_2),
+                        sum(Fst_value_sd_1,Fst_value_od_2))
+threshold <- quantile(all_FST_values, probs = 0.999999, na.rm = TRUE)
+cat("The significance threshold based on drift simulations with sequenicng is:",threshold)
+write.table(all_FST_values, "2022_05_27_FST_values_V4.txt", 
+            row.names = TRUE, sep = "  ",
+            quote = FALSE)
 ```
 <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> and allele frequency differences were calculated for all simulated markers, which corresponded in our case to 42,000,000 markers. We choosed then among the 42,000,000 markers the most extreme value as significance threshold, similar to [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219).  
 
