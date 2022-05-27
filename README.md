@@ -59,7 +59,7 @@ t.test(Short_plants_2020$PlantHeight,Tall_plants_2020$PlantHeight,
 ```
 Additionally we also used the trait measurments from the base population and all generations of selection to show the decrease and increase in the selected trait. In our case the selected trait was plant height. <br /> <br /> 
 **Measured plant height in all years in the subpopulations selected for short plant (green) and tall plant height (purple).**
-<img src="https://user-images.githubusercontent.com/63467079/150105713-a27b5365-4822-483e-abe4-6fff10332bc7.png" width="600" height="360">
+<img src="https://user-images.githubusercontent.com/63467079/150105713-a27b5365-4822-483e-abe4-6fff10332bc7.png" width="600" height="360"> <br />
 The computation of the t-test statistic and the script for plotting the measured phenotypes across all years are available in the `Phenotypic_data_analysis.R` script. 
        
 ## 2 Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy)
@@ -296,16 +296,16 @@ This function also comes from the `vcfR` package from [Knaus and Grünwald 2018]
 ```{r}
 write.vcf(vcf_S4, file="path/to/your/working/directory/filtered_DATA.vcf.gz", mask=FALSE)          
 ```          
-## 4 Selection signature mapping with FST leveraging replicated selection
+## 4 Scan for selection signatures
+Our scan for selection was based on the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection. 
 The function for the calculation of the **<img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection** is contained in the `selection_signature_mapping.R` script. 
 <br /> <br /> 
-The function below will calculate the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> between all possible and non-redundant comparisons between the subpopulations selected in the same and opposite directions as: <br /> <br />
+The function below will calculate the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> between all possible and non-redundant comparisons between the subpopulations selected in the same and opposite directions at each marker as: <br /> <br />
 <img src="https://render.githubusercontent.com/render/math?math=F_{ST}=\frac{s^2}{\mu(p)*(1-\mu(p))%2B(\frac{s^2}{2})}"> 
 <br /> <br /> according to [Weir and Cockerham, 1984](https://doi.org/10.1111/j.1558-5646.1984.tb05657.x). <br /> <br />
 
-The function also calculates the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}Sum"> between the subpopulations selected in same and opposite directions. This values are required for the calculation of the FDR for selection. In this statistic observation which only occured in one comparison are then excluded. Those observations might have been caused by drift. Selection is a repeatable force, so that we should be able to observe the same pattern in both comparisons. <br /> <br />            
+The function also calculates the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}Sum"> between the subpopulations selected in same and opposite directions. This values are required for the calculation of the false discovery rate for selection (FDRfS). In this statistic, observations which only occured in one comparison are excluded. Those observations might have been caused by drift. Selection is a repeatable force, so that we should be able to observe the same pattern in both comparisons. <br /> <br />            
  
-
 ```{r}
 calculate_FST_value <- function(data,
                                 pop_low_phenotype_sel_1,
@@ -408,9 +408,10 @@ FST_values_od_cor <- calculate_FST_value(data = vcf_S4,
                                          pop_high_phenotype_sel_1 = "Shoepag_3",
                                          pop_high_phenotype_sel_2 = "Shoepag_2")
 ```
-             
+          
 ## 5 Significance thresholds
-The calculation of significance thresholds and the plotting functions are contained in the `Significance_thresholds_and_plotting.R`. The `Filtering_for_coverage_average_RD_missingness.R` and `selection_signature_mapping.R` script can or should be run on a inactive Linux session on a high-throughput computing device. These scripts are usually run on extremly large data sets (raw sequence data or large VCF files). The `Significance_thresholds_and_plotting.R` is usually run on a much smaller data set, since many markers were removed in the filtering procedure. Furthermore, when windows font types want to be used,  the script needs to be run on a windows device. <br />   
+Significance thresholds for selection were calculated three ways: 1) based on the empirical distribution; 2) based on drift simulations; and 3) based on the false discovery rate for selection (FDRfS) [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). <br /> 
+The calculation of significance thresholds and the plotting functions are contained in the `Significance_thresholds_and_plotting.R`. The `Filtering_for_coverage_average_RD_missingness.R` and `Selection_signature_mapping.R` script can or should be run on a inactive Linux session on a high-throughput computing device. These scripts are usually run on extremly large data sets (raw sequence data or large VCF files). The `Significance_thresholds_and_plotting.R` is usually run on a much smaller data set, since many markers were removed in the filtering procedure. Furthermore, when windows font types want to be used,  the script needs to be run on a windows device. <br />   
 ### 5.1 Based on the empirical distribution
 The significance thresholds based on the empirical distribution, were calculated by taking the 99.9th and 99.99th percentile of the empirical distribution of the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> and absolute allele frequency differences:
 ```{r}
@@ -420,13 +421,9 @@ FST_sig_thres_2 <- quantile(FST_values_od_cor$Fst, probs = 0.999, na.rm = TRUE)
 The significance threshold is stored, so it can be used later directly for plotting. <br />
 ### 5.2 Based on drift simulations 
 The significance thresholds based on drift simulations were calculated in the `Simulation_of_drift.R` and then only retrieved from this script. The simulation of drift is described below and the script is also available in the repository.
-```{r}
-FST_drift_sim_sig_thres <-  2*0.3540692
-```    
+  
 ### 5.3 Simulation of Drift
-The simulation of drift was conducted by using the `DriftSimulator.R` from [Beissinger (2021)](http://beissingerlab.github.io/Software/). The `DriftSimulator.R` script was run with a drift simulation script from [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219), which enables the implementation of the drift simulator over a large set of markers. The script, which enables the simulation of drift over a large set of markers is available as `Run_drift_simulator_over_many_markers.R`. We ran the `DriftSimulator.R` over a data set consisting out of 4,226,822 simulated SNP markers <br /> <br />
-
-The drift simulator uses the real intital allele frequencies observed in generation 0. Drift is simulated with 250 females and 5000 males and a total population size of 5000 individual plants every season. We assumed that every cob has 500 kernels, which can be pollinated by all those 5000 plants. Drift was simulated for 3 generations in total. Finally, sampling of 96 individuals out of 5000 for genotyping is simulated as well and included into the drift simulator [Turner et al., 2011](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). Additionally, the marker coverage was also sampled, the minimal marker coverage was set to at least 40 out of 96 observations at a marker, so that the marker coverage was always sampled between 40 to 96 observations per marker. The drift simulator was run  <br /> <br /> 
+The simulation of drift was conducted by using the `DriftSimulator.R` from [Beissinger (2021)](http://beissingerlab.github.io/Software/). The `DriftSimulator.R` script was run with a drift simulation script similar to the one from [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219), which enables the implementation of the drift simulator over a large set of markers. The script, which enables the simulation of drift over a large set of markers is available as `Run_drift_simulator_over_many_markers.R`. The `Run_drift_simulator_over_many_markers.R` script contains a function which simulates drift acting a single locus. We ran 5,000,000 simulations. For each simulation, initial allele frequencies were set based on allele frequency spectrum observed in generation 0 (Gyawali et al., 2019). Drift was simulated with a population size of 5000 individuals with 250 female and 5000 male individuals for three generations. We assumed that every ear contributed ~500 kernels. Every kernel could have been pollinated by one of the male parents, which resulted in much higher harvest than 5000 kernels. Therefore, 5000 kernels were randomly drawn from the entire harvest to represent the seeds planted for the next generation. In the third generation, 96 individuals out of 5000 were sampled to represent the individuals that were actually genotyped (Turner et al., 2011; Kumar et al., 2021). Variable marker coverage was also simulated; marker coverage was sampled from a uniform distribution between 40 and 96 observations per marker to match our filtering process [Turner et al., 2011](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). Additionally, the marker coverage was also sampled, the minimal marker coverage was set to at least 40 out of 96 observations at a marker, so that the marker coverage was always sampled between 40 to 96 observations per marker. The drift simulator was run [Turner et al., 2011](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). <br /> <br /> 
 ```{r}
 fs<-round(seq(step,1-step,by=step),digits) ##create a vector of allele frequencies with step; exclude 0 and 1.
 
