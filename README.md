@@ -692,7 +692,7 @@ write.table(all_FST_values, "2022_05_27_FST_values_V4.txt",
             row.names = TRUE, sep = "  ",
             quote = FALSE)
 ```
-<img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> and allele frequency differences were calculated for all simulated markers, which corresponded in our case to 42,000,000 markers. We choosed then among the 42,000,000 markers the most extreme value as significance threshold, similar to [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219).  
+<img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> and allele frequency differences were calculated for all simulated markers, which corresponded in our case to 5,000,000 simulations. We summed those up and choosed the the 99.9999th percentile of the emprirical distribution of all observations as significance threshold, similar to [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219).  
 
 ### 5.4 Based on the FDRfS
 **FDRfS for all possible values of the statistics**
