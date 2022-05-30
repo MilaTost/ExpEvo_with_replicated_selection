@@ -69,7 +69,7 @@ Additionally we also used the trait measurments from the base population and all
 <img src="https://user-images.githubusercontent.com/63467079/150105713-a27b5365-4822-483e-abe4-6fff10332bc7.png" width="600" height="360"> <br />
 The computation of the t-test statistic and the script for plotting the measured phenotypes across all years are available in the `Phenotypic_data_analysis.R` script. 
 ### Realized heritability from the Breeder's equation
-The realized heritability <img src="https://render.githubusercontent.com/render/math?math=h_{bs}^{2}"> was calcaluated according to (Lush, 1937). This is done by the `Calculation_of_the_realized_heritability.R` script. To calculate the realized heritability the selection differential and the response to selection are calculated between the different generations of selection. <br />
+The realized heritability was calcaluated according to (Lush, 1937). This is done by the `Calculation_of_the_realized_heritability.R` script. To calculate the realized heritability the selection differential and the response to selection are calculated between the different generations of selection. <br />
 
 ```{r}
 calculated_realized_herit <- function(Data_Gen1,
