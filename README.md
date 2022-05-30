@@ -1,9 +1,9 @@
 # Experimental evolution with replicated selection
 ## Table of contents
-[0 Introduction](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#introduction) <br />
-[1 Phenotypic data analysis](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#1-phenotypic-data-analysis) <br />
+[0 Introduction](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#introduction) <br />
+[1 Phenotypic data analysis](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#1-phenotypic-data-analysis) <br />
 2 Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy) <br />
-[3 Filtering](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#filtering) <br />
+[3 Filtering](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#filtering) <br />
 &emsp;[3.1 Filtering for individual samples with low coverage](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#21-filtering-for-individual-samples-with-low-coverage) <br />
 &emsp;[3.2 Filtering for read depth per sample](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#22-filtering-for-read-depth-per-sample) <br />
 &emsp;[3.3 Filtering for missingness](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#23-filtering-for-missingness) <br />
