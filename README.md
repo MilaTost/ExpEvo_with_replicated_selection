@@ -300,10 +300,10 @@ Our scan for selection was based on the <img src="https://render.githubuserconte
 The function for the calculation of the **<img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection** is contained in the `selection_signature_mapping.R` script. 
 <br /> <br /> 
 The function below will calculate the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> between all possible and non-redundant comparisons between the subpopulations selected in the same and opposite directions at each marker as: <br /> <br />
-<img src="https://render.githubusercontent.com/render/math?math=F_{ST}=\frac{s^2}{\mu(p)*(1-\mu(p))%2B(\frac{s^2}{2})}"> 
+<img src="https://render.githubusercontent.com/render/math?math=F_{ST} =\frac{s^2}{\mu(p)*(1-\mu(p))%2B(\frac{s^2}{2})}"> 
 <br /> <br /> according to [Weir and Cockerham, 1984](https://doi.org/10.1111/j.1558-5646.1984.tb05657.x). <br /> <br />
 
-The function also calculates the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}Sum"> between the subpopulations selected in same and opposite directions. This values are required for the calculation of the false discovery rate for selection (FDRfS). In this statistic, observations which only occured in one comparison are excluded. Those observations might have been caused by drift. Selection is a repeatable force, so that we should be able to observe the same pattern in both comparisons. <br /> <br />            
+The function also calculates the <img src="https://render.githubusercontent.com/render/math?math=F_{ST} Sum"> between the subpopulations selected in same and opposite directions. This values are required for the calculation of the false discovery rate for selection (FDRfS). In this statistic, observations which only occured in one comparison are excluded. Those observations might have been caused by drift. Selection is a repeatable force, so that we should be able to observe the same pattern in both comparisons. <br /> <br />            
  
 ```{r}
 library(stringr)
