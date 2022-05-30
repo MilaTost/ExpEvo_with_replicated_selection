@@ -55,7 +55,6 @@ t.test(Tall_plants_2020$PlantHeight,Tall_plants_2016$PlantHeight,
 t.test(Short_plants_2020$PlantHeight,Tall_plants_2020$PlantHeight,
        alternative = "less",
        paired = TRUE)
-
 ```
 Additionally we also used the trait measurments from the base population and all generations of selection to show the decrease and increase in the selected trait. In our case the selected trait was plant height. <br /> <br /> 
 **Measured plant height in all years in the subpopulations selected for short plant (green) and tall plant height (purple).**
@@ -307,6 +306,24 @@ The function below will calculate the <img src="https://render.githubusercontent
 The function also calculates the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}Sum"> between the subpopulations selected in same and opposite directions. This values are required for the calculation of the false discovery rate for selection (FDRfS). In this statistic, observations which only occured in one comparison are excluded. Those observations might have been caused by drift. Selection is a repeatable force, so that we should be able to observe the same pattern in both comparisons. <br /> <br />            
  
 ```{r}
+library(stringr)
+library(data.table)
+library(doMC)
+library(vcfR)
+library(parallel)
+
+cores <- as.integer(Sys.getenv('SLURM_CPUS_PER_TASK'))
+cores <- detectCores(all.tests = FALSE, logical = TRUE)
+registerDoMC(cores)
+time_0 <- Sys.time()
+cat("The data set loading starts")
+# vcf_S4 <- read.vcfR("YOUR_DATA_after_filtering.vcf.gz", verbose = FALSE)
+#setwd("/path/to/your/own/working/directory/")
+vcf_S4 <- read.vcfR("/usr/users/mtost/wd_GBeasy_rerun/Results/2022_GB10_Shoepeg_after_filtering.vcf.gz", verbose = FALSE)
+setwd("/usr/users/mtost/GB_easy_results_analysis_wd/final_data_analysis_paper/")
+cat("The data set is loaded.","\n")
+time_1 <- Sys.time()
+print(time_1 - time_0)
 calculate_FST_value <- function(data,
                                 pop_low_phenotype_sel_1,
                                 pop_low_phenotype_sel_2,
@@ -358,16 +375,6 @@ calculate_FST_value <- function(data,
   marker_table_per_pop <- cbind(dt_pop_low_phenotype_1_dt,dt_pop_low_phenotype_2_dt,
                                 dt_pop_high_phenotype_1_dt,dt_pop_high_phenotype_2_dt)
   marker_table_per_pop <- as.data.frame(marker_table_per_pop)
-  fst_value_calc <- function(population_1,population_2,population_3,population_4){
-    mean <- (population_1+population_2+population_3+population_4) / 4
-    var <- (population_1-mean)^2 + (population_2-mean)^2 + (population_3-mean)^2 + (population_4-mean)^2
-    fst_pop <- var / (mean*(1-mean)+(var/4))
-    return(fst_pop)
-  }
-  FST_value <- fst_value_calc(population_1 = marker_table_per_pop[,1], 
-                              population_2 = marker_table_per_pop[,8],
-                              population_3 = marker_table_per_pop[,15],
-                              population_4 = marker_table_per_pop[,22])
   fst_value_calc <- function(population_1,population_2){
     mean <- (population_1+population_2) / 2
     var <- (population_1-mean)^2 + (population_2-mean)^2
@@ -382,21 +389,24 @@ calculate_FST_value <- function(data,
                                    population_2 = marker_table_per_pop[,15])
   Fst_value_od_2 <- fst_value_calc(population_1 = marker_table_per_pop[,22], 
                                    population_2 = marker_table_per_pop[,8])
-  od_stat <- abs(Fst_value_sd_1 + Fst_value_sd_2)
+  FSTSum_OD <- Fst_value_od_1 + Fst_value_od_2
+  FSTSum_SD <- Fst_value_sd_1 + Fst_value_sd_2
   FST_value_dt <- cbind(data@fix[,c(1,2)],SNP_IDs,
-                        FST_value,
                         Fst_value_sd_1,
                         Fst_value_sd_2,
                         Fst_value_od_1,
                         Fst_value_od_2,
-                        od_stat)
+                        FSTSum_OD,
+                        FSTSum_SD)
   FST_value_dt <- as.data.frame(FST_value_dt)
   colnames(FST_value_dt) <- c("Chromosome","Position","SNP_ID",
-                              "FST_value","FST_value_opposite_dir1",
+                              "FST_value_opposite_dir1",
                               "FST_value_opposite_dir2",
                               "FST_value_same_dir1",
                               "FST_value_same_dir2",
-                              "Abs_sum_FST")
+                              "FST_sum_OD",
+                              "FST_sum_SD")
+  FST_value_dt <- cbind(marker_table_per_pop,FST_value_dt)
   cat("Calculation of the FST value is done.","\n")
   time_1 <- Sys.time()
   cat("This was done within",print(time_1 - time_0),"\n")
@@ -458,110 +468,6 @@ initial_Short2_new <- sample(initial_Short2, sim, replace = TRUE)
 initial_Tall1_new <- sample(initial_Short1, sim, replace = TRUE)
 initial_Tall2_new <- sample(initial_Short1, sim, replace = TRUE)
 
-drift_simulations <- function(total_pop_size,
-                              no_males,
-                              no_females,
-                              simulations,
-                              cycles,
-                              kernels_per_plant,
-                              initial_freq){
-  drift_many_loci <- function(a){
-    maleprog <- c()
-    femaleprog <- c()
-    frequency <- c()
-    initial_frequency <- as.numeric(initial_freq[a])
-    drift_cycles <- function(i){
-      prog <- c(rep("A",initial_frequency*total_pop_size*2),rep("B",(1-initial_frequency)*total_pop_size*2))
-      maleprog <- sample(prog, size = no_males, replace=T)  #sample male alleles from total population
-      femaleprog <- sample(prog,size = no_females,replace=F) #sample females from total population
-      kernels_from_female_mother_plants <- rep(femaleprog,kernels_per_plant)
-      pollen_father_plants <- sample(maleprog, length(kernels_from_female_mother_plants),replace = TRUE)
-      progenies <- c(kernels_from_female_mother_plants, pollen_father_plants)
-      prog_1 <- sample(progenies, total_pop_size, replace = FALSE) #from all harvested ears, only 5000 are sown
-      frequency <- length(which(prog_1=="A"))/(2*total_pop_size)
-      return(frequency)
-    }
-    drifted_freq_over_cycles <- mclapply(1:cycles, drift_cycles)
-    drifted_freq_over_cycles <- unlist(drifted_freq_over_cycles)
-    frequency_0 <- initial_frequency
-    drifted_freq <- c(frequency_0, drifted_freq_over_cycles)
-    return(drifted_freq)
-  }
-  drift_many_loci_freq <- mclapply(1:sim, drift_many_loci)
-  data <- unlist(drift_many_loci_freq)
-  dt <- matrix(data = data, ncol={cycles+1},nrow=sim, byrow = TRUE)
-  colnames(dt) <- 0:cycles
-  return(dt)
-}
-### RUN ----------------------------------------------------------------------
-simulated_drift_Short1 <- drift_simulations(total_pop_size = total_pop,
-                                     no_males = males_pop,
-                                     no_females = females_pop,
-                                     simulations = sim,
-                                     cycles = cycles,
-                                     kernels_per_plant = kernels_per_plant,
-                                     initial_freq = initial_Short1_new)
-simulated_drift_Short2 <- drift_simulations(total_pop_size = total_pop,
-                                     no_males = males_pop,
-                                     no_females = females_pop,
-                                     simulations = sim,
-                                     cycles = cycles,
-                                     kernels_per_plant = kernels_per_plant,
-                                     initial_freq = initial_Short2_new)
-simulated_drift_Tall1 <- drift_simulations(total_pop_size = total_pop,
-                                     no_males = males_pop,
-                                     no_females = females_pop,
-                                     simulations = sim,
-                                     cycles = cycles,
-                                     kernels_per_plant = kernels_per_plant,
-                                     initial_freq = initial_Tall1_new)
-simulated_drift_Tall2 <- drift_simulations(total_pop_size = total_pop,
-                                     no_males = males_pop,
-                                     no_females = females_pop,
-                                     simulations = sim,
-                                     cycles = cycles,
-                                     kernels_per_plant = kernels_per_plant,
-                                     initial_freq = initial_Tall2_new)
-
-dt_drift_sim <- rbind(simulated_drift_Short1,
-                      simulated_drift_Short2,
-                      simulated_drift_Tall1,
-                      simulated_drift_Tall2)
-write.table(dt_drift_sim, "2022_05_27_Simulated_drift_Allele_freq_distribution_V4R1.txt", 
-            row.names = TRUE, sep = "  ",
-            quote = FALSE)
-### Calculate FST values -------------------------------------------------------
-fst_value_calc <- function(population_1,population_2){
-  population_1 <- as.numeric(population_1)
-  population_2 <- as.numeric(population_2)
-  mean <- (population_1+population_2) / 2
-  var <- (population_1-mean)^2 + (population_2-mean)^2
-  fst_pop <- var / (mean*(1-mean)+(var/2))
-  return(fst_pop)
-}
-Fst_value_sd_1 <- fst_value_calc(population_1 = simulated_drift_Short1, 
-                                 population_2 = simulated_drift_Short2)
-Fst_value_sd_2 <- fst_value_calc(population_1 = simulated_drift_Tall1, 
-                                 population_2 = simulated_drift_Tall2)
-Fst_value_od_1 <- fst_value_calc(population_1 = simulated_drift_Short1, 
-                                 population_2 = simulated_drift_Tall1)
-Fst_value_od_2 <- fst_value_calc(population_1 = simulated_drift_Short2, 
-                                 population_2 = simulated_drift_Tall2)
-all_FST_values <- rbind(Fst_value_sd_1,
-                        Fst_value_sd_2,
-                        Fst_value_od_1,
-                        Fst_value_od_2,
-                        sum(Fst_value_sd_1,Fst_value_sd_2),
-                        sum(Fst_value_od_1,Fst_value_od_2),
-                        sum(Fst_value_od_1,Fst_value_sd_2),
-                        sum(Fst_value_sd_1,Fst_value_od_2))
-threshold <- quantile(all_FST_values, probs = 0.999999, na.rm = TRUE)
-write.table(all_FST_values, "2022_05_27_Simulated_drift_FST_values_V4R1.txt", 
-            row.names = TRUE, sep = "  ",
-            quote = FALSE)
-cat("The significance threshold based on drift simulations is:",threshold)
-
-### Add sequencing -------------------------------------------------------------
 drift_simulations_with_sequencing <- function(total_pop_size,
                                               no_males,
                                               no_females,
@@ -700,309 +606,154 @@ The function `calculate_FDR_for_selection()` generates a table to show all posib
 The calculation of the FDR for selection is also demonstrated with the following table which shows for different statistics the number of markers diverged between subpopulations selected in the same and opposite directions and the corresponding FDR for selections:          
 |Statistic|Markers diverged same direction|Markers diverged opposite directions|FDR for selection|
 |---------|-------------------------------|------------------------------------|-----------------|
-|0.01     |1944389                        |2041671                             |0.95235177       |
-|0.02     |249836                         |251336                              |0.99403189       |
-|...      |...                            |...                                 |...              |
-|0.03     |249836                         |251336                              |1.00419127       |
-|0.73     |6                              |30                                  |0.20000000       |  
-|0.74     |3                              |27                                  |0.11111111       |
-|0.75     |2                              |24                                  |0.08333333       |
+|0	|1417796	                      |1421826	                   |0.9972           |
+|0.01	|1104313	                      |1115771	                   |0.9897           |
+|0.02	|400204	                      |415091	                             |0.9641           |
+|0.03	|243600	                      |259984	                             |0.9370           |
+|0.04	|182635	                      |198752	                             |0.9189           |
+|0.05	|142278	                      |159055	                             |0.8945           |
+|0.06	|112868	                      |128888	                             |0.8757           |
+|0.07	|90337	                      |105548	                             |0.8559           |
+|0.08	|72791	                      |87109	                             |0.8356           |
+|...	|...	                      |...	                             |...              |
+|0.67	|1	                      |41	                             |0.0244           |
+|0.671	|1	                      |41	                             |0.0244           |
+|0.672	|1	                      |41	                             |0.0244           |
+|0.673	|1	                      |41	                             |0.0244           |
+|0.674	|1	                      |41	                             |0.0244           |
+|0.675	|1	                      |40	                             |0.0250           |
+|0.676	|1	                      |40	                             |0.0250           |
+|0.677	|1	                      |39	                             |0.0256           |
+|...	|...	                      |...	                             |...              |
+|0.752	|1	                      |19	                             |0.0526           |
+|0.753	|0		            |19	                             |0                |
 
 **A table like this is automatically generated by the** `calculate_FDR_for_selection()` **function.**
-
+          
 ```{r}
-calculate_FDR_for_selection <- function(stat_opposite_dir1,
-                                        stat_opposite_dir2,
-                                        stat_same_dir1,
-                                        stat_same_dir2,
-                                        statistic){
+calculate_FDR_for_selection_based_on_sumFST <- function(stat_opposite_dir1,
+                                                         stat_opposite_dir2,
+                                                         stat_same_dir1,
+                                                         stat_same_dir2,
+                                                         statistic, 
+                                                         FDR){
   stat_opposite_dir1 <- as.numeric(stat_opposite_dir1)
   stat_opposite_dir2 <- as.numeric(stat_opposite_dir2)
   stat_same_dir1 <- as.numeric(stat_same_dir1)
   stat_same_dir2 <- as.numeric(stat_same_dir2)
-  if(statistic == "abs_AFD"){
-    dt <- matrix(data = seq(0,2,0.01), nrow = length(seq(0,2,0.01)), ncol = 3)
+    dt <- matrix(data = seq(0,1,0.001), nrow = length(seq(0,1,0.001)), ncol = 3)
     for (i in 1:nrow(dt)) {
-      dt[i,2] <- length(which(stat_same_dir1 + stat_same_dir2>=dt[i,1]))
-      dt[i,3] <- length(which(stat_opposite_dir1 + stat_opposite_dir2>=dt[i,1]))
+      dt[i,2] <- length(which(stat_same_dir1 + stat_same_dir2 >=dt[i,1]))
+      dt[i,3] <- length(which(stat_opposite_dir1 + stat_opposite_dir2 >=dt[i,1]))
     }
-  }
-  if(statistic == "AFD"){
-    dt_pos <- matrix(data = seq(0,2,0.01), nrow = length(seq(0,2,0.01)), ncol = 3)
-    for (i in 1:nrow(dt_pos)) {
-      dt_pos[i,2] <- length(which(stat_same_dir1 + stat_same_dir2>=dt_pos[i,1]))
-      dt_pos[i,3] <- length(which(stat_opposite_dir1 + stat_opposite_dir2>=dt_pos[i,1]))
-    }
-    dt_neg <- matrix(data = seq(-2,0,0.01), length(seq(0,2,0.01)), ncol = 3)
-    for (i in 1:nrow(dt_neg)) {
-      dt_neg[i,2] <- length(which(stat_same_dir1 + stat_same_dir2<=dt_neg[i,1]))
-      dt_neg[i,3] <- length(which(stat_opposite_dir1 + stat_opposite_dir2<=dt_neg[i,1]))
-    }
-    dt <- rbind(dt_neg,dt_pos)
-    }
-  if(statistic == "FST"){
-    dt <- matrix(data = seq(0,1,0.01), nrow = length(seq(0,1,0.01)), ncol = 3)
-    for (i in 1:nrow(dt)) {
-      dt[i,2] <- length(which(abs(stat_same_dir1 + stat_same_dir2)>=dt[i,1]))
-      dt[i,3] <- length(which(abs(stat_opposite_dir1 + stat_opposite_dir2)>=dt[i,1]))
-    }
-  }
   dt <- as.data.frame(dt)
   colnames(dt) <- c("Statistic","Markers diverged same dir","Markers diverged opposite dir")
   dt$FDR_for_selection <- dt[,2]/dt[,3]
-  if(statistic == "FST" | statistic == "abs_AFD"){
-    dt <- dt[!is.infinite(dt[,3]),]
-    dt <- dt[!is.na(dt[,3]),]
-    sig_threshold <- max(dt[which(dt$FDR_for_selection < 0.1),1])
-    cat("The significance threshold based on the FDR for selection < 10%","\n",
-        "corresponds to an statistic of",sig_threshold, "\n")
-  }
-  if(statistic == "AFD"){
-    dt <- dt[!is.infinite(dt[,3]),]
-    dt <- dt[!is.na(dt[,3]),]
-    neg_area <- dt[which(dt$Statistic < 0),]
-    pos_area <- dt[which(dt$Statistic > 0),]
-    neg_sig_threshold <- max(neg_area[which(neg_area$FDR_for_selection < 0.1),1])
-    pos_sig_threshold <- min(pos_area[which(pos_area$FDR_for_selection < 0.1),1])
-    cat("The significance threshold based on the FDR for selection < 10%","\n",
-        "corresponds to an allele frequency difference of",
-        neg_sig_threshold,"and",pos_sig_threshold,"\n")
+  if(statistic == "FST"){
+    FDR_in_per <- FDR*100
+    FDR_below5per <- dt[which(dt$FDR_for_selection < FDR),]
+    sig_threshold <- FDR_below5per$Statistic[which.min(FDR_below5per$Statistic)]
+    cat("The significance threshold based on the FDR for selection <",FDR_in_per,"%","\n",
+        "corresponds to an statistic of",sig_threshold, "\n",
+        "This threshold was exceeded by:",max(dt[which(dt$FDR_for_selection < 0.05),2]),
+        "markers observed between subpopulations selected in the same direction and",
+        max(dt[which(dt$FDR_for_selection < 0.05),3]),
+        "markers observed between subpopulations selected in opposite directions")
   }
   return(dt)
 }
-dt_FDR_for_selection_AFD <- calculate_FDR_for_selection(stat_opposite_dir1 = allele_freq_diff$Low1_vs_High1,
-                                                        stat_opposite_dir2 = allele_freq_diff$Low2_vs_High2,
-                                                        stat_same_dir1 = allele_freq_diff$Low1_vs_Low2,
-                                                        stat_same_dir2 = allele_freq_diff$High1_vs_High2,
-                                                        statistic = "AFD")
-dt_FDR_for_selection_abs_AFD <- calculate_FDR_for_selection(stat_opposite_dir1 = allele_freq_diff$Low1_vs_High1,
-                                                        stat_opposite_dir2 = allele_freq_diff$Low2_vs_High2,
-                                                        stat_same_dir1 = allele_freq_diff$Low1_vs_Low2,
-                                                        stat_same_dir2 = allele_freq_diff$High1_vs_High2,
-                                                        statistic = "abs_AFD")
-dt_FDR_for_selection_FST <- calculate_FDR_for_selection(stat_opposite_dir1 = FST_values_od_cor$FST_value_opposite_dir1,
-                                                        stat_opposite_dir2 = FST_values_od_cor$FST_value_opposite_dir2,
-                                                        stat_same_dir1 = FST_values_od_cor$FST_value_same_dir1,
-                                                        stat_same_dir2 = FST_values_od_cor$FST_value_same_dir2,
-                                                        statistic = "FST")
+dt_FDR_for_selection_sum_FST <- calculate_FDR_for_selection_based_on_sumFST(stat_opposite_dir1 = FST_values_od_cor$FST_value_opposite_dir1,
+                                                                              stat_opposite_dir2 = FST_values_od_cor$FST_value_opposite_dir2,
+                                                                              stat_same_dir1 = FST_values_od_cor$FST_value_same_dir1,
+                                                                              stat_same_dir2 = FST_values_od_cor$FST_value_same_dir2,
+                                                                              statistic = "FST",
+                                                                              FDR = 0.05)
 ```
-Even though, the significance threshold based on the FDR for selection is already printed by the previous function, the following function returns the threshold so it can be used directly in the Manhatten plot or to check the overlap between all the different statistics. 
+Even though, the significance threshold based on the FDR for selection is already printed by the previous function, the following function returns the threshold so it can be used directly in the Manhatten plot or to check the overlap between all the different statistics. The FDRfS can be choosen in the function. In our case we choosed a FDRfS < 5%.
 ```{r}
-get_FDR_for_selection_sign_thres <- function(stat_opposite_dir1,
-                                             stat_opposite_dir2,
-                                             stat_same_dir1,
-                                             stat_same_dir2,
-                                             statistic){
+get_sig_thresh_FDR_for_selection_based_on_sumFST <- function(stat_opposite_dir1,
+                                                        stat_opposite_dir2,
+                                                        stat_same_dir1,
+                                                        stat_same_dir2,
+                                                        statistic, 
+                                                        FDR){
   stat_opposite_dir1 <- as.numeric(stat_opposite_dir1)
   stat_opposite_dir2 <- as.numeric(stat_opposite_dir2)
   stat_same_dir1 <- as.numeric(stat_same_dir1)
   stat_same_dir2 <- as.numeric(stat_same_dir2)
-  if(statistic == "abs_AFD"){
-    dt <- matrix(data = seq(0,2,0.01), nrow = length(seq(0,2,0.01)), ncol = 3)
-    for (i in 1:nrow(dt)) {
-      dt[i,2] <- length(which(stat_same_dir1 + stat_same_dir2>=dt[i,1]))
-      dt[i,3] <- length(which(stat_opposite_dir1 + stat_opposite_dir2>=dt[i,1]))
-    }
-  }
-  if(statistic == "AFD"){
-    dt_pos <- matrix(data = seq(0,2,0.01), nrow = length(seq(0,2,0.01)), ncol = 3)
-    for (i in 1:nrow(dt_pos)) {
-      dt_pos[i,2] <- length(which(stat_same_dir1 + stat_same_dir2>=dt_pos[i,1]))
-      dt_pos[i,3] <- length(which(stat_opposite_dir1 + stat_opposite_dir2>=dt_pos[i,1]))
-    }
-    dt_neg <- matrix(data = seq(-2,0,0.01), length(seq(0,2,0.01)), ncol = 3)
-    for (i in 1:nrow(dt_neg)) {
-      dt_neg[i,2] <- length(which(stat_same_dir1 + stat_same_dir2<=dt_neg[i,1]))
-      dt_neg[i,3] <- length(which(stat_opposite_dir1 + stat_opposite_dir2<=dt_neg[i,1]))
-    }
-    dt <- rbind(dt_neg,dt_pos)
-  }
-  if(statistic == "FST"){
-    dt <- matrix(data = seq(0,1,0.01), nrow = length(seq(0,1,0.01)), ncol = 3)
-    for (i in 1:nrow(dt)) {
-      dt[i,2] <- length(which(abs(stat_same_dir1 + stat_same_dir2)>=dt[i,1]))
-      dt[i,3] <- length(which(abs(stat_opposite_dir1 + stat_opposite_dir2)>=dt[i,1]))
-    }
+  dt <- matrix(data = seq(0,1,0.001), nrow = length(seq(0,1,0.001)), ncol = 3)
+  for (i in 1:nrow(dt)) {
+    dt[i,2] <- length(which(stat_same_dir1 + stat_same_dir2 >=dt[i,1]))
+    dt[i,3] <- length(which(stat_opposite_dir1 + stat_opposite_dir2 >=dt[i,1]))
   }
   dt <- as.data.frame(dt)
   colnames(dt) <- c("Statistic","Markers diverged same dir","Markers diverged opposite dir")
   dt$FDR_for_selection <- dt[,2]/dt[,3]
-  if(statistic == "FST" | statistic == "abs_AFD"){
-    dt <- dt[!is.infinite(dt[,3]),]
-    dt <- dt[!is.na(dt[,3]),]
-    sig_threshold <- max(dt[which(dt$FDR_for_selection < 0.1),1])
-    cat("The significance threshold based on the FDR for selection < 10%","\n",
-        "corresponds to an statistic of",sig_threshold, "\n")
-  }
-  if(statistic == "AFD"){
-    dt <- dt[!is.infinite(dt[,3]),]
-    dt <- dt[!is.na(dt[,3]),]
-    neg_area <- dt[which(dt$Statistic < 0),]
-    pos_area <- dt[which(dt$Statistic > 0),]
-    neg_sig_threshold <- max(neg_area[which(neg_area$FDR_for_selection < 0.1),1])
-    pos_sig_threshold <- min(pos_area[which(pos_area$FDR_for_selection < 0.1),1])
-    cat("The significance threshold based on the FDR for selection < 10%","\n",
-        "corresponds to an allele frequency difference of",
-        neg_sig_threshold,"and",pos_sig_threshold,"\n")
-    sig_threshold <- c(neg_sig_threshold,pos_sig_threshold)
+  if(statistic == "FST"){
+    FDR_in_per <- FDR*100
+    FDR_below5per <- dt[which(dt$FDR_for_selection < FDR),]
+    sig_threshold <- FDR_below5per$Statistic[which.min(FDR_below5per$Statistic)]
+    cat("The significance threshold based on the FDR for selection <",FDR_in_per,"%","\n",
+        "corresponds to an statistic of",sig_threshold, "\n",
+        "This threshold was exceeded by:",max(dt[which(dt$FDR_for_selection < 0.05),2]),
+        "markers observed between subpopulations selected in the same direction and",
+        max(dt[which(dt$FDR_for_selection < 0.05),3]),
+        "markers observed between subpopulations selected in opposite directions")
   }
   return(sig_threshold)
 }
-FST_FDR_for_sel_sig_thres <- get_FDR_for_selection_sign_thres(stat_opposite_dir1 = FST_values_od_cor$FST_value_opposite_dir1,
-                                                              stat_opposite_dir2 = FST_values_od_cor$FST_value_opposite_dir2,
-                                                              stat_same_dir1 = FST_values_od_cor$FST_value_same_dir1,
-                                                              stat_same_dir2 = FST_values_od_cor$FST_value_same_dir2,
-                                                              statistic = "FST")
-AFD_FDR_for_sel_sig_thres <- get_FDR_for_selection_sign_thres(stat_opposite_dir1 = allele_freq_diff$Low1_vs_High1,
-                                                              stat_opposite_dir2 = allele_freq_diff$Low2_vs_High2,
-                                                              stat_same_dir1 = allele_freq_diff$Low1_vs_Low2,
-                                                              stat_same_dir2 = allele_freq_diff$High1_vs_High2,
-                                                              statistic = "AFD")
-abs_AFD_FDR_for_sel_sig_thres <- get_FDR_for_selection_sign_thres(stat_opposite_dir1 = allele_freq_diff$Low1_vs_High1,
-                                                                  stat_opposite_dir2 = allele_freq_diff$Low2_vs_High2,
-                                                                  stat_same_dir1 = allele_freq_diff$Low1_vs_Low2,
-                                                                  stat_same_dir2 = allele_freq_diff$High1_vs_High2,
-                                                              statistic = "abs_AFD")
-
+sig_threshold_sum_FST <- get_sig_thresh_FDR_for_selection_based_on_sumFST(stat_opposite_dir1 = FST_values_od_cor$FST_value_opposite_dir1,
+                                                                            stat_opposite_dir2 = FST_values_od_cor$FST_value_opposite_dir2,
+                                                                            stat_same_dir1 = FST_values_od_cor$FST_value_same_dir1,
+                                                                            stat_same_dir2 = FST_values_od_cor$FST_value_same_dir2,
+                                                                            statistic = "FST",
+                                                                            FDR = 0.05)
 ```
 ## 6 Sauron plot
-The Sauron plot from [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1) can be used to visualize the scope of drift and the scope of selection. Sauron plots of genetic differentiation are created by plotting the FST statistics (A) and the allele frequency differences (B) observed in the subpopulations selected in the same direction (blue) and in opposite directions (red) against each other at each SNP marker. The transparent red colored edges correspond to a false discovery rate (FDR) for selection <10%. The diverged markers observed in the subpopulations selected in the same direction (blue) are provoked by drift and other factors, but not by selection. The diverged markers observed in the subpopulations selected in opposite directions (red) are provoked by drift, other factors and selection. Therefore the observations which exceed the cloud of blue points are expected to be provoked only by selection. The y- and x-axis correspond to the range of <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> and allele frequency differences.  
+          
+          ![image](https://user-images.githubusercontent.com/63467079/170996112-89af30a6-0405-449f-8273-fdcffb44ac0b.png)
+
+This plot depicts how the FDRfS was computed and provides a visualization of the scope of drift and selection. The Sauron plot comes from [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1), but it can be also created for the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> statisitc. Sauron plot of genetic differentiation for FSTSum observed between the subpopulations selected in the same direction (blue) and in opposite directions (red). Each dot represents one SNP. The transparent red colored edges correspond to a false discovery rate (FDR) for selection < 5%. The y- and x-axis correspond to the range of <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> values. 
 <img src="https://user-images.githubusercontent.com/63467079/149146525-ce94e222-dff8-4ad4-8dcb-ad14f7530032.png" width="700" height="350">
-The Sauron plots for the allele frequency differences and <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> are created by two different functions, since they plotting areas are different from each other. The "Sauron plot" for the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> does not even look like the eye of [Sauron](https://twitter.com/strnr/status/457201981007073280) anymore. The Sauron plot for the allele frequency difference is created by the `create_sauron_plot_allele_freq_diff()` function, which is shown above:
+The "Sauron plot" for the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> does not even look like the eye of [Sauron](https://twitter.com/strnr/status/457201981007073280) anymore, as the "Sauron plot" from [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1) did. The Sauron plot for the allele frequency difference is created by the `create_sauron_plot_FST()` function, which is shown above:
 ```{r}
-create_sauron_plot_allele_freq_diff <- function(data_table,
-                                                sig_threshold,
-                                                stat_opposite_dir1,
-                                                stat_opposite_dir2,
-                                                stat_same_dir1,
-                                                stat_same_dir2){
-  windowsFonts(my = windowsFont('Calibri'))
-  create_FDR_below_10_per_neg_area <- function(x){
-    sig_threshold[1]+-1*x
-  }
-  y_coord_value <- create_FDR_below_10_per_neg_area(x = seq(-1,0,0.01))
-  dt_coords_neg_area <- cbind(y_coord_value,seq(-1,0,0.01))
-  dt_coords_neg_area <- as.data.frame(dt_coords_neg_area)
-  dt_coords_neg_area$z <- rep(sig_threshold[1],nrow(dt_coords_neg_area))
-  colnames(dt_coords_neg_area) <- c("x_coord_value","y_coord_value","threshold_value")
-  dt_coords_neg_area <- dt_coords_neg_area[which(dt_coords_neg_area$y_coord_value > sig_threshold[1]),]
-  create_FDR_below_10_per_pos_area <- function(x){
-    sig_threshold[2]+-1*x
-  }
-  y_coord_value <- create_FDR_below_10_per_pos_area(x = 1-seq(0,1,0.01))
-  dt_coords_pos_area <- cbind(y_coord_value,1-seq(0,1,0.01))
-  dt_coords_pos_area <- as.data.frame(dt_coords_pos_area)
-  dt_coords_pos_area$z <- rep(sig_threshold[2],nrow(dt_coords_pos_area))
-  colnames(dt_coords_pos_area) <- c("x_coord_value","y_coord_value","threshold_value")
-  dt_coords_pos_area <- dt_coords_pos_area[which(dt_coords_pos_area$y_coord_value < sig_threshold[2]),]
-  sauron_1 <- ggplot()+
-    geom_area(data = dt_coords_pos_area, aes(x=x_coord_value, y=threshold_value), alpha = 0.1, fill = "tomato")+
-    geom_area(data = dt_coords_pos_area, aes(x=x_coord_value, y=y_coord_value), fill = "white")+
-    geom_area(data = dt_coords_neg_area, aes(x=x_coord_value, y=threshold_value), alpha = 0.1, fill = "tomato")+
-    geom_area(data = dt_coords_neg_area, aes(x=x_coord_value, y=y_coord_value),  fill = "white")+
-    geom_point(data = data_table, aes(x = stat_same_dir1,y = stat_same_dir1),shape=1, colour = "royalblue3")+
-    geom_point(data = data_table, aes(x = stat_opposite_dir1,y = stat_opposite_dir2),shape=1, colour = "firebrick")+
-    theme(text = element_text(size =14, family = "my"),
-          panel.background = element_rect(fill = "white"),
-          axis.line = element_line(colour = "black"),
-          axis.title.y = element_text(size =14, family = "my", colour = "royalblue3", face = "bold"),
-          axis.title.x = element_text(size =14, family = "my", colour = "royalblue3", face = "bold"),
-          axis.line.x = element_line(color = "black"),
-          axis.text = element_text(size =14, family = "my", colour = "black"))+
-    labs(x=paste("\t","\t","\t","\t","\t","\t","\t","\t","Low pheno 1 vs Low pheno 2"),
-         y=paste("\t","\t","\t","High pheno 1 vs High pheno 2"))+
-    ylim(-1,1)+
-    xlim(-1,1)
-  d11 <-  ggplot_build(sauron_1)$data[[1]]
-  empty_plot <- ggplot()+
-    theme(panel.background = element_rect(fill = "white"))
-  get_xaxis<-function(myggplot){
-    tmp <- ggplot_gtable(ggplot_build(myggplot))
-    legend <- tmp$grobs[[12]]
-    return(legend)
-  }
-  xaxis_sauron <- get_xaxis(sauron_1)
-  get_yaxis<-function(myggplot){
-    tmp <- ggplot_gtable(ggplot_build(myggplot))
-    legend <- tmp$grobs[[13]]
-    return(legend)
-  }
-  yaxis_sauron <- get_yaxis(sauron_1)
-  sauron_2 <- ggplot()+
-    geom_area(data = dt_coords_pos_area, aes(x=x_coord_value, y=threshold_value), alpha = 0.1, fill = "tomato")+
-    geom_area(data = dt_coords_pos_area, aes(x=x_coord_value, y=y_coord_value), fill = "white")+
-    geom_area(data = dt_coords_neg_area, aes(x=x_coord_value, y=threshold_value), alpha = 0.1, fill = "tomato")+
-    geom_area(data = dt_coords_neg_area, aes(x=x_coord_value, y=y_coord_value),  fill = "white")+
-    geom_point(data = data_table, aes(x = stat_opposite_dir1,y = stat_opposite_dir2),shape=1, colour = "firebrick")+
-    geom_point(data = data_table, aes(x = stat_same_dir1,y = stat_same_dir2),shape=1, colour = "royalblue3")+
-    theme(text = element_text(size =14, family = "my"),
-          panel.background = element_rect(fill = "white"),
-          panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
-                                          colour = "grey81"),
-          panel.grid.major = element_line(size = 0.5, linetype = 'solid',
-                                          colour = "grey100"),
-          axis.line = element_line(colour = "black"),
-          axis.title.y = element_text(size =14, family = "my", colour = "firebrick", face = "bold"),
-          axis.title.x = element_text(size =14, family = "my", colour = "firebrick", face = "bold"),
-          axis.line.x = element_line(color = "black"),
-          axis.text = element_text(size =14, family = "my", colour = "black"))+
-    labs(x=  "Low pheno 1 vs High pheno 1",
-         y= "Low pheno 2 vs High pheno 2",
-         tag = "B")+
-    geom_abline(intercept = sig_threshold[1], slope = -1, size = 1, alpha = 0.2, colour = "firebrick")+
-    geom_abline(intercept = sig_threshold[2], slope = -1, size = 1, alpha = 0.2, colour = "firebrick")+
-    xlim(sig_threshold[1],sig_threshold[2])+
-    ylim(sig_threshold[1],sig_threshold[2])
-  sauron_2
-  sauron_plot_all_afd <- grid.arrange(yaxis_sauron,sauron_2, xaxis_sauron,empty_plot,
-                                      ncol=2, nrow = 2, 
-                                      layout_matrix = rbind(c(1,2),c(4,3)),
-                                      widths = c(0.2, 4), heights = c(4,0.2))
-  return(sauron_plot_all_afd)
-}
-Sauron_plot_AFD <- create_sauron_plot_allele_freq_diff(data_table = allele_freq_diff,
-                                                       sig_threshold = AFD_FDR_for_sel_sig_thres,
-                                                       stat_opposite_dir1 = allele_freq_diff$Low1_vs_High1,
-                                                       stat_opposite_dir2 = allele_freq_diff$Low2_vs_High2,
-                                                       stat_same_dir1 = allele_freq_diff$Low1_vs_High1,
-                                                       stat_same_dir2 = allele_freq_diff$Low1_vs_High2)
-```
-The "Sauron plot" for the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> is created by the `create_sauron_plot_FST()` function, which is shown above:
-```{r} 
 create_sauron_plot_FST <- function(data_table,
                                    sig_threshold,
                                    stat_opposite_dir1,
                                    stat_opposite_dir2,
                                    stat_same_dir1,
                                    stat_same_dir2){
-  if(.Platform$OS.type == "windows") {
-    windowsFonts(my = windowsFont('Calibri'))}
-  else {my <- "Helvetica-Narrow"}
+  windowsFonts(my = windowsFont('Calibri'))
   create_FDR_area <- function(x){
     sig_threshold+-1*x
   }
-  y_coord_value <- create_FDR_area(x = seq(-1,0,0.01))
-  dt_coords_area <- cbind(y_coord_value,seq(-1,0,0.01))
+  y_coord_value <- create_FDR_area(x = seq(0,1,0.01))
+  dt_coords_area <- cbind(y_coord_value,seq(0,1,0.01))
   dt_coords_area <- as.data.frame(dt_coords_area)
   dt_coords_area$z <- rep(sig_threshold,nrow(dt_coords_area))
   colnames(dt_coords_area) <- c("x_coord_value","y_coord_value","threshold_value")
-  dt_coords_area <- dt_coords_area[which(dt_coords_area$y_coord_value > sig_threshold),]
+  dt_coords_threshold_area <- dt_coords_area[which(dt_coords_area$y_coord_value < sig_threshold),]
+  dt_coords_area_rest1 <- cbind(seq(sig_threshold,1,0.01),seq(sig_threshold,1,0.01))
+  dt_coords_area_rest1 <- as.data.frame(dt_coords_area_rest1)
+  colnames(dt_coords_area_rest1) <- c("x_coord_value","y_coord_value")
   sauron_1 <- ggplot()+
-    geom_area(data = dt_coords_area, aes(x=x_coord_value, y=threshold_value), alpha = 0.1, fill = "tomato")+
+    geom_area(data = dt_coords_area, aes(x=x_coord_value, y=threshold_value), alpha = 0.4, fill = "tomato")+
     geom_area(data = dt_coords_area, aes(x=x_coord_value, y=y_coord_value), fill = "white")+
-    geom_point(data = data_table, aes(x = stat_same_dir1,y = stat_same_dir1),shape=1, colour = "royalblue3")+
+    geom_area(data = dt_coords_area_rest1, aes(x=x_coord_value, y=y_coord_value),  orientation = "x", alpha = 0.4, fill = "tomato") +
+    geom_area(data = dt_coords_area_rest1, aes(x=x_coord_value, y=y_coord_value), orientation = "y", alpha = 0.4, fill = "tomato") +
+    geom_point(data = data_table, aes(x = stat_same_dir1,y = stat_same_dir2),shape=1, colour = "royalblue3")+
     geom_point(data = data_table, aes(x = stat_opposite_dir1,y = stat_opposite_dir2),shape=1, colour = "firebrick")+
-    theme(text = element_text(size =14, family = "my"),
+    theme(text = element_text(size =font_size, family = "my"),
           panel.background = element_rect(fill = "white"),
           axis.line = element_line(colour = "black"),
-          axis.title.y = element_text(size =14, family = "my", colour = "royalblue3", face = "bold"),
-          axis.title.x = element_text(size =14, family = "my", colour = "royalblue3", face = "bold"),
+          axis.title.y = element_text(size = font_size, family = "my", colour = "royalblue3", face = "bold"),
+          axis.title.x = element_text(size = font_size, family = "my", colour = "royalblue3", face = "bold"),
           axis.line.x = element_line(color = "black"),
-          axis.text = element_text(size =14, family = "my", colour = "black"))+
-    labs(x=paste("\t","\t","\t","\t","\t","\t","\t","\t","Low pheno 1 vs Low pheno 2"),
-         y=paste("\t","\t","\t","High pheno 1 vs High pheno 2"))+
-    ylim(0,1)+
-    xlim(0,1)
+          axis.text = element_text(size = font_size, family = "my", colour = "black"))+
+    labs(x=paste("\t","\t","\t","\t","\t","\t","\t","\t","Short 1 vs Short 2"),
+         y=paste("\t","\t","\t","Tall 1 vs Tall 2"))+
+    ylim(0,0.75)+
+    xlim(0,0.75)
   d11 <-  ggplot_build(sauron_1)$data[[1]]
   empty_plot <- ggplot()+
     theme(panel.background = element_rect(fill = "white"))
@@ -1019,43 +770,43 @@ create_sauron_plot_FST <- function(data_table,
   }
   yaxis_sauron <- get_yaxis(sauron_1)
   sauron_2 <- ggplot()+
-    geom_area(data = dt_coords_area, aes(x=x_coord_value, y=threshold_value), alpha = 0.1, fill = "tomato")+
+    geom_area(data = dt_coords_area, aes(x=x_coord_value, y=threshold_value), alpha = 0.4, fill = "tomato")+
     geom_area(data = dt_coords_area, aes(x=x_coord_value, y=y_coord_value), fill = "white")+
-    geom_point(data = data_table, aes(x = stat_opposite_dir1,y = stat_opposite_dir2),shape=1, colour = "firebrick")+
-    geom_point(data = data_table, aes(x = stat_same_dir1,y = stat_same_dir2),shape=1, colour = "royalblue3")+
-    theme(text = element_text(size =14, family = "my"),
+    geom_area(data = dt_coords_area_rest1, aes(x=x_coord_value, y=y_coord_value),  orientation = "x", alpha = 0.4, fill = "tomato") +
+    geom_area(data = dt_coords_area_rest1, aes(x=x_coord_value, y=y_coord_value), orientation = "y", alpha = 0.4, fill = "tomato") +
+    geom_point(data = data_table, aes(x = stat_opposite_dir1,y = stat_opposite_dir2), shape = 1,  colour = "firebrick")+
+    geom_point(data = data_table, aes(x = stat_same_dir1,y = stat_same_dir2),shape = 1, colour = "royalblue3")+
+    theme(text = element_text(size = font_size, family = "my"),
           panel.background = element_rect(fill = "white"),
-          panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
-                                          colour = "grey81"),
-          panel.grid.major = element_line(size = 0.5, linetype = 'solid',
-                                          colour = "grey100"),
+          panel.grid.minor = element_blank(),
+          panel.grid.major = element_blank(),
           axis.line = element_line(colour = "black"),
-          axis.title.y = element_text(size =14, family = "my", colour = "firebrick", face = "bold"),
-          axis.title.x = element_text(size =14, family = "my", colour = "firebrick", face = "bold"),
+          legend.position = "bottom",
+          axis.title.y = element_text(size = font_size, family = "my", colour = "firebrick", face = "bold"),
+          axis.title.x = element_text(size = font_size, family = "my", colour = "firebrick", face = "bold"),
           axis.line.x = element_line(color = "black"),
-          axis.text = element_text(size =14, family = "my", colour = "black"))+
-    labs(x=  "Low pheno 1 vs High pheno 1",
-         y= "Low pheno 2 vs High pheno 2",
-         tag = "B")+
-    geom_abline(intercept = sig_threshold[1], slope = -1, size = 1, alpha = 0.2, colour = "firebrick")+
-    geom_abline(intercept = sig_threshold[2], slope = -1, size = 1, alpha = 0.2, colour = "firebrick")+
-    xlim(0,sig_threshold)+
-    ylim(0,sig_threshold)
+          axis.text = element_text(size = font_size, family = "my", colour = "black"))+
+    labs(x=  "Short 1 vs Short 2",
+         y= "Tall 2 vs Tall 2")+
+    geom_abline(intercept = sig_threshold, slope = -1, size = 1, alpha = 0.2, colour = "firebrick4")+
+    xlim(0,0.75)+
+    ylim(0,0.75)
   sauron_2
   sauron_plot_all_FST<- grid.arrange(yaxis_sauron,sauron_2, xaxis_sauron,empty_plot,
-                                      ncol=2, nrow = 2, 
-                                      layout_matrix = rbind(c(1,2),c(4,3)),
-                                      widths = c(0.2, 4), heights = c(4,0.2))
+                                     ncol=2, nrow = 2, 
+                                     layout_matrix = rbind(c(1,2),c(4,3)),
+                                     widths = c(0.2, 4), heights = c(4,0.2))
   return(sauron_plot_all_FST)
 }
-
-Sauron_plot_FST <- create_sauron_plot_FST(data_table = allele_freq_diff,
-                                          sig_threshold = AFD_FDR_for_sel_sig_thres,
-                                          stat_opposite_dir1 = allele_freq_diff$Short1_vs_Tall1,
-                                          stat_opposite_dir2 = allele_freq_diff$Short2_vs_Tall2,
-                                          stat_same_dir1 = allele_freq_diff$Short1_vs_Short2,
-                                          stat_same_dir2 = allele_freq_diff$Tall1_vs_Tall2)             
+Sauron_plot_FST <- create_sauron_plot_FST(data_table = FST_values_od_cor,
+                                          sig_threshold = sig_threshold_sum_FST ,
+                                          stat_opposite_dir1 = FST_values_od_cor$FST_value_opposite_dir1,
+                                          stat_opposite_dir2 = FST_values_od_cor$FST_value_opposite_dir2,
+                                          stat_same_dir1 = FST_values_od_cor$FST_value_same_dir1,
+                                          stat_same_dir2 = FST_values_od_cor$FST_value_same_dir2)
+Sauron_plot_FST
 ```
+
 The two Sauron plots can be combined:
 ```{r}
 combined_sauron_plots <- grid.arrange(Sauron_plot_AFD, Sauron_plot_FST, 
