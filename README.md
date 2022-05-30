@@ -1,23 +1,24 @@
 # Experimental evolution with replicated selection
 ## Table of contents
+# Experimental evolution with replicated selection
+## Table of contents
 [0 Introduction](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#introduction) <br />
 [1 Phenotypic data analysis](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#1-phenotypic-data-analysis) <br />
 2 Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy) <br />
 [3 Filtering](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#filtering) <br />
-&emsp;[3.1 Filtering for individual samples with low coverage](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#21-filtering-for-individual-samples-with-low-coverage) <br />
-&emsp;[3.2 Filtering for read depth per sample](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#22-filtering-for-read-depth-per-sample) <br />
-&emsp;[3.3 Filtering for missingness](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#23-filtering-for-missingness) <br />
-&emsp;[3.4 Removal of non-diallelic and non-polymorphic markers](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#24-removal-of-non-diallelic-and-non-polymorphic-markers) <br />
-[4 Selection signature mapping with FST leveraging replicated selection](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#3-selection-signature-mapping) <br />
-
-[5 Significance thresholds](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#4-significance-thresholds) <br />
-&emsp; [5.1 Based on the empirical distribution](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#41-based-on-the-empiric-distribution) <br />
-&emsp; [5.2 Based on drift simulations](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#42-based-on-drift-simulations) <br />
-&emsp; [5.3 Simulation of drift](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#43-simulation-of-drift) <br />
-&emsp; [5.4 Based on the FDRfS](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#44-based-on-the-fdr-for-selection)<br />
-[6 Sauron plot](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#5-sauron-plot) <br />
-[7 Manhatten plots](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#6-other-plotting-scripts) <br />
-[8 LD decay](https://github.com/milaleonie/Selection_signature_mapping_with_replicated_selection/blob/main/README.md#8-ld-decay)
+&emsp;[3.1 Filtering for individual samples with low coverage](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#21-filtering-for-individual-samples-with-low-coverage) <br />
+&emsp;[3.2 Filtering for read depth per sample](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#22-filtering-for-read-depth-per-sample) <br />
+&emsp;[3.3 Filtering for missingness](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#23-filtering-for-missingness) <br />
+&emsp;[3.4 Removal of non-diallelic and non-polymorphic markers](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#24-removal-of-non-diallelic-and-non-polymorphic-markers) <br />
+[4 Selection signature mapping with FST leveraging replicated selection](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#3-selection-signature-mapping) <br />
+[5 Significance thresholds](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#4-significance-thresholds) <br />
+&emsp; [5.1 Based on the empirical distribution](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#41-based-on-the-empiric-distribution) <br />
+&emsp; [5.2 Based on drift simulations](https://github.com/milaleoni/ExpEvo_with_replicated_selection/blob/main/README.md#42-based-on-drift-simulations) <br />
+&emsp; [5.3 Simulation of drift](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#43-simulation-of-drift) <br />
+&emsp; [5.4 Based on the FDRfS](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#44-based-on-the-fdr-for-selection)<br />
+[6 Sauron plot](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#5-sauron-plot) <br />
+[7 Manhatten plots](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#6-Manhattan-plots) <br />
+[8 LD decay](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#8-ld-decay)
 
 ## 0 Introduction
 This repository contains scripts for selection signature mapping with replicated selection.
@@ -81,7 +82,7 @@ After the VCF file was created with the GB-eaSy pipeline from [Wickland et al. 2
 - Filtering for missingness
 - Removal of non-diallelic and non-polymorphic markers 
 <br /> <br />
-The Rscript generates a new filter VCF file, when all filtering steps are passed. The script additionally contains functions which calculate the  filtering parameters per marker, so that these can be plotted or checked, if needed. Furthermore the script also creates plots with the quality parameters **total read depth**, **mapping quality**, and **phred-scaled quality** before and after filtering. This plot is created with a plotting function from the `vcfR` package from [Knaus and Grünwald 2018]
+The Rscript generates a new filter VCF file, when all filtering steps are passed. The script additionally contains functions which calculate the  filtering parameters per marker, so that these can be plotted or checked, if needed. Furthermore the script also creates plots with the quality parameters **total read depth**, **mapping quality**, and **phred-scaled quality** before and after filtering. This plot is created with a plotting function from the `vcfR` package from [Knaus and Grünwald 2018](https://github.com/knausb/vcfR#:~:text=VcfR%20is%20an%20R%20package%20intended%20to%20allow,rapidly%20read%20from%20and%20write%20to%20VCF%20files.).
 
 ### Loading of required packages and the VCF file:
 Most of the function come from the `vcfR` package from [Knaus and Grünwald 2018](https://github.com/knausb/vcfR#:~:text=VcfR%20is%20an%20R%20package%20intended%20to%20allow,rapidly%20read%20from%20and%20write%20to%20VCF%20files.). The <vcfR> package from [Knaus and Grünwald 2018] works with S4 objects, therefore the syntax is quite different from "normal" R jargon. 
@@ -300,10 +301,10 @@ Our scan for selection was based on the <img src="https://render.githubuserconte
 The function for the calculation of the **<img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection** is contained in the `selection_signature_mapping.R` script. 
 <br /> <br /> 
 The function below will calculate the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> between all possible and non-redundant comparisons between the subpopulations selected in the same and opposite directions at each marker as: <br /> <br />
-<img src="https://render.githubusercontent.com/render/math?math=F_{ST} = \frac{s^2}{\mu(p)*(1-\mu(p))%2B(\frac{s^2}{2})}"> 
+<img width="440" alt="FST_formula" src="https://user-images.githubusercontent.com/63467079/171010281-cf3648d2-1baf-4fc3-8e23-83d3dbd792ca.png">
 <br /> <br /> according to [Weir and Cockerham, 1984](https://doi.org/10.1111/j.1558-5646.1984.tb05657.x). <br /> <br />
 
-The function also calculates the <img src="https://render.githubusercontent.com/render/math?math=F_{ST} Sum"> between the subpopulations selected in same and opposite directions. This values are required for the calculation of the false discovery rate for selection (FDRfS). In this statistic, observations which only occured in one comparison are excluded. Those observations might have been caused by drift. Selection is a repeatable force, so that we should be able to observe the same pattern in both comparisons. <br /> <br />            
+The function also calculates the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> Sum between the subpopulations selected in same and opposite directions. This values are required for the calculation of the false discovery rate for selection (FDRfS). In this statistic, observations which only occured in one comparison are excluded. Those observations might have been caused by drift. Selection is a repeatable force, so that we should be able to observe the same pattern in both comparisons. <br /> <br />            
  
 ```{r}
 library(stringr)
@@ -317,7 +318,7 @@ cores <- detectCores(all.tests = FALSE, logical = TRUE)
 registerDoMC(cores)
 time_0 <- Sys.time()
 cat("The data set loading starts")
-# vcf_S4 <- read.vcfR("YOUR_DATA_after_filtering.vcf.gz", verbose = FALSE)
+#vcf_S4 <- read.vcfR("YOUR_DATA_after_filtering.vcf.gz", verbose = FALSE)
 #setwd("/path/to/your/own/working/directory/")
 cat("The data set is loaded.","\n")
 time_1 <- Sys.time()
@@ -421,7 +422,7 @@ FST_values_od_cor <- calculate_FST_value(data = vcf_S4,
 Significance thresholds for selection were calculated three ways: 1) based on the empirical distribution; 2) based on drift simulations; and 3) based on the false discovery rate for selection (FDRfS) [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). <br /> 
 The calculation of significance thresholds and the plotting functions are contained in the `Significance_thresholds_and_plotting.R`. The `Filtering_for_coverage_average_RD_missingness.R` and `Selection_signature_mapping.R` script can or should be run on a inactive Linux session on a high-throughput computing device. These scripts are usually run on extremly large data sets (raw sequence data or large VCF files). The `Significance_thresholds_and_plotting.R` is usually run on a much smaller data set, since many markers were removed in the filtering procedure. Furthermore, when windows font types want to be used,  the script needs to be run on a windows device. <br />   
 ### 5.1 Based on the empirical distribution
-The significance thresholds based on the empirical distribution, were calculated by taking the 99.9th and 99.99th percentile of the empirical distribution of the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}">:
+The significance thresholds based on the empirical distribution, were calculated by taking the 99.9th and 99.99th percentile of the empirical distribution of the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> :
 ```{r}
 FST_sig_thres_1 <- quantile(FST_values_od_cor$Fst, probs = 0.9999, na.rm = TRUE)
 FST_sig_thres_2 <- quantile(FST_values_od_cor$Fst, probs = 0.999, na.rm = TRUE)    
@@ -444,10 +445,10 @@ library(doMC)
 cores <- as.integer(Sys.getenv('SLURM_CPUS_PER_TASK'))
 cores <- detectCores(all.tests = FALSE, logical = TRUE)
 registerDoMC(cores)
-setwd("/usr/users/mtost/new_drift_simulations/")
+setwd("/your/personal/working/directory/")
           
 # use the real allele frequencies from generation 0
-real_data <- read.table("/usr/users/mtost/wd_test_GB_easy_rerun/R_analysis_20162020/GB1307_Allele_and_GT_freq_per_pop_after_MAF005_filt.txt",
+real_data <- read.table("/your/personal/working/directory/Allele_freq.txt",
                         header = TRUE)
 initial_Short1 <- real_data$freq_P_Short1Shoe0
 initial_Short2 <- real_data$freq_P_Short2Shoe0
@@ -564,10 +565,6 @@ dt_drift_sim <- rbind(simulated_drift_Short1,
                       simulated_drift_Short2,
                       simulated_drift_Tall1,
                       simulated_drift_Tall2)
-write.table(dt_drift_sim, "2022_02_16_new_simulated_drift_with_sequencing_af_dist_V3R1.txt", 
-            row.names = TRUE, sep = "  ",
-            quote = FALSE)
-
 fst_value_calc <- function(population_1,population_2){
   mean <- (population_1+population_2) / 2
   var <- (population_1-mean)^2 + (population_2-mean)^2
@@ -591,10 +588,6 @@ all_FST_values <- rbind(Fst_value_sd_1,
                         sum(Fst_value_od_1,Fst_value_sd_2),
                         sum(Fst_value_sd_1,Fst_value_od_2))
 threshold <- quantile(all_FST_values, probs = 0.999999, na.rm = TRUE)
-cat("The significance threshold based on drift simulations with sequenicng is:",threshold)
-write.table(all_FST_values, "2022_05_27_FST_values_V4.txt", 
-            row.names = TRUE, sep = "  ",
-            quote = FALSE)
 ```
 <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> values were calculated for all simulated markers, which corresponded in our case to 5,000,000 simulations. We summed those up and choosed the the 99.9999th percentile of the emprirical distribution of all observations as significance threshold, similar to [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219).  
 
@@ -630,11 +623,11 @@ The calculation of the FDR for selection is also demonstrated with the following
           
 ```{r}
 calculate_FDR_for_selection_based_on_sumFST <- function(stat_opposite_dir1,
-                                                         stat_opposite_dir2,
-                                                         stat_same_dir1,
-                                                         stat_same_dir2,
-                                                         statistic, 
-                                                         FDR){
+                                                        stat_opposite_dir2,
+                                                        stat_same_dir1,
+                                                        stat_same_dir2,
+                                                        statistic, 
+                                                        FDR){
   stat_opposite_dir1 <- as.numeric(stat_opposite_dir1)
   stat_opposite_dir2 <- as.numeric(stat_opposite_dir2)
   stat_same_dir1 <- as.numeric(stat_same_dir1)
@@ -708,7 +701,7 @@ sig_threshold_sum_FST <- get_sig_thresh_FDR_for_selection_based_on_sumFST(stat_o
                                                                             FDR = 0.05)
 ```
 ## 6 Sauron plot       
-<img src="https://user-images.githubusercontent.com/63467079/170998919-de260c76-c32f-4267-a85a-186fd2e857d3.png", width="700" height="350">
+<img src="https://user-images.githubusercontent.com/63467079/171002013-a510cf2f-5150-4808-bff8-b3a5d92d40b4.png" width="400" height="400"> <br /> <br /> 
 This plot depicts how the FDRfS was computed and provides a visualization of the scope of drift and selection. The Sauron plot comes from [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1), but it can be also created for the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> statisitc. Sauron plot of genetic differentiation for FSTSum observed between the subpopulations selected in the same direction (blue) and in opposite directions (red). Each dot represents one SNP. The transparent red colored edges correspond to a false discovery rate (FDR) for selection < 5%. The y- and x-axis correspond to the range of <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> values. 
 The "Sauron plot" for the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> does not even look like the eye of [Sauron](https://twitter.com/strnr/status/457201981007073280) anymore, as the "Sauron plot" from [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1) did. The Sauron plot for the allele frequency difference is created by the `create_sauron_plot_FST()` function, which is shown above:
 ```{r}
@@ -801,130 +794,29 @@ Sauron_plot_FST <- create_sauron_plot_FST(data_table = FST_values_od_cor,
                                           stat_same_dir2 = FST_values_od_cor$FST_value_same_dir2)
 Sauron_plot_FST
 ```
-
-The two Sauron plots can be combined:
-```{r}
-combined_sauron_plots <- grid.arrange(Sauron_plot_AFD, Sauron_plot_FST, 
-                                    ncol=2, nrow = 1,
-                                    labels = c("A","B"))
-```
+          
 ## 7 Manhatten plots
-In these [Manhatten plot](https://en.wikipedia.org/wiki/Manhattan_plot#:~:text=A%20Manhattan%20plot%20is%20a%20type%20of%20scatter,genome-wide%20association%20studies%20%28GWAS%29%20to%20display%20significant%20SNPs.) the positions of the markers are plotted against the statistical value observed at this marker. Here the Manhatten plots are only shown for Chromosome 3, which showed in our study the most interesting results. The different significance thresholds are also plotted. <br /> 
-**Differentiation along Chromosome 3 expressed by the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> (A) and absolute allele frequency differences (B) 
-![2021_new_combined_manhatten_plots](https://user-images.githubusercontent.com/63467079/149943665-fdedbd0f-cb06-44f4-a2d2-c3ffd53b258a.png)
+In the [Manhatten plot](https://en.wikipedia.org/wiki/Manhattan_plot#:~:text=A%20Manhattan%20plot%20is%20a%20type%20of%20scatter,genome-wide%20association%20studies%20%28GWAS%29%20to%20display%20significant%20SNPs.) the positions of the markers are plotted against the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> value observed at this marker. <br />
+![2022_03_21_V4_Presentation_Manhatten_plot](https://user-images.githubusercontent.com/63467079/171006453-6317bd29-2d8b-48b9-866f-476333fc974a.png)
 <br /> 
-Because we plot the different signifcance thresholds and we observed quite much recombination the Manhatten plots were created for the different chromosomes separately. Therefore the data set first needs to divided into the markers observed at the different chromosomes. This can be easly done by a function from the `data.table` package.  
 ```{r}
-Fst_tab <- as.data.table(FST_values_od_cor)
-Fst_Chr_1 <- Fst_tab[Chromosome=="chr1",]
-Fst_Chr_2 <- Fst_tab[Chromosome=="chr2",]
-Fst_Chr_3 <- Fst_tab[Chromosome=="chr3",]
-Fst_Chr_4 <- Fst_tab[Chromosome=="chr4",]
-Fst_Chr_5 <- Fst_tab[Chromosome=="chr5",]
-Fst_Chr_6 <- Fst_tab[Chromosome=="chr6",]
-Fst_Chr_7 <- Fst_tab[Chromosome=="chr7",]
-Fst_Chr_8 <- Fst_tab[Chromosome=="chr8",]
-Fst_Chr_9 <- Fst_tab[Chromosome=="chr9",]
-Fst_Chr_10 <- Fst_tab[Chromosome=="chr10",]          
-```
-The combined Manhatten plots for both statistics are created per chromosome separately by the following function:
-```{r}
-create_manhatten_plot_per_chr_both_stat <- function(data_1,
-                                                    data_2,
-                                                    statistic_1, 
-                                                    statistic_2,
-                                                    name_of_statistic_1,
-                                                    name_of_statistic_2,
-                                                    SNP_position,
-                                                    sign_thres_emp_dis_999,
-                                                    sign_thres_emp_dis_9999,
-                                                    sign_thres_drift_sim,
-                                                    sign_thres_FDR){
-  windowsFonts(my = windowsFont('Calibri'))
-  Stat1_chr_plot <- ggplot(data = data_1)+
-    geom_point(aes(x = SNP_position_1,y = statistic_1), colour = "black")+
-    theme(text = element_text(size =12, family = "my"),
-          panel.background = element_rect(fill = "white"),
-          panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
-                                          colour = "grey81"),
-          panel.grid.major = element_line(size = 0.5, linetype = 'solid',
-                                          colour = "grey100"),
-          panel.border = element_blank(),
-          axis.line.y = element_line(colour = "black"),
-          axis.line.x = element_line(colour = "black"),
-          axis.ticks = element_blank(),
-          axis.title.y = element_text(size =12, family = "my", colour = "black", face = "bold"),
-          axis.text.y = element_text(size =12, family = "my", colour = "black"),
-          axis.title.x = element_text(size =12, family = "my", colour = "black", face = "bold"),
-          axis.text.x = element_blank(),
-          legend.text = element_text(size =10, family = "my", colour = "black"),
-          legend.title = element_text(size =10, family = "my", colour = "black", face = "bold"))+
-    labs(y = name_of_statistic_1,x = "Position", tag = "A")+
-    geom_hline(yintercept = sign_thres_emp_dis_999, colour="darkred", size = 1)+
-    geom_hline(yintercept = sign_thres_emp_dis_9999, colour="tomato", size = 1)+
-    geom_hline(yintercept = drift_simulation_based_sig_thresold, colour="purple", size = 1)+
-    geom_hline(yintercept = FDR_of_selection_significance_threshold, colour="gold", size = 1)
-  Stat2_chr_plot <- ggplot(data = data_2)+
-    geom_point(aes(x = SNP_position_2,y = statistic_2), colour = "black")+
-    theme(text = element_text(size =12, family = "my"),
-          panel.background = element_rect(fill = "white"),
-          panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
-                                          colour = "grey81"),
-          panel.grid.major = element_line(size = 0.5, linetype = 'solid',
-                                          colour = "grey100"),
-          panel.border = element_blank(),
-          axis.line.y = element_line(colour = "black"),
-          axis.line.x = element_line(colour = "black"),
-          axis.ticks = element_blank(),
-          axis.title.y = element_text(size =12, family = "my", colour = "black", face = "bold"),
-          axis.text.y = element_text(size =12, family = "my", colour = "black"),
-          axis.title.x = element_text(size =12, family = "my", colour = "black", face = "bold"),
-          axis.text.x = element_blank(),
-          legend.text = element_text(size =10, family = "my", colour = "black"),
-          legend.title = element_text(size =10, family = "my", colour = "black", face = "bold"))+
-    labs(y = name_of_statistic_2,x = "Position", tag = "B")+
-    geom_hline(aes(yintercept = sign_thres_emp_dis_999, linetype=str_wrap("99.9th percentile",10)), colour="darkred", size = 1)+
-    geom_hline(aes(yintercept = sign_thres_emp_dis_9999, linetype=str_wrap("99.99th",10)), colour="tomato", size = 1)+
-    geom_hline(aes(yintercept = drift_simulation_based_sig_thresold, linetype=str_wrap("drift simulations",10)), colour="purple", size = 1)+
-    geom_hline(aes(yintercept = FDR_of_selection_significance_threshold, linetype=str_wrap("FDR",10)), colour="gold", size = 1)+
-    scale_linetype_manual(name = str_wrap("Significance threshold",10), values = c(1,1,1,1), 
-                          guide = guide_legend(override.aes = list(color = c("darkred", "tomato",
-                                                                             "purple","gold"))))
-  combined_Manhattenplots <- grid.arrange(Stat1_chr_plot,Stat2_chr_plot,
-                                      ncol=2, nrow = 1,
-                                      widths = c(8, 8.5), heights = c(4))
-  return(combined_Manhattenplots)
-}
-manhatten_plot <- create_manhatten_plot_per_chr_both_stat(data_1 = Fst_Chr_3,
-                                                          data_2 = AFD_Chr_3,
-                                                          statistic_1 = Fst_Chr_3$Fst_value, 
-                                                          statistic_2 = AFD_Chr_3$Abs_allele_freq_diff,
-                                                          name_of_statistic_1 = "Fst",
-                                                          name_of_statistic_2 = "|allele frequency difference|",
-                                                          SNP_position_1 = Fst_Chr_3$Fst_value,
-                                                          SNP_position_2 = AFD_Chr_3$Abs_allele_freq_diff,
-                                                          Stat1_sign_thres_emp_dis_999 = FST_emp_dis_999_perc,
-                                                          Stat1_sign_thres_emp_dis_9999 = FST_emp_dis_9999_perc,
-                                                          Stat1_sign_thres_drift_sim = FST_drift_sim_sig_thres,
-                                                          Stat1_sign_thres_FDR = FDR_for_sel_sig_thres,
-                                                          Stat2_sign_thres_emp_dis_999 = AFD_emp_dis_999_perc,
-                                                          Stat2_sign_thres_emp_dis_9999 = AFD_emp_dis_9999_perc,
-                                                          Stat2_sign_thres_drift_sim = AFD_drift_sim_sig_thres,
-                                                          Stat2_sign_thres_FDR = abs_AFD_FDR_for_sel_sig_thres)          
-```
-In case one wants to plot only one statistic in the Manhatten plot, this function creates the only one Manhatten plot:
-```{r}
+library(stringr)
+FST_values_od_cor$Chromosome <- str_sub(FST_values_od_cor$Chromosome,4,5)
+FST_values_od_cor$Chromosome <- as.factor(FST_values_od_cor$Chromosome)
 create_manhatten_plot_per_chr_one_stat <- function(data,
                                                    name_of_statistic,
-                                                   statistic, 
-                                                   SNP_position,
+                                                   font_size,
                                                    sign_thres_emp_dis_999,
                                                    sign_thres_emp_dis_9999,
                                                    sign_thres_drift_sim,
                                                    sign_thres_FDR){
-  windowsFonts(my = windowsFont('Calibri'))
-  chr_plot <- ggplot(data = data)+
-    geom_point(aes(x = SNP_position,y = statistic), colour = "black")+
+  windowsFonts(my = windowsFont('Calibri Light'))
+  my_pal_col <- (c("1" = "pink","2" = "pink3","3" = "pink",
+                   "4" = "pink3","5" = "pink","6" = "pink3", 
+                   "7" = "pink","8" = "pink3","9" = "pink",
+                   "10" = "pink3"))
+  Fst_tab_small <- data[1:10,]
+  legend_chr_plot <- ggplot(data = Fst_tab_small)+
     theme(text = element_text(size =12, family = "my"),
           panel.background = element_rect(fill = "white"),
           panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
@@ -935,40 +827,66 @@ create_manhatten_plot_per_chr_one_stat <- function(data,
           axis.line.y = element_line(colour = "black"),
           axis.line.x = element_line(colour = "black"),
           axis.ticks = element_blank(),
-          axis.title.y = element_text(size =12, family = "my", colour = "black", face = "bold"),
-          axis.text.y = element_text(size =12, family = "my", colour = "black"),
-          axis.title.x = element_text(size =12, family = "my", colour = "black", face = "bold"),
+          axis.title.y = element_text(size =font_size-10, family = "my", colour = "black", face = "bold"),
+          axis.text.y = element_text(size =font_size-12, family = "my", colour = "black"),
+          axis.title.x = element_text(size =font_size-12, family = "my", colour = "black", face = "bold"),
           axis.text.x = element_blank(),
-          legend.text = element_text(size =10, family = "my", colour = "black"),
-          legend.title = element_text(size =10, family = "my", colour = "black", face = "bold"))+
-    labs(y = name_of_statistic,x = "Position")+
-    geom_hline(aes(yintercept = sign_thres_emp_dis_999, linetype=str_wrap("99.9th percentile",10)), colour="darkred", size = 1)+
-    geom_hline(aes(yintercept = sign_thres_emp_dis_9999, linetype=str_wrap("99.99th",10)), colour="tomato", size = 1)+
-    geom_hline(aes(yintercept = sign_thres_drift_sim, linetype=str_wrap("drift simulations",10)), colour="purple", size = 1)+
-    geom_hline(aes(yintercept = sign_thres_FDR, linetype=str_wrap("FDR",10)), colour="gold", size = 1)+
-    scale_linetype_manual(name = str_wrap("Significance threshold",10), values = c(1,1,1,1), 
-                          guide = guide_legend(override.aes = list(color = c("darkred", "tomato",
-                                                                             "purple","gold"))))
-  return(chr_plot)
+          legend.text = element_text(size =font_size-12, family = "my", colour = "black"),
+          legend.title = element_text(size =font_size-12, family = "my", colour = "black", face = "bold"))+
+    labs(y = "FST",x = "Position")+
+    geom_hline(aes(yintercept = sign_thres_drift_sim, linetype=str_wrap("1) Drift Sim",12)), colour="purple", size = 1)+
+    geom_hline(aes(yintercept = sign_thres_FDR, linetype=str_wrap("2) FDRfS",12)), colour="gold", size = 1)+
+    geom_hline(aes(yintercept = sign_thres_emp_dis_9999, linetype=str_wrap("3) 99.99th",12)), colour="darkred", size = 1)+
+    geom_hline(aes(yintercept = sign_thres_emp_dis_999, linetype=str_wrap("4) 99.9th",12)), colour="tomato", size = 1)+
+    scale_linetype_manual(name = str_wrap("Significance threshold",10), values = c(1,1,1,1),
+                          guide = guide_legend(override.aes = list(color = c("purple","gold","darkred","tomato"),
+                                                                   linetype = c("solid","solid","dotted","dotted"))))
+  get_legend <- function(a.gplot){ 
+    tmp <- ggplot_gtable(ggplot_build(a.gplot)) 
+    leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box") 
+    legend <- tmp$grobs[[leg]] 
+    legend
+  } 
+  legend <- get_legend(legend_chr_plot)
+  chr_plot <- ggplot(data =  data, aes(x =  fct_inorder(SNP_ID), y = Sum_FST))+
+    geom_point(aes(x = fct_inorder(SNP_ID), y = Sum_FST, colour = Chromosome, group = Chromosome))+
+    theme(text = element_text(size =font_size, family = "my"),
+          panel.background = element_rect(fill = "white"),
+          panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
+                                          colour = "grey81"),
+          panel.grid.major = element_line(size = 0.5, linetype = 'solid',
+                                          colour = "grey100"),
+          panel.border = element_blank(),
+          axis.line.y = element_line(colour = "black"),
+          axis.line.x = element_line(colour = "black"),
+          axis.ticks = element_blank(),
+          axis.title.y = element_text(size =font_size, family = "my", colour = "black", face = "bold"),
+          axis.text.y = element_text(size =font_size-10, family = "my", colour = "black"),
+          axis.title.x = element_text(size =font_size, family = "my", colour = "black", face = "bold"),
+          axis.text.x = element_blank(),
+          legend.text = element_blank(),
+          legend.title = element_blank())+
+    labs(y = "FstSum",x = "Position")+
+    geom_hline(aes(yintercept = sign_thres_FDR), linetype="solid", colour="gold", size = 1)+
+    geom_hline(aes(yintercept = sign_thres_drift_sim), linetype="solid", colour="purple", size = 1)+
+    geom_hline(aes(yintercept = as.numeric(sign_thres_emp_dis_9999)), linetype="dotted", colour="darkred", size = 1)+
+    geom_hline(aes(yintercept = as.numeric(sign_thres_emp_dis_999)), linetype="dotted", colour="tomato", size = 1)+
+    scale_color_manual(values=my_pal_col)+
+    guides(color = "none", linetype = "none")
+    Manhatten_plot <- grid.arrange(chr_plot, legend,
+                                   ncol=2, nrow = 1, 
+                                   layout_matrix = rbind(c(1,2)),
+                                   widths = c(17, 3), heights = c(4))
+    return(Manhatten_plot)
 }
-FST_manhatten_plot <- create_manhatten_plot_per_chr_one_stat(data = Fst_Chr_3,
+FST_manhatten_plot <- create_manhatten_plot_per_chr_one_stat(data = FST_values_od_cor,
                                                              name_of_statistic = "Fst",
-                                                             statistic = Fst_Chr_3$Fst_value,
-                                                             SNP_position = Fst_Chr_3$Position,
-                                                             sign_thres_emp_dis_999 = FST_emp_dis_999_perc,
-                                                             sign_thres_emp_dis_9999 = FST_emp_dis_9999_perc,
-                                                             sign_thres_drift_sim = FST_drift_sim_sig_thres,
-                                                             sign_thres_FDR = FST_FDR_for_sel_sig_thres)   
-AFD_manhatten_plot <- create_manhatten_plot_per_chr_one_stat(data = AFD_Chr_3,
-                                                             name_of_statistic = "|allele frequency difference|",
-                                                             statistic = AFD_Chr_3$Abs_allele_freq_diff,
-                                                             SNP_position = AFD_Chr_3$Position,
-                                                             sign_thres_emp_dis_999 = AFD_emp_dis_999_perc,
-                                                             sign_thres_emp_dis_9999 = AFD_emp_dis_9999_perc,
-                                                             sign_thres_drift_sim = AFD_drift_sim_sig_thres,
-                                                             sign_thres_FDR = abs_AFD_FDR_for_sel_sig_thres) 
-```
-         
+                                                             font_size = 28,
+                                                             sign_thres_emp_dis_999 = sign_thres_emp_dis_999,
+                                                             sign_thres_emp_dis_9999 = sign_thres_emp_dis_9999,
+                                                             sign_thres_drift_sim = sign_thres_drift_sim,
+                                                             sign_thres_FDR = sign_thres_FDR)       
+```      
 ## 8 LD decay
 The extent of linkage disequilibrium (LD) was estimated based on all 4,029,092 SNP markers with the PLINK software  v1.90 as squared correlation between markers as R2 [(Purcell et al., 2007)](https://www.cell.com/ajhg/fulltext/S0002-9297(07)61352-4). The script for the computation of LD decay between markers is available as `LD_decay_calculation_with_plink.bash`.
 ![2021_V3_LD_decay_ggplot](https://user-images.githubusercontent.com/63467079/150421503-dcebed82-9f2c-45f0-9457-f8db16320ec7.png)
