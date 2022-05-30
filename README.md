@@ -1,7 +1,5 @@
 # Experimental evolution with replicated selection
 ## Table of contents
-# Experimental evolution with replicated selection
-## Table of contents
 [0 Introduction](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#introduction) <br />
 [1 Phenotypic data analysis](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#1-phenotypic-data-analysis) <br />
 2 Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy) <br />
