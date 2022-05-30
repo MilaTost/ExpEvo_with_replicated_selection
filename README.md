@@ -319,8 +319,6 @@ time_0 <- Sys.time()
 cat("The data set loading starts")
 # vcf_S4 <- read.vcfR("YOUR_DATA_after_filtering.vcf.gz", verbose = FALSE)
 #setwd("/path/to/your/own/working/directory/")
-vcf_S4 <- read.vcfR("/usr/users/mtost/wd_GBeasy_rerun/Results/2022_GB10_Shoepeg_after_filtering.vcf.gz", verbose = FALSE)
-setwd("/usr/users/mtost/GB_easy_results_analysis_wd/final_data_analysis_paper/")
 cat("The data set is loaded.","\n")
 time_1 <- Sys.time()
 print(time_1 - time_0)
@@ -423,7 +421,7 @@ FST_values_od_cor <- calculate_FST_value(data = vcf_S4,
 Significance thresholds for selection were calculated three ways: 1) based on the empirical distribution; 2) based on drift simulations; and 3) based on the false discovery rate for selection (FDRfS) [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). <br /> 
 The calculation of significance thresholds and the plotting functions are contained in the `Significance_thresholds_and_plotting.R`. The `Filtering_for_coverage_average_RD_missingness.R` and `Selection_signature_mapping.R` script can or should be run on a inactive Linux session on a high-throughput computing device. These scripts are usually run on extremly large data sets (raw sequence data or large VCF files). The `Significance_thresholds_and_plotting.R` is usually run on a much smaller data set, since many markers were removed in the filtering procedure. Furthermore, when windows font types want to be used,  the script needs to be run on a windows device. <br />   
 ### 5.1 Based on the empirical distribution
-The significance thresholds based on the empirical distribution, were calculated by taking the 99.9th and 99.99th percentile of the empirical distribution of the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> and absolute allele frequency differences:
+The significance thresholds based on the empirical distribution, were calculated by taking the 99.9th and 99.99th percentile of the empirical distribution of the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}">:
 ```{r}
 FST_sig_thres_1 <- quantile(FST_values_od_cor$Fst, probs = 0.9999, na.rm = TRUE)
 FST_sig_thres_2 <- quantile(FST_values_od_cor$Fst, probs = 0.999, na.rm = TRUE)    
@@ -598,7 +596,7 @@ write.table(all_FST_values, "2022_05_27_FST_values_V4.txt",
             row.names = TRUE, sep = "  ",
             quote = FALSE)
 ```
-<img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> and allele frequency differences were calculated for all simulated markers, which corresponded in our case to 5,000,000 simulations. We summed those up and choosed the the 99.9999th percentile of the emprirical distribution of all observations as significance threshold, similar to [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219).  
+<img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> values were calculated for all simulated markers, which corresponded in our case to 5,000,000 simulations. We summed those up and choosed the the 99.9999th percentile of the emprirical distribution of all observations as significance threshold, similar to [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219).  
 
 ### 5.4 Based on the FDRfS
 **FDRfS for all possible values of the statistics**
@@ -709,10 +707,8 @@ sig_threshold_sum_FST <- get_sig_thresh_FDR_for_selection_based_on_sumFST(stat_o
                                                                             statistic = "FST",
                                                                             FDR = 0.05)
 ```
-## 6 Sauron plot
-          
-          ![image](https://user-images.githubusercontent.com/63467079/170996112-89af30a6-0405-449f-8273-fdcffb44ac0b.png)
-
+## 6 Sauron plot       
+<img src="[https://user-images.githubusercontent.com/63467079/149146525-ce94e222-dff8-4ad4-8dcb-ad14f7530032.png](https://user-images.githubusercontent.com/63467079/170996112-89af30a6-0405-449f-8273-fdcffb44ac0b.png)" width="700" height="350">
 This plot depicts how the FDRfS was computed and provides a visualization of the scope of drift and selection. The Sauron plot comes from [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1), but it can be also created for the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> statisitc. Sauron plot of genetic differentiation for FSTSum observed between the subpopulations selected in the same direction (blue) and in opposite directions (red). Each dot represents one SNP. The transparent red colored edges correspond to a false discovery rate (FDR) for selection < 5%. The y- and x-axis correspond to the range of <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> values. 
 <img src="https://user-images.githubusercontent.com/63467079/149146525-ce94e222-dff8-4ad4-8dcb-ad14f7530032.png" width="700" height="350">
 The "Sauron plot" for the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> does not even look like the eye of [Sauron](https://twitter.com/strnr/status/457201981007073280) anymore, as the "Sauron plot" from [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1) did. The Sauron plot for the allele frequency difference is created by the `create_sauron_plot_FST()` function, which is shown above:
