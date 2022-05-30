@@ -12,10 +12,10 @@
 [5 Significance thresholds](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#4-significance-thresholds) <br />
 &emsp; [5.1 Based on the empirical distribution](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#41-based-on-the-empiric-distribution) <br />
 &emsp; [5.2 Based on drift simulations](https://github.com/milaleoni/ExpEvo_with_replicated_selection/blob/main/README.md#42-based-on-drift-simulations) <br />
-&emsp; [5.3 Simulation of drift](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#43-simulation-of-drift) <br />
-&emsp; [5.4 Based on the FDRfS](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#44-based-on-the-fdr-for-selection)<br />
+&emsp; [Simulation of drift](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#simulation-of-drift) <br />
+&emsp; [5.3 Based on the FDRfS](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#44-based-on-the-fdr-for-selection)<br />
 [6 Sauron plot](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#5-sauron-plot) <br />
-[7 Manhatten plots](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#6-Manhattan-plots) <br />
+[7 Manhatten plots](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#7-manhatten-plots) <br />
 [8 LD decay](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#8-ld-decay)
 
 ## 0 Introduction
