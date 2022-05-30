@@ -37,6 +37,15 @@ statistic. <br /> <br />
 <img src="https://user-images.githubusercontent.com/63467079/150107509-3f984ca3-3a61-4338-87d5-d920a5673727.png" width="500" height="555.7324841">
 
 ## 1 Phenotypic data analysis
+### Truncation selection thresholds
+The truncation thresholds of the 5% tallest or 5% shortest plants within the populations can be calculated like this:
+```{r}
+quantile(Short_Population_1$PlantHeight, 0.05, na.rm = TRUE)
+quantile(Short_Population_2$PlantHeight, 0.05, na.rm = TRUE)
+quantile(Tall_Population_1$PlantHeight, 0.05, na.rm = TRUE)
+quantile(Tall_Population_2$PlantHeight, 0.05, na.rm = TRUE)
+```
+### Plant height measurements
 The phenotypic data analysis was conducted to evaluate the effect of selection on the phenotype. Therefore, the trait measurements in the subpopulations selected in opposite directions can be compared. We conducted a t-test between the subpopulations selected in opposite directions to test for significance.  <br /> 
 ```{r}
 Short_plants_2016 <- data[PlantHeight_group == "Selected for short plant height" & year == "2016",]
@@ -59,7 +68,24 @@ Additionally we also used the trait measurments from the base population and all
 **Measured plant height in all years in the subpopulations selected for short plant (green) and tall plant height (purple).**
 <img src="https://user-images.githubusercontent.com/63467079/150105713-a27b5365-4822-483e-abe4-6fff10332bc7.png" width="600" height="360"> <br />
 The computation of the t-test statistic and the script for plotting the measured phenotypes across all years are available in the `Phenotypic_data_analysis.R` script. 
-       
+### Realized heritability from the Breeder's equation
+The realized heritability <img src="https://render.githubusercontent.com/render/math?math=h_{bs}^{2}"> was calcaluated according to (Lush, 1937). This is done by the `Calculation_of_the_realized_heritability.R` script. To calculate the realized heritability the selection differential and the response to selection are calculated between the different generations of selection. <br />
+
+```{r}
+calculated_realized_herit <- function(Data_Gen1,
+                                      Data_Gen2){
+  mean_Gen_1 <- mean(Data_Gen1$PlantHeight, na.rm = TRUE)
+  mean_Gen_2 <- mean(Data_Gen2$PlantHeight, na.rm = TRUE)
+  Selected_prop <- quantile(Data_Gen1$PlantHeight, 0.05, na.rm = TRUE)
+  Selection_Differential <- Selected_prop - mean_Gen_1
+  Response_to_Selection <- mean_Gen_2 - mean_Gen_1
+  herit_BS <- as.numeric(Response_to_Selection)/as.numeric(Selection_Differential)
+  return(herit_BS)
+}
+calculated_realized_herit(Data_Gen1 = Short_1_2016,
+                          Data_Gen2 = Short_1_2017)
+```
+
 ## 2 Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy)
 For the analysis of our raw reads from paired-end genotyping-by-sequencing (GBS) with ApeKI according to [Elshire et al. 2011](https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0019379&type=printable), we used the GB-eaSy pipeline from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy). <br />
 The pipeline consists out of several steps, which comprises:
@@ -429,8 +455,8 @@ The significance threshold is stored, so it can be used later directly for plott
 ### 5.2 Based on drift simulations 
 The significance thresholds based on drift simulations were calculated in the `Simulation_of_drift.R` and then only retrieved from this script. The simulation of drift is described below and the script is also available in the repository.
   
-### 5.3 Simulation of Drift
-The simulation of drift was conducted by using the `DriftSimulator.R` from [Beissinger (2021)](http://beissingerlab.github.io/Software/). The `DriftSimulator.R` script was run with a drift simulation script similar to the one from [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219), which enables the implementation of the drift simulator over a large set of markers. The script, which enables the simulation of drift over a large set of markers is available as `Run_drift_simulator_over_many_markers.R`. The `Run_drift_simulator_over_many_markers.R` script contains a function which simulates drift acting a single locus. We ran 5,000,000 simulations. For each simulation, initial allele frequencies were set based on allele frequency spectrum observed in generation 0 [Gyawali et al., 2019](https://pubmed.ncbi.nlm.nih.gov/31590656/) . Drift was simulated with a population size of 5000 individuals with 250 female and 5000 male individuals for three generations. We assumed that every ear contributed ~500 kernels. Every kernel could have been pollinated by one of the male parents, which resulted in much higher harvest than 5000 kernels. Therefore, 5000 kernels were randomly drawn from the entire harvest to represent the seeds planted for the next generation. In the third generation, 96 individuals out of 5000 were sampled to represent the individuals that were actually genotyped (Turner et al., 2011; Kumar et al., 2021). Variable marker coverage was also simulated; marker coverage was sampled from a uniform distribution between 40 and 96 observations per marker to match our filtering process [Turner et al., 2011](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). Additionally, the marker coverage was also sampled, the minimal marker coverage was set to at least 40 out of 96 observations at a marker, so that the marker coverage was always sampled between 40 to 96 observations per marker [Turner et al., 2011](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). <br /> <br />. The drift simulator was run as: <br />
+### Simulation of Drift
+The simulation of drift was conducted by using the `DriftSimulator.R` from [Beissinger (2021)](http://beissingerlab.github.io/Software/). The `DriftSimulator.R` script was run with a drift simulation script similar to the one from [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219), which enables the implementation of the drift simulator over a large set of markers. The script, which enables the simulation of drift over a large set of markers is available as `Run_drift_simulator_over_many_markers.R`. The `Run_drift_simulator_over_many_markers.R` script contains a function which simulates drift acting a single locus. We ran 5,000,000 simulations. For each simulation, initial allele frequencies were set based on allele frequency spectrum observed in generation 0 [Gyawali et al., 2019](https://pubmed.ncbi.nlm.nih.gov/31590656/) . Drift was simulated with a population size of 5000 individuals with 250 female and 5000 male individuals for three generations. We assumed that every ear contributed ~500 kernels. Every kernel could have been pollinated by one of the male parents, which resulted in much higher harvest than 5000 kernels. Therefore, 5000 kernels were randomly drawn from the entire harvest to represent the seeds planted for the next generation. In the third generation, 96 individuals out of 5000 were sampled to represent the individuals that were actually genotyped (Turner et al., 2011; Kumar et al., 2021). Variable marker coverage was also simulated; marker coverage was sampled from a uniform distribution between 40 and 96 observations per marker to match our filtering process [Turner et al., 2011](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). Additionally, the marker coverage was also sampled, the minimal marker coverage was set to at least 40 out of 96 observations at a marker, so that the marker coverage was always sampled between 40 to 96 observations per marker [Turner et al., 2011](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). <br /> <br /> The drift simulator was run as: <br />
           
 ```{r}
 rm(list = ls())
@@ -589,7 +615,7 @@ threshold <- quantile(all_FST_values, probs = 0.999999, na.rm = TRUE)
 ```
 <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> values were calculated for all simulated markers, which corresponded in our case to 5,000,000 simulations. We summed those up and choosed the the 99.9999th percentile of the emprirical distribution of all observations as significance threshold, similar to [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219).  
 
-### 5.4 Based on the FDRfS
+### 5.3 Based on the FDRfS
 **FDRfS for all possible values of the statistics**
 The function `calculate_FDR_for_selection()` generates a table to show all posible values of a statistic and the number of observed markers diverged between subpopulation selected in the same and opposite directions at a certain value. The FDR for selection is received by dividing the number of observed markers diverged between subpopulation selected in the same direction by the number of observed markers diverged between subpopulation selected in opposite directions. <br />
 The calculation of the FDR for selection is also demonstrated with the following table which shows for different statistics the number of markers diverged between subpopulations selected in the same and opposite directions and the corresponding FDR for selections:          
