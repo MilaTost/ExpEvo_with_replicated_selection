@@ -69,7 +69,7 @@ Additionally we also used the trait measurments from the base population and all
 <img src="https://user-images.githubusercontent.com/63467079/150105713-a27b5365-4822-483e-abe4-6fff10332bc7.png" width="600" height="360"> <br />
 The computation of the t-test statistic and the script for plotting the measured phenotypes across all years are available in the `Phenotypic_data_analysis.R` script. 
 ### Realized heritability from the Breeder's equation
-The realized heritability was calcaluated according to (Lush, 1937). This is done by the `Calculation_of_the_realized_heritability.R` script. To calculate the realized heritability the selection differential and the response to selection are calculated between the different generations of selection. <br />
+The realized heritability was calcaluated according to (Lush, 1937). This is done by the `Calculation_of_the_realized_heritability.R` script. To calculate the realized heritability the selection differential and the response to selection are calculated between the different generations of selection. In the following example the realized heritability was calculated between generation 0 and generation 1 of the subpopulations short plants 1. <br />
 
 ```{r}
 calculated_realized_herit <- function(Data_Gen1,
@@ -319,8 +319,14 @@ vcf_S4 <- filter_for_non_diallelic_non_polymorphic(data = vcf_S4)
 This function also comes from the `vcfR` package from [Knaus and Grünwald 2018](https://github.com/knausb/vcfR#:~:text=VcfR%20is%20an%20R%20package%20intended%20to%20allow,rapidly%20read%20from%20and%20write%20to%20VCF%20files.). 
 ```{r}
 write.vcf(vcf_S4, file="path/to/your/working/directory/filtered_DATA.vcf.gz", mask=FALSE)          
-```          
-## 4 Scan for selection signatures
+```  
+## 4 Estimation of the effective population size  
+          
+
+          
+          
+          
+## 5 Scan for selection signatures
 Our scan for selection was based on the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection. 
 The function for the calculation of the **<img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection** is contained in the `selection_signature_mapping.R` script. 
 <br /> <br /> 
