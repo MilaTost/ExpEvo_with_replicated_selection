@@ -2,21 +2,27 @@
 ## Table of contents
 [0 Introduction](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#0-introduction) <br />
 [1 Phenotypic data analysis](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#1-phenotypic-data-analysis) <br />
+&emsp;[1.1 Truncation selection thresholds](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#21-filtering-for-individual-samples-with-low-coverage) <br />
+&emsp;[1.2 Plant height measurements](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#21-filtering-for-individual-samples-with-low-coverage) <br />
+&emsp;[1.3 Realized heritability from the Breeder's equation](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#21-filtering-for-individual-samples-with-low-coverage) <br />
 2 Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy) <br />
 [3 Filtering](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#filtering) <br />
 &emsp;[3.1 Filtering for individual samples with low coverage](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#21-filtering-for-individual-samples-with-low-coverage) <br />
 &emsp;[3.2 Filtering for read depth per sample](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#22-filtering-for-read-depth-per-sample) <br />
 &emsp;[3.3 Filtering for missingness](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#23-filtering-for-missingness) <br />
 &emsp;[3.4 Removal of non-diallelic and non-polymorphic markers](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#24-removal-of-non-diallelic-and-non-polymorphic-markers) <br />
-[4 Selection signature mapping with FST leveraging replicated selection](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#3-selection-signature-mapping) <br />
+[4 Allele frequency estimation] <br />
+[5 Estimation of the effective population size] <br />
+[6 LD decay](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#6-ld-decay)
+[7 Scan for selection signatures mapping with FST leveraging replicated selection](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#3-selection-signature-mapping) <br />
 [5 Significance thresholds](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#4-significance-thresholds) <br />
+[6 Sauron plot](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#5-sauron-plot) <br />
+[6 Sauron plot](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#5-sauron-plot) <br />
 &emsp; [5.1 Based on the empirical distribution](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#41-based-on-the-empiric-distribution) <br />
 &emsp; [5.2 Based on drift simulations](https://github.com/milaleoni/ExpEvo_with_replicated_selection/blob/main/README.md#42-based-on-drift-simulations) <br />
 &emsp; [Simulation of drift](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#simulation-of-drift) <br />
 &emsp; [5.3 Based on the FDRfS](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#44-based-on-the-fdr-for-selection)<br />
-[6 Sauron plot](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#5-sauron-plot) <br />
-[7 Manhatten plots](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#7-manhatten-plots) <br />
-[8 LD decay](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#8-ld-decay)
+
 
 ## 0 Introduction
 This repository contains scripts for selection signature mapping with replicated selection.
@@ -321,7 +327,85 @@ This function also comes from the `vcfR` package from [Knaus and Grünwald 2018]
 write.vcf(vcf_S4, file="path/to/your/working/directory/filtered_DATA.vcf.gz", mask=FALSE)          
 ```
 ## 4 Allele frequency estimation 
-          
+```{r}
+calculate_the_allele_freq <- function(data,
+                                      population_name_1,
+                                      population_name_2,
+                                      population_name_3,
+                                      population_name_4){
+  time_0 <- Sys.time()
+  cat("Calculation of the allele frequency spectrum started.","\n")
+  gt <- extract.gt(data, element = "GT", as.numeric = FALSE)
+  gt_file <- gt
+  pop_1 <- gt_file[,which(str_detect(colnames(gt_file),population_name_1))]
+  pop_2 <- gt_file[,which(str_detect(colnames(gt_file),population_name_2))]
+  pop_3 <- gt_file[,which(str_detect(colnames(gt_file),population_name_3))]
+  pop_4 <- gt_file[,which(str_detect(colnames(gt_file),population_name_4))]
+  dp <- extract.gt(data, element = "DP")
+  SNP_IDs <- rownames(dp)
+  get_allele_freq_per_marker_per_pop <- function(data, population_name){
+    get_allele_freq_per_marker <- function(i){
+      N_alleles_total <- 2*length(which(!is.na(data[i,])))
+      N_ALT_alleles <- 2*length(which(data[i,] == "1|1")) + 2*length(which(data[i,] == "1/1"))
+      N_REF_alleles <- 2*length(which(data[i,] == "0|0")) + 2*length(which(data[i,] == "0/0"))
+      N_HET_alleles <- length(which(data[i,] == "1|0")) + length(which(data[i,] == "1/0")) +
+        length(which(data[i,] == "0|1")) + length(which(data[i,] == "0/1"))
+      N_GT_tot <- length(which(!is.na(data[i,])))
+      N_P_GT <- length(which(data[i,] == "0|0")) + length(which(data[i,] == "0/0"))
+      N_Q_GT <- length(which(data[i,] == "1|1")) + length(which(data[i,] == "1/1"))
+      freq_REF <- (N_REF_alleles + N_HET_alleles)/N_alleles_total
+      freq_ALT <- (N_ALT_alleles + N_HET_alleles)/N_alleles_total
+      freq_HET <- N_HET_alleles/N_GT_tot
+      freq_P <- N_P_GT/N_GT_tot
+      freq_Q <- N_Q_GT/N_GT_tot
+      Exp_Het <- 2*N_P_GT/N_GT_tot*N_Q_GT/N_GT_tot
+      marker_info <- cbind(freq_REF,freq_ALT,freq_HET,freq_P,freq_Q,N_GT_tot,Exp_Het)
+      return(marker_info)
+    }
+    af_per_Marker_pop <- unlist(mclapply(1:nrow(data),get_allele_freq_per_marker))
+    marker_tab_pop <- matrix(af_per_Marker_pop, ncol = 7, byrow = TRUE)
+    marker_tab_pop <- as.data.frame(marker_tab_pop)
+    colnames(marker_tab_pop) <- c(paste("freq_REF",population_name,sep="_"),paste("freq_ALT",population_name,sep="_"),
+                                  paste("freq_HET",population_name,sep="_"),paste("freq_P",population_name,sep="_"),
+                                  paste("freq_Q",population_name,sep="_"),paste("N_GT_tot",population_name,sep="_"),
+                                  paste("Exp_HET",population_name,sep="_"))
+    rownames(marker_tab_pop) <- SNP_IDs
+    return(marker_tab_pop)
+  }
+  pop_1_dt <- get_allele_freq_per_marker_per_pop(data=pop_1, population_name = population_name_1)
+  pop_2_dt <- get_allele_freq_per_marker_per_pop(data=pop_2, population_name = population_name_2)
+  pop_3_dt <- get_allele_freq_per_marker_per_pop(data=pop_3, population_name = population_name_3)
+  pop_4_dt <- get_allele_freq_per_marker_per_pop(data=pop_4, population_name = population_name_4)
+  marker_table_per_pop <- cbind(pop_1_dt,pop_2_dt,
+                                pop_3_dt,pop_4_dt)
+  marker_table_per_pop <- as.data.frame(marker_table_per_pop)
+  cat("Pop 1: For",length(which(marker_table_per_pop[,3] < marker_table_per_pop[,7])),
+      "markers the observed heterozygosity was higher than the expected heterozygosity!","\n")
+  cat("Pop 2: For",length(which(marker_table_per_pop[,10] < marker_table_per_pop[,14])),
+      "markers the observed heterozygosity was higher than the expected heterozygosity!","\n")
+  cat("Pop 3: For",length(which(marker_table_per_pop[,17] < marker_table_per_pop[,21])),
+      "markers the observed heterozygosity was higher than the expected heterozygosity!","\n")
+  cat("Pop 4: For",length(which(marker_table_per_pop[,24] < marker_table_per_pop[,28])),
+      "markers the observed heterozygosity was higher than the expected heterozygosity!","\n")
+  cat("Pop 1:",length(which(marker_table_per_pop[,1] < marker_table_per_pop[,2])),"times the REF allele was the minor allele","\n")
+  cat("Pop 1:",length(which(marker_table_per_pop[,1] > marker_table_per_pop[,2])),"times the REF allele was the major allele","\n")
+  cat("Pop 2:",length(which(marker_table_per_pop[,8] < marker_table_per_pop[,9])),"times the REF allele was the minor allele","\n")
+  cat("Pop 2:",length(which(marker_table_per_pop[,8] > marker_table_per_pop[,9])),"times the REF allele was the major allele","\n")
+  cat("Pop 3:",length(which(marker_table_per_pop[,15] < marker_table_per_pop[,16])),"times the REF allele was the minor allele","\n")
+  cat("Pop 3:",length(which(marker_table_per_pop[,15] > marker_table_per_pop[,16])),"times the REF allele was the major allele","\n")
+  cat("Pop 4:",length(which(marker_table_per_pop[,21] < marker_table_per_pop[,22])),"times the REF allele was the minor allele","\n")
+  cat("Pop 4:",length(which(marker_table_per_pop[,21] > marker_table_per_pop[,22])),"times the REF allele was the major allele","\n")
+  cat("Calculation of the allele frequency spectrum is done.","\n")
+  time_1 <- Sys.time()
+  cat("This was done within",print(time_1 - time_0),"\n")
+  return(marker_table_per_pop)
+}
+marker_table_per_pop <- calculate_the_allele_freq_diff(data = vcf_S4, 
+                                                       population_name_1 = "Shoepag_1",
+                                                       population_name_2 = "Shoepag_2",
+                                                       population_name_3 = "Shoepag_3",
+                                                       population_name_4 = "Shoepag_4")     
+```
           
 ## 5 Estimation of the effective population size  
 The effective population size was calculated using the known demographic parameters of the populations and based off of the formula: 
@@ -498,8 +582,12 @@ calculate_eff_pop_size(N_males = sim_flow_males_pop_3,
                        N_females = 250)
 calculate_eff_pop_size(N_males = sim_flow_males_pop_4,
                        N_females = 250)          
-```             
-## 5 Scan for selection signatures
+``` 
+## 6 LD decay
+The extent of linkage disequilibrium (LD) was estimated based on all 4,029,092 SNP markers with the PLINK software  v1.90 as squared correlation between markers as R2 [(Purcell et al., 2007)](https://www.cell.com/ajhg/fulltext/S0002-9297(07)61352-4). The script for the computation of LD decay between markers is available as `LD_decay_calculation_with_plink.bash`.
+![2021_V3_LD_decay_ggplot](https://user-images.githubusercontent.com/63467079/150421503-dcebed82-9f2c-45f0-9457-f8db16320ec7.png)
+                        
+## 7 Scan for selection signatures
 Our scan for selection was based on the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection. 
 The function for the calculation of the **<img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection** is contained in the `selection_signature_mapping.R` script. 
 <br /> <br /> 
@@ -508,14 +596,12 @@ The function below will calculate the <img src="https://render.githubusercontent
 <br /> <br /> according to [Weir and Cockerham, 1984](https://doi.org/10.1111/j.1558-5646.1984.tb05657.x). <br /> <br />
 
 The function also calculates the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> Sum between the subpopulations selected in same and opposite directions. This values are required for the calculation of the false discovery rate for selection (FDRfS). In this statistic, observations which only occured in one comparison are excluded. Those observations might have been caused by drift. Selection is a repeatable force, so that we should be able to observe the same pattern in both comparisons. <br /> <br />            
- 
 ```{r}
 library(stringr)
 library(data.table)
 library(doMC)
 library(vcfR)
 library(parallel)
-
 cores <- as.integer(Sys.getenv('SLURM_CPUS_PER_TASK'))
 cores <- detectCores(all.tests = FALSE, logical = TRUE)
 registerDoMC(cores)
@@ -620,18 +706,111 @@ FST_values_od_cor <- calculate_FST_value(data = vcf_S4,
                                          pop_high_phenotype_sel_1 = "Shoepag_3",
                                          pop_high_phenotype_sel_2 = "Shoepag_2")
 ```
-          
-## 5 Significance thresholds
+## 8 Test for selection: "Sauron plot"      
+<img src="https://user-images.githubusercontent.com/63467079/171002013-a510cf2f-5150-4808-bff8-b3a5d92d40b4.png" width="400" height="400"> <br /> <br /> 
+This so-called "Sauron plot" depicts how the FDRfS was computed and provides a visualization of the scope of drift and selection. The Sauron plot comes from [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1), but it can be also created for the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> statisitc. Sauron plot of genetic differentiation for FSTSum observed between the subpopulations selected in the same direction (blue) and in opposite directions (red). Each dot represents one SNP. The transparent red colored edges correspond to a false discovery rate (FDR) for selection < 5%. The y- and x-axis correspond to the range of <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> values. 
+The "Sauron plot" for the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> does not even look like the eye of [Sauron](https://twitter.com/strnr/status/457201981007073280) anymore, as the "Sauron plot" from [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1) did. The Sauron plot for the allele frequency difference is created by the `create_sauron_plot_FST()` function, which is shown above:
+```{r}
+create_sauron_plot_FST <- function(data_table,
+                                   sig_threshold,
+                                   stat_opposite_dir1,
+                                   stat_opposite_dir2,
+                                   stat_same_dir1,
+                                   stat_same_dir2){
+  windowsFonts(my = windowsFont('Calibri'))
+  create_FDR_area <- function(x){
+    sig_threshold+-1*x
+  }
+  y_coord_value <- create_FDR_area(x = seq(0,1,0.01))
+  dt_coords_area <- cbind(y_coord_value,seq(0,1,0.01))
+  dt_coords_area <- as.data.frame(dt_coords_area)
+  dt_coords_area$z <- rep(sig_threshold,nrow(dt_coords_area))
+  colnames(dt_coords_area) <- c("x_coord_value","y_coord_value","threshold_value")
+  dt_coords_threshold_area <- dt_coords_area[which(dt_coords_area$y_coord_value < sig_threshold),]
+  dt_coords_area_rest1 <- cbind(seq(sig_threshold,1,0.01),seq(sig_threshold,1,0.01))
+  dt_coords_area_rest1 <- as.data.frame(dt_coords_area_rest1)
+  colnames(dt_coords_area_rest1) <- c("x_coord_value","y_coord_value")
+  sauron_1 <- ggplot()+
+    geom_area(data = dt_coords_area, aes(x=x_coord_value, y=threshold_value), alpha = 0.4, fill = "tomato")+
+    geom_area(data = dt_coords_area, aes(x=x_coord_value, y=y_coord_value), fill = "white")+
+    geom_area(data = dt_coords_area_rest1, aes(x=x_coord_value, y=y_coord_value),  orientation = "x", alpha = 0.4, fill = "tomato") +
+    geom_area(data = dt_coords_area_rest1, aes(x=x_coord_value, y=y_coord_value), orientation = "y", alpha = 0.4, fill = "tomato") +
+    geom_point(data = data_table, aes(x = stat_same_dir1,y = stat_same_dir2),shape=1, colour = "royalblue3")+
+    geom_point(data = data_table, aes(x = stat_opposite_dir1,y = stat_opposite_dir2),shape=1, colour = "firebrick")+
+    theme(text = element_text(size =font_size, family = "my"),
+          panel.background = element_rect(fill = "white"),
+          axis.line = element_line(colour = "black"),
+          axis.title.y = element_text(size = font_size, family = "my", colour = "royalblue3", face = "bold"),
+          axis.title.x = element_text(size = font_size, family = "my", colour = "royalblue3", face = "bold"),
+          axis.line.x = element_line(color = "black"),
+          axis.text = element_text(size = font_size, family = "my", colour = "black"))+
+    labs(x=paste("\t","\t","\t","\t","\t","\t","\t","\t","Short 1 vs Short 2"),
+         y=paste("\t","\t","\t","Tall 1 vs Tall 2"))+
+    ylim(0,0.75)+
+    xlim(0,0.75)
+  d11 <-  ggplot_build(sauron_1)$data[[1]]
+  empty_plot <- ggplot()+
+    theme(panel.background = element_rect(fill = "white"))
+  get_xaxis<-function(myggplot){
+    tmp <- ggplot_gtable(ggplot_build(myggplot))
+    legend <- tmp$grobs[[12]]
+    return(legend)
+  }
+  xaxis_sauron <- get_xaxis(sauron_1)
+  get_yaxis<-function(myggplot){
+    tmp <- ggplot_gtable(ggplot_build(myggplot))
+    legend <- tmp$grobs[[13]]
+    return(legend)
+  }
+  yaxis_sauron <- get_yaxis(sauron_1)
+  sauron_2 <- ggplot()+
+    geom_area(data = dt_coords_area, aes(x=x_coord_value, y=threshold_value), alpha = 0.4, fill = "tomato")+
+    geom_area(data = dt_coords_area, aes(x=x_coord_value, y=y_coord_value), fill = "white")+
+    geom_area(data = dt_coords_area_rest1, aes(x=x_coord_value, y=y_coord_value),  orientation = "x", alpha = 0.4, fill = "tomato") +
+    geom_area(data = dt_coords_area_rest1, aes(x=x_coord_value, y=y_coord_value), orientation = "y", alpha = 0.4, fill = "tomato") +
+    geom_point(data = data_table, aes(x = stat_opposite_dir1,y = stat_opposite_dir2), shape = 1,  colour = "firebrick")+
+    geom_point(data = data_table, aes(x = stat_same_dir1,y = stat_same_dir2),shape = 1, colour = "royalblue3")+
+    theme(text = element_text(size = font_size, family = "my"),
+          panel.background = element_rect(fill = "white"),
+          panel.grid.minor = element_blank(),
+          panel.grid.major = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "bottom",
+          axis.title.y = element_text(size = font_size, family = "my", colour = "firebrick", face = "bold"),
+          axis.title.x = element_text(size = font_size, family = "my", colour = "firebrick", face = "bold"),
+          axis.line.x = element_line(color = "black"),
+          axis.text = element_text(size = font_size, family = "my", colour = "black"))+
+    labs(x=  "Short 1 vs Short 2",
+         y= "Tall 2 vs Tall 2")+
+    geom_abline(intercept = sig_threshold, slope = -1, size = 1, alpha = 0.2, colour = "firebrick4")+
+    xlim(0,0.75)+
+    ylim(0,0.75)
+  sauron_2
+  sauron_plot_all_FST<- grid.arrange(yaxis_sauron,sauron_2, xaxis_sauron,empty_plot,
+                                     ncol=2, nrow = 2, 
+                                     layout_matrix = rbind(c(1,2),c(4,3)),
+                                     widths = c(0.2, 4), heights = c(4,0.2))
+  return(sauron_plot_all_FST)
+}
+Sauron_plot_FST <- create_sauron_plot_FST(data_table = FST_values_od_cor,
+                                          sig_threshold = sig_threshold_sum_FST ,
+                                          stat_opposite_dir1 = FST_values_od_cor$FST_value_opposite_dir1,
+                                          stat_opposite_dir2 = FST_values_od_cor$FST_value_opposite_dir2,
+                                          stat_same_dir1 = FST_values_od_cor$FST_value_same_dir1,
+                                          stat_same_dir2 = FST_values_od_cor$FST_value_same_dir2)
+Sauron_plot_FST
+```
+## 9 Significance thresholds
 Significance thresholds for selection were calculated three ways: 1) based on the empirical distribution; 2) based on drift simulations; and 3) based on the false discovery rate for selection (FDRfS) [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). <br /> 
 The calculation of significance thresholds and the plotting functions are contained in the `Significance_thresholds_and_plotting.R`. The `Filtering_for_coverage_average_RD_missingness.R` and `Selection_signature_mapping.R` script can or should be run on a inactive Linux session on a high-throughput computing device. These scripts are usually run on extremly large data sets (raw sequence data or large VCF files). The `Significance_thresholds_and_plotting.R` is usually run on a much smaller data set, since many markers were removed in the filtering procedure. Furthermore, when windows font types want to be used,  the script needs to be run on a windows device. <br />   
-### 5.1 Based on the empirical distribution
+### 9.1 Based on the empirical distribution
 The significance thresholds based on the empirical distribution, were calculated by taking the 99.9th and 99.99th percentile of the empirical distribution of the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> :
 ```{r}
 FST_sig_thres_1 <- quantile(FST_values_od_cor$Fst, probs = 0.9999, na.rm = TRUE)
 FST_sig_thres_2 <- quantile(FST_values_od_cor$Fst, probs = 0.999, na.rm = TRUE)    
 ```          
 The significance threshold is stored, so it can be used later directly for plotting. <br />
-### 5.2 Based on drift simulations 
+### 9.2 Based on drift simulations 
 The significance thresholds based on drift simulations were calculated in the `Simulation_of_drift.R` and then only retrieved from this script. The simulation of drift is described below and the script is also available in the repository.
   
 ### Simulation of Drift
@@ -794,7 +973,7 @@ threshold <- quantile(all_FST_values, probs = 0.999999, na.rm = TRUE)
 ```
 <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> values were calculated for all simulated markers, which corresponded in our case to 5,000,000 simulations. We summed those up and choosed the the 99.9999th percentile of the emprirical distribution of all observations as significance threshold, similar to [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219).  
 
-### 5.3 Based on the FDRfS
+### 9.3 Based on the FDRfS
 **FDRfS for all possible values of the statistics**
 The function `calculate_FDR_for_selection()` generates a table to show all posible values of a statistic and the number of observed markers diverged between subpopulation selected in the same and opposite directions at a certain value. The FDR for selection is received by dividing the number of observed markers diverged between subpopulation selected in the same direction by the number of observed markers diverged between subpopulation selected in opposite directions. <br />
 The calculation of the FDR for selection is also demonstrated with the following table which shows for different statistics the number of markers diverged between subpopulations selected in the same and opposite directions and the corresponding FDR for selections:          
@@ -902,103 +1081,7 @@ sig_threshold_sum_FST <- get_sig_thresh_FDR_for_selection_based_on_sumFST(stat_o
                                                                             stat_same_dir2 = FST_values_od_cor$FST_value_same_dir2,
                                                                             statistic = "FST",
                                                                             FDR = 0.05)
-```
-## 6 Sauron plot       
-<img src="https://user-images.githubusercontent.com/63467079/171002013-a510cf2f-5150-4808-bff8-b3a5d92d40b4.png" width="400" height="400"> <br /> <br /> 
-This plot depicts how the FDRfS was computed and provides a visualization of the scope of drift and selection. The Sauron plot comes from [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1), but it can be also created for the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> statisitc. Sauron plot of genetic differentiation for FSTSum observed between the subpopulations selected in the same direction (blue) and in opposite directions (red). Each dot represents one SNP. The transparent red colored edges correspond to a false discovery rate (FDR) for selection < 5%. The y- and x-axis correspond to the range of <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> values. 
-The "Sauron plot" for the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> does not even look like the eye of [Sauron](https://twitter.com/strnr/status/457201981007073280) anymore, as the "Sauron plot" from [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1) did. The Sauron plot for the allele frequency difference is created by the `create_sauron_plot_FST()` function, which is shown above:
-```{r}
-create_sauron_plot_FST <- function(data_table,
-                                   sig_threshold,
-                                   stat_opposite_dir1,
-                                   stat_opposite_dir2,
-                                   stat_same_dir1,
-                                   stat_same_dir2){
-  windowsFonts(my = windowsFont('Calibri'))
-  create_FDR_area <- function(x){
-    sig_threshold+-1*x
-  }
-  y_coord_value <- create_FDR_area(x = seq(0,1,0.01))
-  dt_coords_area <- cbind(y_coord_value,seq(0,1,0.01))
-  dt_coords_area <- as.data.frame(dt_coords_area)
-  dt_coords_area$z <- rep(sig_threshold,nrow(dt_coords_area))
-  colnames(dt_coords_area) <- c("x_coord_value","y_coord_value","threshold_value")
-  dt_coords_threshold_area <- dt_coords_area[which(dt_coords_area$y_coord_value < sig_threshold),]
-  dt_coords_area_rest1 <- cbind(seq(sig_threshold,1,0.01),seq(sig_threshold,1,0.01))
-  dt_coords_area_rest1 <- as.data.frame(dt_coords_area_rest1)
-  colnames(dt_coords_area_rest1) <- c("x_coord_value","y_coord_value")
-  sauron_1 <- ggplot()+
-    geom_area(data = dt_coords_area, aes(x=x_coord_value, y=threshold_value), alpha = 0.4, fill = "tomato")+
-    geom_area(data = dt_coords_area, aes(x=x_coord_value, y=y_coord_value), fill = "white")+
-    geom_area(data = dt_coords_area_rest1, aes(x=x_coord_value, y=y_coord_value),  orientation = "x", alpha = 0.4, fill = "tomato") +
-    geom_area(data = dt_coords_area_rest1, aes(x=x_coord_value, y=y_coord_value), orientation = "y", alpha = 0.4, fill = "tomato") +
-    geom_point(data = data_table, aes(x = stat_same_dir1,y = stat_same_dir2),shape=1, colour = "royalblue3")+
-    geom_point(data = data_table, aes(x = stat_opposite_dir1,y = stat_opposite_dir2),shape=1, colour = "firebrick")+
-    theme(text = element_text(size =font_size, family = "my"),
-          panel.background = element_rect(fill = "white"),
-          axis.line = element_line(colour = "black"),
-          axis.title.y = element_text(size = font_size, family = "my", colour = "royalblue3", face = "bold"),
-          axis.title.x = element_text(size = font_size, family = "my", colour = "royalblue3", face = "bold"),
-          axis.line.x = element_line(color = "black"),
-          axis.text = element_text(size = font_size, family = "my", colour = "black"))+
-    labs(x=paste("\t","\t","\t","\t","\t","\t","\t","\t","Short 1 vs Short 2"),
-         y=paste("\t","\t","\t","Tall 1 vs Tall 2"))+
-    ylim(0,0.75)+
-    xlim(0,0.75)
-  d11 <-  ggplot_build(sauron_1)$data[[1]]
-  empty_plot <- ggplot()+
-    theme(panel.background = element_rect(fill = "white"))
-  get_xaxis<-function(myggplot){
-    tmp <- ggplot_gtable(ggplot_build(myggplot))
-    legend <- tmp$grobs[[12]]
-    return(legend)
-  }
-  xaxis_sauron <- get_xaxis(sauron_1)
-  get_yaxis<-function(myggplot){
-    tmp <- ggplot_gtable(ggplot_build(myggplot))
-    legend <- tmp$grobs[[13]]
-    return(legend)
-  }
-  yaxis_sauron <- get_yaxis(sauron_1)
-  sauron_2 <- ggplot()+
-    geom_area(data = dt_coords_area, aes(x=x_coord_value, y=threshold_value), alpha = 0.4, fill = "tomato")+
-    geom_area(data = dt_coords_area, aes(x=x_coord_value, y=y_coord_value), fill = "white")+
-    geom_area(data = dt_coords_area_rest1, aes(x=x_coord_value, y=y_coord_value),  orientation = "x", alpha = 0.4, fill = "tomato") +
-    geom_area(data = dt_coords_area_rest1, aes(x=x_coord_value, y=y_coord_value), orientation = "y", alpha = 0.4, fill = "tomato") +
-    geom_point(data = data_table, aes(x = stat_opposite_dir1,y = stat_opposite_dir2), shape = 1,  colour = "firebrick")+
-    geom_point(data = data_table, aes(x = stat_same_dir1,y = stat_same_dir2),shape = 1, colour = "royalblue3")+
-    theme(text = element_text(size = font_size, family = "my"),
-          panel.background = element_rect(fill = "white"),
-          panel.grid.minor = element_blank(),
-          panel.grid.major = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = "bottom",
-          axis.title.y = element_text(size = font_size, family = "my", colour = "firebrick", face = "bold"),
-          axis.title.x = element_text(size = font_size, family = "my", colour = "firebrick", face = "bold"),
-          axis.line.x = element_line(color = "black"),
-          axis.text = element_text(size = font_size, family = "my", colour = "black"))+
-    labs(x=  "Short 1 vs Short 2",
-         y= "Tall 2 vs Tall 2")+
-    geom_abline(intercept = sig_threshold, slope = -1, size = 1, alpha = 0.2, colour = "firebrick4")+
-    xlim(0,0.75)+
-    ylim(0,0.75)
-  sauron_2
-  sauron_plot_all_FST<- grid.arrange(yaxis_sauron,sauron_2, xaxis_sauron,empty_plot,
-                                     ncol=2, nrow = 2, 
-                                     layout_matrix = rbind(c(1,2),c(4,3)),
-                                     widths = c(0.2, 4), heights = c(4,0.2))
-  return(sauron_plot_all_FST)
-}
-Sauron_plot_FST <- create_sauron_plot_FST(data_table = FST_values_od_cor,
-                                          sig_threshold = sig_threshold_sum_FST ,
-                                          stat_opposite_dir1 = FST_values_od_cor$FST_value_opposite_dir1,
-                                          stat_opposite_dir2 = FST_values_od_cor$FST_value_opposite_dir2,
-                                          stat_same_dir1 = FST_values_od_cor$FST_value_same_dir1,
-                                          stat_same_dir2 = FST_values_od_cor$FST_value_same_dir2)
-Sauron_plot_FST
-```
-          
-## 7 Manhatten plots
+```          
 In the [Manhatten plot](https://en.wikipedia.org/wiki/Manhattan_plot#:~:text=A%20Manhattan%20plot%20is%20a%20type%20of%20scatter,genome-wide%20association%20studies%20%28GWAS%29%20to%20display%20significant%20SNPs.) the positions of the markers are plotted against the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> value observed at this marker. <br />
 ![2022_03_21_V4_Presentation_Manhatten_plot](https://user-images.githubusercontent.com/63467079/171006453-6317bd29-2d8b-48b9-866f-476333fc974a.png)
 <br /> 
@@ -1090,6 +1173,3 @@ FST_manhatten_plot <- create_manhatten_plot_per_chr_one_stat(data = FST_values_o
                                                              sign_thres_drift_sim = sign_thres_drift_sim,
                                                              sign_thres_FDR = sign_thres_FDR)       
 ```      
-## 8 LD decay
-The extent of linkage disequilibrium (LD) was estimated based on all 4,029,092 SNP markers with the PLINK software  v1.90 as squared correlation between markers as R2 [(Purcell et al., 2007)](https://www.cell.com/ajhg/fulltext/S0002-9297(07)61352-4). The script for the computation of LD decay between markers is available as `LD_decay_calculation_with_plink.bash`.
-![2021_V3_LD_decay_ggplot](https://user-images.githubusercontent.com/63467079/150421503-dcebed82-9f2c-45f0-9457-f8db16320ec7.png)
