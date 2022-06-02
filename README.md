@@ -2,7 +2,7 @@
 ## Table of contents
 [0 Introduction](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#0-introduction) <br />
 [1 Phenotypic data analysis](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#1-phenotypic-data-analysis) <br />
-&emsp;[1.1 Truncation selection thresholds](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#21-filtering-for-individual-samples-with-low-coverage) <br />
+&emsp;[1.1 Truncation selection thresholds](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#11-truncation-selection-thresholds) <br />
 &emsp;[1.2 Plant height measurements](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#21-filtering-for-individual-samples-with-low-coverage) <br />
 &emsp;[1.3 Realized heritability from the Breeder's equation](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#21-filtering-for-individual-samples-with-low-coverage) <br />
 2 Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy) <br />
