@@ -408,7 +408,7 @@ marker_table_per_pop <- calculate_the_allele_freq_diff(data = vcf_S4,
           
 ## 5 Estimation of the effective population size  
 The effective population size was calculated using the known demographic parameters of the populations and based off of the formula: 
-          <img width="120" alt="effective_pop_size" src="https://user-images.githubusercontent.com/63467079/171614297-2936b14e-3c6c-4914-b0b5-6e6cca2c5fc7.png"> <br /> where ![formula](https://render.githubusercontent.com/render/math?math=N_{m}) is the number of male and ![formula](https://render.githubusercontent.com/render/math?math=N_{f} the number of female individuals (Crow and Kimura, 1970). In every generation the ~5% shortest or tallest plants were harvested, amounting to ~250 plants. Under the assumption of complete random mating, all 5000 plants could contribute as male parents for the next generation, the effective population size would be calculated as:
+          <img width="120" alt="effective_pop_size" src="https://user-images.githubusercontent.com/63467079/171614297-2936b14e-3c6c-4914-b0b5-6e6cca2c5fc7.png"> <br /> where ![formula](https://render.githubusercontent.com/render/math?math=N_{m}) is the number of male and ![formula](https://render.githubusercontent.com/render/math?math=N_{f}) the number of female individuals (Crow and Kimura, 1970). In every generation the ~5% shortest or tallest plants were harvested, amounting to ~250 plants. Under the assumption of complete random mating, all 5000 plants could contribute as male parents for the next generation, the effective population size would be calculated as:
 ```{r}   
 ### Calculate the effetive population size -------------------------------------
 calculate_eff_pop_size <- function(N_males,
