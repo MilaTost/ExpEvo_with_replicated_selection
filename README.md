@@ -15,13 +15,12 @@
 [5 Estimation of the effective population size] <br />
 [6 LD decay](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#6-ld-decay)
 [7 Scan for selection signatures mapping with FST leveraging replicated selection](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#3-selection-signature-mapping) <br />
-[5 Significance thresholds](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#4-significance-thresholds) <br />
-[6 Sauron plot](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#5-sauron-plot) <br />
-[6 Sauron plot](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#5-sauron-plot) <br />
-&emsp; [5.1 Based on the empirical distribution](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#41-based-on-the-empiric-distribution) <br />
-&emsp; [5.2 Based on drift simulations](https://github.com/milaleoni/ExpEvo_with_replicated_selection/blob/main/README.md#42-based-on-drift-simulations) <br />
+[8 Test for selection: "Sauron plot"](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#5-sauron-plot) <br />
+[9 Significance thresholds](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#4-significance-thresholds) <br />
+&emsp; [9.1 Based on the empirical distribution](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#41-based-on-the-empiric-distribution) <br />
+&emsp; [9.2 Based on drift simulations](https://github.com/milaleoni/ExpEvo_with_replicated_selection/blob/main/README.md#42-based-on-drift-simulations) <br />
 &emsp; [Simulation of drift](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#simulation-of-drift) <br />
-&emsp; [5.3 Based on the FDRfS](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#44-based-on-the-fdr-for-selection)<br />
+&emsp; [9.3 Based on the FDRfS](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#44-based-on-the-fdr-for-selection)<br />
 
 
 ## 0 Introduction
