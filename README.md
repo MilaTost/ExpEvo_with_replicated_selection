@@ -4,7 +4,7 @@
 [1 Phenotypic data analysis](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#1-phenotypic-data-analysis) <br />
 &emsp;[1.1 Truncation selection thresholds](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#11-truncation-selection-thresholds) <br />
 &emsp;[1.2 Plant height measurements](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#12-plant-height-measurements) <br />
-&emsp;[1.3 Realized heritability from the Breeder's equation](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#21-filtering-for-individual-samples-with-low-coverage) <br />
+&emsp;[1.3 Realized heritability from the Breeder's equation](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#13-realized-heritability-from-the-breeders-equation) <br />
 2 Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy) <br />
 [3 Filtering](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#filtering) <br />
 &emsp;[3.1 Filtering for individual samples with low coverage](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#21-filtering-for-individual-samples-with-low-coverage) <br />
@@ -14,13 +14,13 @@
 [4 Allele frequency estimation] <br />
 [5 Estimation of the effective population size] <br />
 [6 LD decay](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#6-ld-decay)
-[7 Scan for selection signatures mapping with FST leveraging replicated selection](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#3-selection-signature-mapping) <br />
-[8 Test for selection: "Sauron plot"](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#5-sauron-plot) <br />
-[9 Significance thresholds](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#4-significance-thresholds) <br />
-&emsp; [9.1 Based on the empirical distribution](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#41-based-on-the-empiric-distribution) <br />
-&emsp; [9.2 Based on drift simulations](https://github.com/milaleoni/ExpEvo_with_replicated_selection/blob/main/README.md#42-based-on-drift-simulations) <br />
+[7 Scan for selection signatures mapping with FST leveraging replicated selection](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#7-scan-for-selection-signatures) <br />
+[8 Test for selection: "Sauron plot"](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#8-test-for-selection-sauron-plot) <br />
+[9 Significance thresholds](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#9-significance-thresholds) <br />
+&emsp; [9.1 Based on the empirical distribution](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#91-based-on-the-empiric-distribution) <br />
+&emsp; [9.2 Based on drift simulations](https://github.com/milaleoni/ExpEvo_with_replicated_selection/blob/main/README.md#92-based-on-drift-simulations) <br />
 &emsp; [Simulation of drift](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#simulation-of-drift) <br />
-&emsp; [9.3 Based on the FDRfS](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#44-based-on-the-fdr-for-selection)<br />
+&emsp; [9.3 Based on the FDRfS](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#93-based-on-the-fdr-for-selection)<br />
 
 
 ## 0 Introduction
