@@ -319,19 +319,192 @@ vcf_S4 <- filter_for_non_diallelic_non_polymorphic(data = vcf_S4)
 This function also comes from the `vcfR` package from [Knaus and Grünwald 2018](https://github.com/knausb/vcfR#:~:text=VcfR%20is%20an%20R%20package%20intended%20to%20allow,rapidly%20read%20from%20and%20write%20to%20VCF%20files.). 
 ```{r}
 write.vcf(vcf_S4, file="path/to/your/working/directory/filtered_DATA.vcf.gz", mask=FALSE)          
-```  
-## 4 Estimation of the effective population size  
+```
+## 4 Allele frequency estimation 
           
+          
+## 5 Estimation of the effective population size  
+The effective population size was calculated using the known demographic parameters of the populations and based off of the formula: 
+          <img width="120" alt="effective_pop_size" src="https://user-images.githubusercontent.com/63467079/171614297-2936b14e-3c6c-4914-b0b5-6e6cca2c5fc7.png"> <br /> where ![formula](https://render.githubusercontent.com/render/math?math=N_{m}) is the number of male and ![formula](https://render.githubusercontent.com/render/math?math=N_{f} the number of female individuals (Crow and Kimura, 1970). In every generation the ~5% shortest or tallest plants were harvested, amounting to ~250 plants. Under the assumption of complete random mating, all 5000 plants could contribute as male parents for the next generation, the effective population size would be calculated as:
+```{r}   
+### Calculate the effetive population size -------------------------------------
+calculate_eff_pop_size <- function(N_males,
+                                   N_females){
+  N_eff <- (4*N_males*N_females)/(N_males+N_females)
+  return(N_eff)
+}
+calculate_eff_pop_size(N_males = 5000,
+                       N_females = 250)          
+```            
+In field trials, the assumption of random mating is violated because of the effects of assortative mating due to varying flowering dates and limited spatial pollen dispersion (Allard, 1999). Therefore, we evaluated the flowering dates of the 96 randomly chosen plants from each subpopulation to approximate the number of simultaneously flowering tassels and silks. It was assumed that silks remain receptive up to 5 days after silk emergence (Nieh et al., 2014), so that we calculated the number of flowering tassels during this time interval and projected it onto the entire subpopulation. This was done by:
+```{r}   
+### Tassel flowering dates -----------------------------------------------------
+shoepag <- as.data.table(shoepag)
+shoepag$population <- str_sub(shoepag$Barcode_of_plant,1,1)
+shoepag_1 <- shoepag[population == "1",]
+shoepag_2 <- shoepag[population == "2",]
+shoepag_3 <- shoepag[population == "3",]
+shoepag_4 <- shoepag[population == "4",]
+flowering_data_set_T <- function(data){
+  day_T <- str_sub(data$Flowering_date_Tassel,1,2)
+  day_Tassel <- day_T[!is.na(as.numeric(day_T))]
+  index <- which(!is.na(as.numeric(day_T)))
+  data <- data[index,]
+  month_Tassel <- str_sub(data$Flowering_date_Tassel,4,5)
+  date_T <- paste("2020",month_Tassel,day_Tassel, sep = "-", collapse = NULL, recycle0 = F)
+  
+  day_S <- str_sub(data$Flowering_date_Silk,1,2)
+  day_Silk <- day_S[!is.na(as.numeric(day_S))]
+  index <- which(!is.na(as.numeric(day_S)))
+  month_S <- str_sub(data$Flowering_date_Silk,4,5)
+  month_Silk <- month_S[index]
+  date_S <- paste("2020",month_Silk,day_Silk, sep = "-", collapse = NULL, recycle0 = F)
+  
+  Flowering_date_T <- as.Date(date_T)
+  Flowering_date_T <- as.data.frame(Flowering_date_T)
+  colnames(Flowering_date_T) <- "Flowering_date_Tassel"
+  Flowering_date_S <- as.Date(date_S)
+  Flowering_date_S <- as.data.frame(Flowering_date_S)
+  colnames(Flowering_date_S) <- "Flowering_date_Silk"
+  return(Flowering_date_T)
+}
 
-          
-          
-          
+flowering_data_set_S <- function(data){
+  day_T <- str_sub(data$Flowering_date_Tassel,1,2)
+  day_Tassel <- day_T[!is.na(as.numeric(day_T))]
+  index <- which(!is.na(as.numeric(day_T)))
+  data <- data[index,]
+  month_Tassel <- str_sub(data$Flowering_date_Tassel,4,5)
+  date_T <- paste("2020",month_Tassel,day_Tassel, sep = "-", collapse = NULL, recycle0 = F)
+  
+  day_S <- str_sub(data$Flowering_date_Silk,1,2)
+  day_Silk <- day_S[!is.na(as.numeric(day_S))]
+  index <- which(!is.na(as.numeric(day_S)))
+  month_S <- str_sub(data$Flowering_date_Silk,4,5)
+  month_Silk <- month_S[index]
+  date_S <- paste("2020",month_Silk,day_Silk, sep = "-", collapse = NULL, recycle0 = F)
+  
+  Flowering_date_T <- as.Date(date_T)
+  Flowering_date_T <- as.data.frame(Flowering_date_T)
+  colnames(Flowering_date_T) <- "Flowering_date_Tassel"
+  Flowering_date_S <- as.Date(date_S)
+  Flowering_date_S <- as.data.frame(Flowering_date_S)
+  colnames(Flowering_date_S) <- "Flowering_date_Silk"
+  return(Flowering_date_S)
+}
+
+flowering_time_intervals <- function(data){
+  day_T <- str_sub(data$Flowering_date_Tassel,1,2)
+  day_Tassel <- day_T[!is.na(as.numeric(day_T))]
+  index <- which(!is.na(as.numeric(day_T)))
+  data <- data[index,]
+  month_Tassel <- str_sub(data$Flowering_date_Tassel,4,5)
+  date_T <- paste("2020",month_Tassel,day_Tassel, sep = "-", collapse = NULL, recycle0 = F)
+  
+  day_S <- str_sub(data$Flowering_date_Silk,1,2)
+  day_Silk <- day_S[!is.na(as.numeric(day_S))]
+  index <- which(!is.na(as.numeric(day_S)))
+  month_S <- str_sub(data$Flowering_date_Silk,4,5)
+  month_Silk <- month_S[index]
+  date_S <- paste("2020",month_Silk,day_Silk, sep = "-", collapse = NULL, recycle0 = F)
+  
+  Flowering_date_T <- as.Date(date_T)
+  Flowering_date_T <- as.data.frame(Flowering_date_T)
+  colnames(Flowering_date_T) <- "Flowering_date_Tassel"
+  Flowering_date_S <- as.Date(date_S)
+  Flowering_date_S <- as.data.frame(Flowering_date_S)
+  colnames(Flowering_date_S) <- "Flowering_date_Silk"
+  
+  days_to_flowering_Tassel <- Flowering_date_T$Flowering_date_Tassel-as.Date("2020-04-28")
+  as.Date("2020-04-28") + median(days_to_flowering_Tassel)
+  mat <- matrix(nrow = 9, ncol= 4)
+  mat[,1:2] <- cbind(seq(0.05,0.45,0.05),sort(seq(0.55,0.95,0.05), decreasing = TRUE))
+  for (i in 1:9) {
+    mat[i,3:4] <- quantile(days_to_flowering_Tassel, probs = c(mat[i,1],mat[i,2]), na.rm = TRUE)
+  }
+  mat <- as.data.frame(mat)
+  mat$time_int <- mat$V4 -mat$V3
+  mat$date_1 <- as.Date("2020-04-28") + mat$V3
+  mat$date_2 <- as.Date("2020-04-28") + mat$V4
+  return(mat)
+}
+time_intervals_pop1 <- flowering_time_intervals(shoepag_1)# 0.2;0.8
+time_intervals_pop2 <- flowering_time_intervals(shoepag_2)# 0.35;0.65
+time_intervals_pop3 <- flowering_time_intervals(shoepag_3)# 0.25;0.75
+time_intervals_pop4 <- flowering_time_intervals(shoepag_4)# 0.85;0.15
+
+cbind(time_intervals_pop1,time_intervals_pop2,time_intervals_pop3,time_intervals_pop4)
+
+Flowering_date_T_pop1 <- flowering_data_set_T(shoepag_1)
+Flowering_date_T_pop2 <- flowering_data_set_T(shoepag_2)
+Flowering_date_T_pop3 <- flowering_data_set_T(shoepag_3)
+Flowering_date_T_pop4 <- flowering_data_set_T(shoepag_4)
+
+Flowering_date_S_pop1 <- flowering_data_set_S(shoepag_1)
+Flowering_date_S_pop2 <- flowering_data_set_S(shoepag_2)
+Flowering_date_S_pop3 <- flowering_data_set_S(shoepag_3)
+Flowering_date_S_pop4 <- flowering_data_set_S(shoepag_4)
+
+days_to_flowering_Tassel_pop1 <- Flowering_date_T_pop1$Flowering_date_Tassel-as.Date("2020-04-28")
+days_to_flowering_Tassel_pop2 <- Flowering_date_T_pop2$Flowering_date_Tassel-as.Date("2020-04-28")
+days_to_flowering_Tassel_pop3 <- Flowering_date_T_pop3$Flowering_date_Tassel-as.Date("2020-04-28")
+days_to_flowering_Tassel_pop4 <- Flowering_date_T_pop4$Flowering_date_Tassel-as.Date("2020-04-28")
+
+silk_0_pop1 <- as.Date("2020-04-28") + quantile(days_to_flowering_Tassel_pop1, probs = 0.2, na.rm = TRUE)
+silk_1_pop1 <- as.Date("2020-04-28") + quantile(days_to_flowering_Tassel_pop1, probs = 0.8, na.rm = TRUE)
+silk_0_pop2 <- as.Date("2020-04-28") + quantile(days_to_flowering_Tassel_pop2, probs = 0.35, na.rm = TRUE)
+silk_1_pop2 <- as.Date("2020-04-28") + quantile(days_to_flowering_Tassel_pop2, probs = 0.65, na.rm = TRUE)
+silk_0_pop3 <- as.Date("2020-04-28") + quantile(days_to_flowering_Tassel_pop3, probs = 0.25, na.rm = TRUE)
+silk_1_pop3 <- as.Date("2020-04-28") + quantile(days_to_flowering_Tassel_pop3, probs = 0.75, na.rm = TRUE)
+silk_0_pop4 <- as.Date("2020-04-28") + quantile(days_to_flowering_Tassel_pop4, probs = 0.15, na.rm = TRUE)
+silk_1_pop4 <- as.Date("2020-04-28") + quantile(days_to_flowering_Tassel_pop4, probs = 0.85, na.rm = TRUE)
+
+silk_0_num_pop1 <- length(which(silk_0_pop1 < (as.Date("2020-04-28") + days_to_flowering_Tassel_pop1)))
+silk_1_num_pop1 <- length(which(silk_1_pop1 < (as.Date("2020-04-28") + days_to_flowering_Tassel_pop1)))
+num_pop_1 <- silk_0_num_pop1 - silk_1_num_pop1
+silk_0_num_pop2 <- length(which(silk_0_pop2 < (as.Date("2020-04-28") + days_to_flowering_Tassel_pop2)))
+silk_1_num_pop2 <- length(which(silk_1_pop2 < (as.Date("2020-04-28") + days_to_flowering_Tassel_pop2)))
+num_pop_2 <- silk_0_num_pop2 - silk_1_num_pop2
+silk_0_num_pop3 <- length(which(silk_0_pop3 < (as.Date("2020-04-28") + days_to_flowering_Tassel_pop3)))
+silk_1_num_pop3 <- length(which(silk_1_pop3 < (as.Date("2020-04-28") + days_to_flowering_Tassel_pop3)))
+num_pop_3 <- silk_0_num_pop3 - silk_1_num_pop3
+silk_0_num_pop4 <- length(which(silk_0_pop4 < (as.Date("2020-04-28") + days_to_flowering_Tassel_pop4)))
+silk_1_num_pop4 <- length(which(silk_1_pop4 < (as.Date("2020-04-28") + days_to_flowering_Tassel_pop4)))
+num_pop_4 <- silk_0_num_pop4 - silk_1_num_pop4
+
+silk_0_num_pop1 <- length(which(silk_0_pop1 < (as.Date("2020-04-28") + days_to_flowering_Tassel_pop1)))
+silk_1_num_pop1 <- length(which(silk_1_pop1 < (as.Date("2020-04-28") + days_to_flowering_Tassel_pop1)))
+num_pop_1 <- silk_0_num_pop1 - silk_1_num_pop1
+silk_0_num_pop2 <- length(which(silk_0_pop2 < (as.Date("2020-04-28") + days_to_flowering_Silk_pop2)))
+silk_1_num_pop2 <- length(which(silk_1_pop2 < (as.Date("2020-04-28") + days_to_flowering_Tassel_pop2)))
+num_pop_2 <- silk_0_num_pop2 - silk_1_num_pop2
+silk_0_num_pop3 <- length(which(silk_0_pop3 < (as.Date("2020-04-28") + days_to_flowering_Tassel_pop3)))
+silk_1_num_pop3 <- length(which(silk_1_pop3 < (as.Date("2020-04-28") + days_to_flowering_Tassel_pop3)))
+num_pop_3 <- silk_0_num_pop3 - silk_1_num_pop3
+silk_0_num_pop4 <- length(which(silk_0_pop4 < (as.Date("2020-04-28") + days_to_flowering_Tassel_pop4)))
+silk_1_num_pop4 <- length(which(silk_1_pop4 < (as.Date("2020-04-28") + days_to_flowering_Tassel_pop4)))
+num_pop_4 <- silk_0_num_pop4 - silk_1_num_pop4
+### Project the numbers of simulatanously flowering plants onto the entire population
+sim_flow_males_pop_1 <- (num_pop_1/96)*5000
+sim_flow_males_pop_2 <- (num_pop_2/96)*5000
+sim_flow_males_pop_3 <- (num_pop_3/96)*5000
+sim_flow_males_pop_4 <- (num_pop_4/96)*5000
+### New effective population size considering simultanously flowering plants ---
+calculate_eff_pop_size(N_males = sim_flow_males_pop_1,
+                       N_females = 250)
+calculate_eff_pop_size(N_males = sim_flow_males_pop_2,
+                       N_females = 250)
+calculate_eff_pop_size(N_males = sim_flow_males_pop_3,
+                       N_females = 250)
+calculate_eff_pop_size(N_males = sim_flow_males_pop_4,
+                       N_females = 250)          
+```             
 ## 5 Scan for selection signatures
 Our scan for selection was based on the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection. 
 The function for the calculation of the **<img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection** is contained in the `selection_signature_mapping.R` script. 
 <br /> <br /> 
 The function below will calculate the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> between all possible and non-redundant comparisons between the subpopulations selected in the same and opposite directions at each marker as: <br /> <br />
-<img width="440" alt="FST_formula" src="https://user-images.githubusercontent.com/63467079/171010281-cf3648d2-1baf-4fc3-8e23-83d3dbd792ca.png">
+<img width="150" alt="FST_formula" src="https://user-images.githubusercontent.com/63467079/171010281-cf3648d2-1baf-4fc3-8e23-83d3dbd792ca.png">
 <br /> <br /> according to [Weir and Cockerham, 1984](https://doi.org/10.1111/j.1558-5646.1984.tb05657.x). <br /> <br />
 
 The function also calculates the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> Sum between the subpopulations selected in same and opposite directions. This values are required for the calculation of the false discovery rate for selection (FDRfS). In this statistic, observations which only occured in one comparison are excluded. Those observations might have been caused by drift. Selection is a repeatable force, so that we should be able to observe the same pattern in both comparisons. <br /> <br />            
