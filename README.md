@@ -16,7 +16,7 @@
 [6 LD decay](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#6-ld-decay)
 [7 Scan for selection signatures mapping with FST leveraging replicated selection](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#7-scan-for-selection-signatures) <br />
 [8 Test for selection: "Sauron plot"](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#8-test-for-selection-sauron-plot) <br />
-[9 Significance thresholds](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#9-significance-thresholds) <br />
+[9 Comparison of significance thresholds and candidate gene identification](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#9-significance-thresholds) <br />
 &emsp; [9.1 Based on the empirical distribution](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#91-based-on-the-empiric-distribution) <br />
 &emsp; [9.2 Based on drift simulations](https://github.com/milaleoni/ExpEvo_with_replicated_selection/blob/main/README.md#92-based-on-drift-simulations) <br />
 &emsp; [Simulation of drift](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#simulation-of-drift) <br />
