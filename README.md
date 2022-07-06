@@ -585,8 +585,8 @@ calculate_eff_pop_size(N_males = sim_flow_males_pop_4,
 ``` 
 ## 6 LD decay
 The extent of linkage disequilibrium (LD) was estimated based on all 4,029,092 SNP markers with the PLINK software  v1.90 as squared correlation between markers as R2 [(Purcell et al., 2007)](https://www.cell.com/ajhg/fulltext/S0002-9297(07)61352-4). The script for the computation of LD decay between markers is available as `LD_decay_calculation_with_plink.bash`.
-![2021_V3_LD_decay_ggplot](https://user-images.githubusercontent.com/63467079/150421503-dcebed82-9f2c-45f0-9457-f8db16320ec7.png)
-                        
+ ![Figure_3](https://user-images.githubusercontent.com/63467079/177547785-a9dbf1f1-0029-423e-bf9d-0eb07819cdaf.png)
+                       
 ## 7 Scan for selection signatures
 Our scan for selection was based on the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection. 
 The function for the calculation of the **<img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection** is contained in the `selection_signature_mapping.R` script. 
@@ -595,7 +595,8 @@ The function below will calculate the <img src="https://render.githubusercontent
 <img width="150" alt="FST_formula" src="https://user-images.githubusercontent.com/63467079/171010281-cf3648d2-1baf-4fc3-8e23-83d3dbd792ca.png">
 <br /> <br /> according to [Weir and Cockerham, 1984](https://doi.org/10.1111/j.1558-5646.1984.tb05657.x). <br /> <br />
 
-The function also calculates the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> Sum between the subpopulations selected in same and opposite directions. This values are required for the calculation of the false discovery rate for selection (FDRfS). In this statistic, observations which only occured in one comparison are excluded. Those observations might have been caused by drift. Selection is a repeatable force, so that we should be able to observe the same pattern in both comparisons. <br /> <br />            
+The function also calculates the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> Sum between the subpopulations selected in same and opposite directions. This values are required for the calculation of the false discovery rate for selection (FDRfS). In this statistic, observations which only occured in one comparison are excluded. Those observations might have been caused by drift. Selection is a repeatable force, so that we should be able to observe the same pattern in both compa[Shoepeg_paper_Exp_Evo_2022_05_31_MLT_Ginnie.docx](https://github.com/milaleonie/ExpEvo_with_replicated_selection/files/9054487/Shoepeg_paper_Exp_Evo_2022_05_31_MLT_Ginnie.docx)
+risons. <br /> <br />            
 ```{r}
 library(stringr)
 library(data.table)
