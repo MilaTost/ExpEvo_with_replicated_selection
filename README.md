@@ -115,7 +115,7 @@ The Rscript generates a new filter VCF file, when all filtering steps are passed
 
 ### Loading of required packages and the VCF file:
 Most of the function come from the `vcfR` package from
-[Knaus and Grünwald 2018] (https://github.com/knausb/vcfR#:~:text=VcfR%20is%20an%20R%20package%20intended%20to%20allow,rapidly%20read%20from%20and%20write%20to%20VCF%20files.). The <vcfR> package from [Knaus and Grünwald 2018] works with S4 objects, therefore the syntax is quite different from "normal" R jargon. 
+[Knaus and Grünwald 2018](https://github.com/knausb/vcfR#:~:text=VcfR%20is%20an%20R%20package%20intended%20to%20allow,rapidly%20read%20from%20and%20write%20to%20VCF%20files.). The <vcfR> package from [Knaus and Grünwald 2018](https://github.com/knausb/vcfR#:~:text=VcfR%20is%20an%20R%20package%20intended%20to%20allow,rapidly%20read%20from%20and%20write%20to%20VCF%20files.) works with S4 objects, therefore the syntax is quite different from "normal" R jargon. 
 Most calculations and filtering steps over the entire set of markers were run by using the `mclapply()` function from the `parallel` package. We observed that the `mclapply()` function was extremly fast and efficient. 
 ```{r}
 library(stringr)
@@ -817,9 +817,91 @@ The significance thresholds based on drift simulations were calculated in the `S
 The simulation of drift was conducted by using the `DriftSimulator.R` from [Beissinger (2021)](http://beissingerlab.github.io/Software/). The `DriftSimulator.R` script was run with a drift simulation script similar to the one from [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219), which enables the implementation of the drift simulator over a large set of markers. The script, which enables the simulation of drift over a large set of markers is available as `Run_drift_simulator_over_many_markers.R`. The `Run_drift_simulator_over_many_markers.R` script contains a function which simulates drift acting a single locus. We ran 5,000,000 simulations. For each simulation, initial allele frequencies were set based on allele frequency spectrum observed in generation 0 [Gyawali et al., 2019](https://pubmed.ncbi.nlm.nih.gov/31590656/) . Drift was simulated with a population size of 5000 individuals with 250 female and 5000 male individuals for three generations. We assumed that every ear contributed ~500 kernels. Every kernel could have been pollinated by one of the male parents, which resulted in much higher harvest than 5000 kernels. Therefore, 5000 kernels were randomly drawn from the entire harvest to represent the seeds planted for the next generation. In the third generation, 96 individuals out of 5000 were sampled to represent the individuals that were actually genotyped (Turner et al., 2011; Kumar et al., 2021). Variable marker coverage was also simulated; marker coverage was sampled from a uniform distribution between 40 and 96 observations per marker to match our filtering process [Turner et al., 2011](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). Additionally, the marker coverage was also sampled, the minimal marker coverage was set to at least 40 out of 96 observations at a marker, so that the marker coverage was always sampled between 40 to 96 observations per marker [Turner et al., 2011](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). <br /> <br /> The drift simulator was run as: <br />
           
 ```{r}
-XXX
+initial_Short1 <- marker_data_tab$freq_P_Gen1_Shoe0
+initial_Short2 <- marker_data_tab$freq_P_Gen2_Shoe0
+initial_Tall1 <- marker_data_tab$freq_P_Rol1_Shoe0
+initial_Tall2 <- marker_data_tab$freq_P_Rol2_Shoe0
+
+total_pop <- 5000
+males_pop <- 5000
+females_pop <- 250
+### 500 K simulations ----------------------------------------------------------
+sim <- 500000
+cat(sim, "simulations are conducted.","\n")
+cycles <- 3
+kernels_per_plant <- 500
+
+initial_Short1_new <- sample(initial_Short1, sim, replace = TRUE)
+initial_Short2_new <- sample(initial_Short2, sim, replace = TRUE)
+initial_Tall1_new <- sample(initial_Tall1, sim, replace = TRUE)
+initial_Tall2_new <- sample(initial_Tall2, sim, replace = TRUE)
+
+drift_simulations <- function(total_pop_size,
+                              no_males,
+                              no_females,
+                              simulations,
+                              cycles,
+                              kernels_per_plant,
+                              initial_freq){
+  drift_many_loci <- function(a){
+    maleprog <- c()
+    femaleprog <- c()
+    frequency <- c()
+    initial_frequency <- as.numeric(initial_freq[a])
+    drift_cycles <- function(i){
+      prog <- c(rep("A",initial_frequency*total_pop_size*2),rep("B",(1-initial_frequency)*total_pop_size*2))
+      maleprog <- sample(prog, size = no_males, replace=T)  #sample male alleles from total population
+      femaleprog <- sample(prog,size = no_females,replace=F) #sample females from total population
+      kernels_from_female_mother_plants <- rep(femaleprog,kernels_per_plant)
+      pollen_father_plants <- sample(maleprog, length(kernels_from_female_mother_plants),replace = TRUE)
+      progenies <- c(kernels_from_female_mother_plants, pollen_father_plants)
+      prog_1 <- sample(progenies, total_pop_size, replace = FALSE) #from all harvested ears, only 5000 are sown
+      frequency <- length(which(prog_1=="A"))/(2*total_pop_size)
+      return(frequency)
+    }
+    drifted_freq_over_cycles <- mclapply(1:cycles, drift_cycles)
+    drifted_freq_over_cycles <- unlist(drifted_freq_over_cycles)
+    frequency_0 <- initial_frequency
+    drifted_freq <- c(frequency_0, drifted_freq_over_cycles)
+    return(drifted_freq)
+  }
+  drift_many_loci_freq <- mclapply(1:sim, drift_many_loci)
+  data <- unlist(drift_many_loci_freq)
+  dt <- matrix(data = data, ncol={cycles+1},nrow=sim, byrow = TRUE)
+  colnames(dt) <- paste("Generation",0:cycles, sep = "_")
+  return(dt)
+}
+### RUN ------------------------------------------------------------------------
+simulated_drift_Short1 <- drift_simulations(total_pop_size = total_pop,
+                                     no_males = males_pop,
+                                     no_females = females_pop,
+                                     simulations = sim,
+                                     cycles = cycles,
+                                     kernels_per_plant = kernels_per_plant,
+                                     initial_freq = initial_Short1_new)
+simulated_drift_Short2 <- drift_simulations(total_pop_size = total_pop,
+                                     no_males = males_pop,
+                                     no_females = females_pop,
+                                     simulations = sim,
+                                     cycles = cycles,
+                                     kernels_per_plant = kernels_per_plant,
+                                     initial_freq = initial_Short2_new)
+simulated_drift_Tall1 <- drift_simulations(total_pop_size = total_pop,
+                                     no_males = males_pop,
+                                     no_females = females_pop,
+                                     simulations = sim,
+                                     cycles = cycles,
+                                     kernels_per_plant = kernels_per_plant,
+                                     initial_freq = initial_Tall1_new)
+simulated_drift_Tall2 <- drift_simulations(total_pop_size = total_pop,
+                                     no_males = males_pop,
+                                     no_females = females_pop,
+                                     simulations = sim,
+                                     cycles = cycles,
+                                     kernels_per_plant = kernels_per_plant,
+                                     initial_freq = initial_Tall2_new)
 ```
-<img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> values were calculated for all simulated markers, which corresponded in our case to 5,000,000 simulations. We summed those up and choosed the the 99.9999th percentile of the emprirical distribution of all observations as significance threshold, similar to [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219).  
+<img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> values were calculated for all simulated markers, which corresponded in our case to 500,000 simulations. We summed those up and choosed the the 99.9999th percentile of the emprirical distribution of all observations as significance threshold, similar to [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219).  
 
 ### 9.3 Based on the FDRfS
 **FDRfS for all possible values of the statistics**
