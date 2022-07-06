@@ -800,7 +800,7 @@ Sauron_plot_FST <- create_sauron_plot_FST(data_table = FST_values_od_cor,
                                           stat_same_dir2 = FST_values_od_cor$FST_value_same_dir2)
 Sauron_plot_FST
 ```
-## 9 Significance thresholds
+## 9 Comparison of significance thresholds and candidate gene identification
 Significance thresholds for selection were calculated three ways: 1) based on the empirical distribution; 2) based on drift simulations; and 3) based on the false discovery rate for selection (FDRfS) [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). <br /> 
 The calculation of significance thresholds and the plotting functions are contained in the `Significance_thresholds_and_plotting.R`. The `Filtering_for_coverage_average_RD_missingness.R` and `Selection_signature_mapping.R` script can or should be run on a inactive Linux session on a high-throughput computing device. These scripts are usually run on extremly large data sets (raw sequence data or large VCF files). The `Significance_thresholds_and_plotting.R` is usually run on a much smaller data set, since many markers were removed in the filtering procedure. Furthermore, when windows font types want to be used,  the script needs to be run on a windows device. <br />   
 ### 9.1 Based on the empirical distribution
