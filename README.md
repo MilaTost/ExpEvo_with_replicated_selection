@@ -13,7 +13,7 @@
 &emsp;[3.4 Removal of non-diallelic and non-polymorphic markers](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#34-removal-of-non-diallelic-and-non-polymorphic-markers) <br />
 [4 Allele frequency estimation](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#4-allele-frequency-estimation) <br />
 [5 Estimation of the effective population size](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#5-estimation-of-the-effective-population-size) <br />
-[6 LD decay](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#6-ld-decay)
+[6 LD decay](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#6-ld-decay) <br />
 [7 Scan for selection signatures mapping with FST leveraging replicated selection](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#7-scan-for-selection-signatures) <br />
 [8 Test for selection: "Sauron plot"](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#8-test-for-selection-sauron-plot) <br />
 [9 Comparison of significance thresholds and candidate gene identification](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#9-comparison-of-significance-thresholds-and-candidate-gene-identification) <br />
