@@ -39,7 +39,7 @@ Whereas we applied this new significance threshold to the commonly used
           <img src="https://render.githubusercontent.com/render/math?math=F_{ST}">
 statistic. <br /> <br /> 
 **Experimental design of an experimental evolution study with replicated selection** <br />
-<img width="500" height="555.7324841, src="https://github.com/MilaTost/ExpEvo_with_replicated_selection/assets/63467079/dec971b6-fd01-484c-88e1-75fc620318d9.png">
+
 
 ## 1 Phenotypic data analysis
 ### 1.1 Truncation selection thresholds
@@ -70,8 +70,8 @@ t.test(Short_plants_2020$PlantHeight,Tall_plants_2020$PlantHeight,
        paired = TRUE)
 ```
 Additionally we also used the trait measurments from the base population and all generations of selection to show the decrease and increase in the selected trait. In our case the selected trait was plant height. <br /> <br /> 
-**Measured plant height in all years in the subpopulations selected for short plant (green) and tall plant height (purple).**
-<img src="https://user-images.githubusercontent.com/63467079/150105713-a27b5365-4822-483e-abe4-6fff10332bc7.png" width="600" height="360"> <br />
+**Measured plant height in all years in the subpopulations selected for short plant (green) and tall plant height (purple).** <br />
+<img src="[https://user-images.githubusercontent.com/63467079/150105713-a27b5365-4822-483e-abe4-6fff10332bc7.png](https://github.com/MilaTost/ExpEvo_with_replicated_selection/assets/63467079/c1775cd7-27c2-4e35-8506-3f1862d71133)" width="600" height="360"> <br />
 The computation of the t-test statistic and the script for plotting the measured phenotypes across all years are available in the `Phenotypic_data_analysis.R` script. 
 ### 1.3 Realized heritability from the Breeder's equation
 The realized heritability was calcaluated according to (Lush, 1937). This is done by the `Calculation_of_the_realized_heritability.R` script. To calculate the realized heritability the selection differential and the response to selection are calculated between the different generations of selection. In the following example the realized heritability was calculated between generation 0 and generation 1 of the subpopulations short plants 1. <br />
