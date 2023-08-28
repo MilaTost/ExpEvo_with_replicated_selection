@@ -39,6 +39,7 @@ Whereas we applied this new significance threshold to the commonly used
           <img src="https://render.githubusercontent.com/render/math?math=F_{ST}">
 statistic. <br /> <br /> 
 **Experimental design of an experimental evolution study with replicated selection** <br />
+<img width="500" alt="Figure_1" src="https://github.com/MilaTost/ExpEvo_with_replicated_selection/assets/63467079/558bfbe8-5844-451a-ab2c-229f72488a92">
 
 ## 1 Phenotypic data analysis
 ### 1.1 Truncation selection thresholds
@@ -70,7 +71,7 @@ t.test(Short_plants_2020$PlantHeight,Tall_plants_2020$PlantHeight,
 ```
 Additionally we also used the trait measurments from the base population and all generations of selection to show the decrease and increase in the selected trait. In our case the selected trait was plant height. <br /> <br /> 
 **Measured plant height in all years in the subpopulations selected for short plant (green) and tall plant height (purple).** <br />
-<img src="[https://user-images.githubusercontent.com/63467079/150105713-a27b5365-4822-483e-abe4-6fff10332bc7.png](https://github.com/MilaTost/ExpEvo_with_replicated_selection/assets/63467079/c1775cd7-27c2-4e35-8506-3f1862d71133)" width="600" height="360"> <br />
+<img width="600" alt="Figure_2" src="https://github.com/MilaTost/ExpEvo_with_replicated_selection/assets/63467079/596ca155-6c47-4b77-9e65-607d1825f9c2"> <br />
 The computation of the t-test statistic and the script for plotting the measured phenotypes across all years are available in the `Phenotypic_data_analysis.R` script. 
 ### 1.3 Realized heritability from the Breeder's equation
 The realized heritability was calcaluated according to (Lush, 1937). This is done by the `Calculation_of_the_realized_heritability.R` script. To calculate the realized heritability the selection differential and the response to selection are calculated between the different generations of selection. In the following example the realized heritability was calculated between generation 0 and generation 1 of the subpopulations short plants 1. <br />
@@ -188,7 +189,7 @@ The calculation of the FDR for selection is also demonstrated with the following
 Even though, the significance threshold based on the FDR for selection is already printed by the previous function, the following function returns the threshold so it can be used directly in the Manhatten plot or to check the overlap between all the different statistics. The FDRfS can be choosen in the function. In our case we choosed a FDRfS < 5%. <br /> <br /> 
 
 In the [Manhatten plot](https://en.wikipedia.org/wiki/Manhattan_plot#:~:text=A%20Manhattan%20plot%20is%20a%20type%20of%20scatter,genome-wide%20association%20studies%20%28GWAS%29%20to%20display%20significant%20SNPs.) the positions of the markers are plotted against the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> value observed at this marker. <br /> <br /> 
-<img src="https://github.com/MilaTost/ExpEvo_with_replicated_selection/assets/63467079/663ee6e3-7891-4fd9-9aef-7f8a470a7284.png" width="500" height="555.7324841">
+<img src="https://github.com/MilaTost/ExpEvo_with_replicated_selection/assets/63467079/663ee6e3-7891-4fd9-9aef-7f8a470a7284.png" width="1200" height="500">
 **FST at each SNP marker between the subpopulations selected in opposite directions (A) and the same direction (B) and expressed by Wstat values across regions (C, D) with the significance thresholds based on the 99.9th percentile of the empirical distribution (light purple), based on the 99.99th percentile of the empirical distribution (dark purple), drift simulations (pink), and by the false discovery rate for selection (FDRfS) (yellow).**
 
 ## Haplotype estimation and haplotype block calculation
