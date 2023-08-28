@@ -39,7 +39,8 @@ Whereas we applied this new significance threshold to the commonly used
           <img src="https://render.githubusercontent.com/render/math?math=F_{ST}">
 statistic. <br /> <br /> 
 **Experimental design of an experimental evolution study with replicated selection** <br />
-<img  width="500" height="555.7324841, alt="Figure_2" src="https://github.com/MilaTost/ExpEvo_with_replicated_selection/assets/63467079/07862279-2ada-4e91-9ee7-74635e0a19d4"> <br /> 
+<img width="500" height="555.7324841, src="https://github.com/MilaTost/ExpEvo_with_replicated_selection/assets/63467079/dec971b6-fd01-484c-88e1-75fc620318d9.png">
+
 ## 1 Phenotypic data analysis
 ### 1.1 Truncation selection thresholds
 The truncation thresholds of the 5% tallest or 5% shortest plants within the populations can be calculated like this:
