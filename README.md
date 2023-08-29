@@ -134,14 +134,15 @@ We filtered the individuals out with a marker coverage below `0.6`. For this ana
 #### LD decay calculation
 The calculation can be found in the script `Calc_LD_decay_calc_with_TASSEL_based_on_thinned_out_VCF.bash`. <br /> <br /> 
 #### LD decay plotting
-LD decay was modeled with a nonlinear regression model as expected value <img width="120" alt="Formula_Github" src="https://github.com/MilaTost/ExpEvo_with_replicated_selection/assets/63467079/dedff33d-bf1f-40e4-9191-9dbfc33b846b"> with N as the number of individuals at each site and C as the recombination coefficient between sites (Remington et al., 2001). The calculation and plotting script is available as `Plot_LD_decay_based_on_TASSEL_output.R`. We also created a pairwise LD heatmap with the R package LDheatmap (Shin et al., 2006). This calculation is contained in the `Create_Haplotype_figure.R` script. <br /><br />
+LD decay was modeled with a nonlinear regression model as expected value <img width="120" alt="Formula_Github" src="https://github.com/MilaTost/ExpEvo_with_replicated_selection/assets/63467079/dedff33d-bf1f-40e4-9191-9dbfc33b846b"> with N as the number of individuals at each site and C as the recombination coefficient between sites (Remington et al., 2001). The calculation and plotting script is available as `Plot_LD_decay_based_on_TASSEL_output.R`. We also created a pairwise LD heatmap with the R package LDheatmap (Shin et al., 2006). This calculation is contained in the `Create_Haplotype_figure.R` script. <br /> <br />
                        
 ## 7 Scan for selection signatures
-Our scan for selection was based on the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection. 
-The function for the calculation of the **<img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection** is contained in the `FstSum_value_calculation.R` script. <br /> <br /> 
-The function below will calculate the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> between all possible and non-redundant comparisons between the subpopulations selected in the same and opposite directions at each marker as: <br /> <br />
+Our scan for selection was based on the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection. <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> is calculated as: <br /> <br />
 <img width="150" alt="FST_formula" src="https://user-images.githubusercontent.com/63467079/171010281-cf3648d2-1baf-4fc3-8e23-83d3dbd792ca.png">
 <br /> <br /> according to [Weir and Cockerham, 1984](https://doi.org/10.1111/j.1558-5646.1984.tb05657.x). <br /> <br />
+
+#### Calculation of FSTSum
+The sum of FST was calculated between the two non-redundant comparisons of divergently selected subpopulations (Short 1 vs Tall 1; Short 2 vs Tall 2) and subpopulation selected in the same direction (Short 1 vs Short; Tall 1 vs Tall 2).
 
 The function also calculates the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> Sum between the subpopulations selected in same and opposite directions. This values are required for the calculation of the false discovery rate for selection (FDRfS). In this statistic, observations which only occured in one comparison are excluded. Those observations might have been caused by drift. Selection is a repeatable force, so that we should be able to observe the same pattern in both comparisons. <br /> <br />            
 
@@ -154,8 +155,8 @@ The "Sauron plot" for the <img src="https://render.githubusercontent.com/render/
 We implemented a window-based analysis to assess linked selection. A cubic smoothing spline was applied to the single-marker based FSTSum values. From the fitted spline, inflection points were calculated and used as window boundaries for newly defined regions. This analysis was performed with the R package GenWin from [Beissinger et al., 2015](https://gsejournal.biomedcentral.com/articles/10.1186/s12711-015-0105-9). Briefly, the GenWin package returns window boundaries that we used to define regions with linked markers that may be analyzed together ([Beissinger et al., 2015).  <br /> <br />
 
 ## 10 Calculation of significance thresholds
-Significance thresholds for selection were calculated three ways: 1) based on the empirical distribution; 2) based on drift simulations; and 3) based on the false discovery rate for selection (FDRfS) [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). <br /> 
-The calculation of significance thresholds and the plotting functions are contained in the `Significance_thresholds_and_plotting.R`. The `Filtering_for_coverage_average_RD_missingness.R` and `Selection_signature_mapping.R` script can or should be run on a inactive Linux session on a high-throughput computing device. These scripts are usually run on extremly large data sets (raw sequence data or large VCF files). The `Significance_thresholds_and_plotting.R` is usually run on a much smaller data set, since many markers were removed in the filtering procedure. Furthermore, when windows font types want to be used,  the script needs to be run on a windows device. <br />   
+Significance thresholds for selection were calculated three ways: 1) based on the empirical distribution; 2) based on drift simulations; and 3) based on the false discovery rate for selection (FDRfS) [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). <br />
+The calculation of significance thresholds and the plotting functions are contained in the `Significance_thresholds_and_plotting.R`. <br /> <br />
 ### 9.1 Based on the empirical distribution
 The significance thresholds based on the empirical distribution, were calculated by taking the 99.9th and 99.99th percentile of the empirical distribution of the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> :
 ```{r}
@@ -199,3 +200,4 @@ In the [Manhatten plot](https://en.wikipedia.org/wiki/Manhattan_plot#:~:text=A%2
 ## Haplotype estimation and haplotype block calculation
 The data were phased using fastPHASE version 1.4.8 (Sheet and Stephens, 2006) for further dissection. We phased the genomic data of the region from 9.437 to 10.457 Mb on chromosome 3 with 10 iterations of the expectation-maximization (EM) algorithm (Sheet and Stephens, 2006). The model was supplied with labels indicating the different subpopulations. The scripts are available as `XXX.bash`. Haplotype blocks were calculated with the R package HaploBlocker [Pook et al., 2019](https://github.com/tpook92/HaploBlocker). The results look like this: <br />
 ![Figure_5_1](https://github.com/MilaTost/ExpEvo_with_replicated_selection/assets/63467079/76e648e6-fd51-41ab-bc79-6a9a201b0c80) <br /> 
+The haplotype block calculation and plotting of the blocks are contained in the `Create_Haplotype_figure.R` script. <br /> <br />
