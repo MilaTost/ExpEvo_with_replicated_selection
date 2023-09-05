@@ -16,12 +16,13 @@
 [6 LD decay](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#6-ld-decay) <br />
 [7 Scan for selection signatures mapping with FST leveraging replicated selection](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#7-scan-for-selection-signatures) <br />
 [8 Test for selection: "Sauron plot"](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#8-test-for-selection-sauron-plot) <br />
-[9 Comparison of significance thresholds and candidate gene identification](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#9-comparison-of-significance-thresholds-and-candidate-gene-identification) <br />
-&emsp; [9.1 Based on the empirical distribution](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#91-based-on-the-empirical-distribution) <br />
-&emsp; [9.2 Based on drift simulations](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#92-based-on-drift-simulations) <br />
+[9 Window based analysis]
+[10 Comparison of significance thresholds and candidate gene identification](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#9-comparison-of-significance-thresholds-and-candidate-gene-identification) <br />
+&emsp; [10.1 Based on the empirical distribution](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#91-based-on-the-empirical-distribution) <br />
+&emsp; [10.2 Based on drift simulations](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#92-based-on-drift-simulations) <br />
 &emsp; [Simulation of drift](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#simulation-of-drift) <br />
-&emsp; [9.3 Based on the FDRfS](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#93-based-on-the-fdrfs)<br />
-
+&emsp; [10.3 Based on the FDRfS](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#93-based-on-the-fdrfs)<br />
+[11 Haplotype estimation and haplotype block calculation]
 
 ## 0 Introduction
 This repository contains scripts for selection signature mapping with replicated selection.
@@ -192,7 +193,7 @@ In the [Manhatten plot](https://en.wikipedia.org/wiki/Manhattan_plot#:~:text=A%2
 **Observations between the subpopulations selected in opposite directions (A) and the same direction (B) and expressed by Wstat values across regions (C, D) with the significance thresholds based on the 99.9th percentile of the empirical distribution (light purple), based on the 99.99th percentile of the empirical distribution (dark purple), drift simulations (pink), and by the false discovery rate for selection (FDRfS) (yellow).** <br /> <br /> 
 The plotting functions are available in the `Plot_Manhattan_plot_with_WStat_and_FSTSum.R` script. <br /> <br /> 
 
-## Haplotype estimation and haplotype block calculation
+## 11 Haplotype estimation and haplotype block calculation
 The data were phased using fastPHASE version 1.4.8 [(Sheet and Stephens, 2006)](https://stephenslab.uchicago.edu/software.html#fastphase) for further dissection. We phased the genomic data of the region from 9.437 to 10.457 Mb on chromosome 3 with 10 iterations of the expectation-maximization (EM) algorithm (Sheet and Stephens, 2006). The model was supplied with labels indicating the different subpopulations. The scripts are available as `Run_fastPHASE_random9MB_region_on_chr3.bash`. Before we ran fastPHASE, we prepared the data with the Rscript `Prepare_data_for_fastPHASE.R`. Haplotype blocks were calculated with the R package HaploBlocker [Pook et al., 2019](https://github.com/tpook92/HaploBlocker). The results look like this: <br />
 <img src="https://github.com/MilaTost/ExpEvo_with_replicated_selection/assets/63467079/76e648e6-fd51-41ab-bc79-6a9a201b0c80.png" width="600"> <br /> 
 The haplotype block calculation and plotting of the blocks are contained in the `Create_Haplotype_figure.R` script. <br /> <br />
