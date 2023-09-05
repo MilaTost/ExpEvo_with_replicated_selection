@@ -90,7 +90,6 @@ calculated_realized_herit <- function(Data_Gen1,
 calculated_realized_herit(Data_Gen1 = Short_1_2016,
                           Data_Gen2 = Short_1_2017)
 ```
-<br /> All functions for the phenotypic data analysis are contained in the Rscript `Phenotypic_data_analysis.R`.<br/> 
 
 ## 2 Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy)
 For the analysis of our raw reads from paired-end genotyping-by-sequencing (GBS) with ApeKI according to [Elshire et al. 2011](https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0019379&type=printable), we used the GB-eaSy pipeline from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy). <br />
