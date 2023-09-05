@@ -37,7 +37,7 @@ The **replicated selection** is used to calculate a *FDR for selection*.
 statistic based on the allele frequency differences. 
 Whereas we applied this new significance threshold to the commonly used 
           <img src="https://render.githubusercontent.com/render/math?math=F_{ST}">
-statistic. <br /> <br /> 
+statistic. <br /> 
 **Experimental design of an experimental evolution study with replicated selection** <br />
 <img width="500" alt="Figure_1" src="https://github.com/MilaTost/ExpEvo_with_replicated_selection/assets/63467079/558bfbe8-5844-451a-ab2c-229f72488a92">
 
@@ -139,7 +139,7 @@ LD decay was modeled with a nonlinear regression model as expected value <img wi
 ## 7 Scan for selection signatures
 Our scan for selection was based on the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection. <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> is calculated as: <br /> <br />
 <img width="150" alt="FST_formula" src="https://user-images.githubusercontent.com/63467079/171010281-cf3648d2-1baf-4fc3-8e23-83d3dbd792ca.png">
-<br /> <br /> according to [Weir and Cockerham, 1984](https://doi.org/10.1111/j.1558-5646.1984.tb05657.x). <br /> <br />
+<br /> <br /> according to [Weir and Cockerham, 1984](https://doi.org/10.1111/j.1558-5646.1984.tb05657.x). <br /> 
 
 #### Calculation of FSTSum
 The sum of FST was calculated between the two non-redundant comparisons of divergently selected subpopulations (Short 1 vs Tall 1; Short 2 vs Tall 2) and subpopulation selected in the same direction (Short 1 vs Short; Tall 1 vs Tall 2).
@@ -194,7 +194,7 @@ The calculation of the FDR for selection is also demonstrated with the following
 Even though, the significance threshold based on the FDR for selection is already printed by the previous function, the following function returns the threshold so it can be used directly in the Manhatten plot or to check the overlap between all the different statistics. The FDRfS can be choosen in the function. In our case we choosed a FDRfS < 5%. <br /> <br /> 
 
 In the [Manhatten plot](https://en.wikipedia.org/wiki/Manhattan_plot#:~:text=A%20Manhattan%20plot%20is%20a%20type%20of%20scatter,genome-wide%20association%20studies%20%28GWAS%29%20to%20display%20significant%20SNPs.) the positions of the markers are plotted against the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> value observed at this marker. <br /> <br /> 
-<img src="https://github.com/MilaTost/ExpEvo_with_replicated_selection/assets/63467079/663ee6e3-7891-4fd9-9aef-7f8a470a7284.png" width="1200" height="500">
+<img src="https://github.com/MilaTost/ExpEvo_with_replicated_selection/assets/63467079/663ee6e3-7891-4fd9-9aef-7f8a470a7284.png" width="1200">
 **FST at each SNP marker between the subpopulations selected in opposite directions (A) and the same direction (B) and expressed by Wstat values across regions (C, D) with the significance thresholds based on the 99.9th percentile of the empirical distribution (light purple), based on the 99.99th percentile of the empirical distribution (dark purple), drift simulations (pink), and by the false discovery rate for selection (FDRfS) (yellow).**
 
 ## Haplotype estimation and haplotype block calculation
