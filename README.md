@@ -90,6 +90,7 @@ calculated_realized_herit <- function(Data_Gen1,
 calculated_realized_herit(Data_Gen1 = Short_1_2016,
                           Data_Gen2 = Short_1_2017)
 ```
+<br /> All functions for the phenotypic data analysis are contained in the Rscript `Phenotypic_data_analysis.R`.<br/> 
 
 ## 2 Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy)
 For the analysis of our raw reads from paired-end genotyping-by-sequencing (GBS) with ApeKI according to [Elshire et al. 2011](https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0019379&type=printable), we used the GB-eaSy pipeline from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy). <br />
@@ -111,13 +112,9 @@ After the VCF file was created with the GB-eaSy pipeline from [Wickland et al. 2
 - Filtering for missingness
 - Removal of non-diallelic and non-polymorphic markers 
 <br /> <br />
-The Rscript generates a new filter VCF file, when all filtering steps are passed. The script additionally contains functions which calculate the  filtering parameters per marker, so that these can be plotted or checked, if needed. Furthermore the script also creates plots with the quality parameters **total read depth**, **mapping quality**, and **phred-scaled quality** before and after filtering. This plot is created with a plotting function from the `vcfR` package from [Knaus and Grünwald 2018](https://github.com/knausb/vcfR#:~:text=VcfR%20is%20an%20R%20package%20intended%20to%20allow,rapidly%20read%20from%20and%20write%20to%20VCF%20files.).
+The Rscript contains many functions from the `vcfR` package from [Knaus and Grünwald 2018](https://github.com/knausb/vcfR#:~:text=VcfR%20is%20an%20R%20package%20intended%20to%20allow,rapidly%20read%20from%20and%20write%20to%20VCF%20files.).
+<br />
 
-### Loading of required packages and the VCF file:
-Most of the function come from the `vcfR` package from
-[Knaus and Grünwald 2018](https://github.com/knausb/vcfR#:~:text=VcfR%20is%20an%20R%20package%20intended%20to%20allow,rapidly%20read%20from%20and%20write%20to%20VCF%20files.). The <vcfR> package from [Knaus and Grünwald 2018](https://github.com/knausb/vcfR#:~:text=VcfR%20is%20an%20R%20package%20intended%20to%20allow,rapidly%20read%20from%20and%20write%20to%20VCF%20files.) works with S4 objects, therefore the syntax is quite different from "normal" R jargon. 
-Most calculations and filtering steps over the entire set of markers were run by using the `mclapply()` function from the `parallel` package. We observed that the `mclapply()` function was extremly fast and efficient. <br /><br />
- 
 ## 4 Allele frequency estimation 
 The allele frequency estimation was done with the `Allele_frequency_estimation.R` rscript.<br/> <br />
           
@@ -128,13 +125,13 @@ The effective population size was calculated using the known demographic paramet
 In field trials, the assumption of random mating is violated because of the effects of assortative mating due to varying flowering dates and limited spatial pollen dispersion (Allard, 1999). Therefore, we evaluated the flowering dates of the 96 randomly chosen plants from each subpopulation to approximate the number of simultaneously flowering tassels and silks. It was assumed that silks remain receptive up to 5 days after silk emergence (Nieh et al., 2014), so that we calculated the number of flowering tassels during this time interval and projected it onto the entire subpopulation. This calculation of this is also available in the  `Estimation_of_effective_population_size.R` rscript. <br /> <br />
 
 ## 6 LD decay
-The extent of linkage disequilibrium (LD) was estimated based on 100,000 SNP markers with TASSEL v5 using the squared correlation between markers, ![formula](https://render.githubusercontent.com/render/math?math=R^{2}), over a window size of 2,000 bp (Bradbury et al., 2007). 
+The extent of linkage disequilibrium (LD) was estimated based on 100,000 SNP markers with TASSEL v5 using the squared correlation between markers, ![formula](https://render.githubusercontent.com/render/math?math=R^{2}), over a window size of 2,000 bp (Bradbury et al., 2007). <br />
 #### Filtering and thinning out for LD decay calculation
-We filtered the individuals out with a marker coverage below `0.6`. For this analysis, we required that every SNP marker was observed at least 80 times in each subpopulation. This filtering resulted in 1,243,604 SNP markers. Additionally, we thinned the data set by randomly sampling 10,000 markers per chromosome. <br /> <br /> 
+We filtered the individuals out with a marker coverage below `0.6`. For this analysis, we required that every SNP marker was observed at least 80 times in each subpopulation. This filtering resulted in 1,243,604 SNP markers. Additionally, we thinned the data set by randomly sampling 10,000 markers per chromosome. <br />  
 #### LD decay calculation
-The calculation can be found in the script `Calc_LD_decay_calc_with_TASSEL_based_on_thinned_out_VCF.bash`. <br /> <br /> 
+The calculation can be found in the script `Calc_LD_decay_calc_with_TASSEL_based_on_thinned_out_VCF.bash`. <br />
 #### LD decay plotting
-LD decay was modeled with a nonlinear regression model as expected value <img width="120" alt="Formula_Github" src="https://github.com/MilaTost/ExpEvo_with_replicated_selection/assets/63467079/dedff33d-bf1f-40e4-9191-9dbfc33b846b"> with N as the number of individuals at each site and C as the recombination coefficient between sites (Remington et al., 2001). The calculation and plotting script is available as `Plot_LD_decay_based_on_TASSEL_output.R`. We also created a pairwise LD heatmap with the R package LDheatmap (Shin et al., 2006). This calculation is contained in the `Create_Haplotype_figure.R` script. <br /> <br />
+LD decay was modeled with a nonlinear regression model as expected value <img width="120" alt="Formula_Github" src="https://github.com/MilaTost/ExpEvo_with_replicated_selection/assets/63467079/dedff33d-bf1f-40e4-9191-9dbfc33b846b"> with N as the number of individuals at each site and C as the recombination coefficient between sites (Remington et al., 2001). The calculation and plotting script is available as `Plot_LD_decay_based_on_TASSEL_output.R`. We also created a pairwise LD heatmap with the R package LDheatmap (Shin et al., 2006). This calculation is contained in the `Create_Haplotype_figure.R` script. <br />
                        
 ## 7 Scan for selection signatures
 Our scan for selection was based on the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection. <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> is calculated as: <br /> <br />
@@ -157,21 +154,21 @@ We implemented a window-based analysis to assess linked selection. A cubic smoot
 ## 10 Calculation of significance thresholds
 Significance thresholds for selection were calculated three ways: 1) based on the empirical distribution; 2) based on drift simulations; and 3) based on the false discovery rate for selection (FDRfS) [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). <br />
 The calculation of significance thresholds and the plotting functions are contained in the `Significance_thresholds_and_plotting.R`. <br /> <br />
-### 9.1 Based on the empirical distribution
+### 10.1 Based on the empirical distribution
 The significance thresholds based on the empirical distribution, were calculated by taking the 99.9th and 99.99th percentile of the empirical distribution of the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> :
 ```{r}
 FST_sig_thres_1 <- quantile(FST_values_od_cor$Fst, probs = 0.9999, na.rm = TRUE)
 FST_sig_thres_2 <- quantile(FST_values_od_cor$Fst, probs = 0.999, na.rm = TRUE)    
 ```          
 The significance threshold is stored, so it can be used later directly for plotting. <br /> <br />
-### 9.2 Based on drift simulations 
+### 10.2 Based on drift simulations 
 The significance thresholds based on drift simulations were calculated in the `Simulation_of_drift.R` and then only retrieved from this script. The simulation of drift is described below and the script is also available in the repository.<br /> <br />
   
 ### Simulation of Drift
 The simulation of drift was conducted by using the `DriftSimulator.R` from [Beissinger (2021)](http://beissingerlab.github.io/Software/). The `DriftSimulator.R` script was run with a drift simulation script similar to the one from [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219), which enables the implementation of the drift simulator over a large set of markers. The script, which enables the simulation of drift over a large set of markers is available as `Run_drift_simulator_over_many_markers.R`. The `Run_drift_simulator_over_many_markers.R` script contains a function which simulates drift acting a single locus. We ran 5,000,000 simulations. For each simulation, initial allele frequencies were set based on allele frequency spectrum observed in generation 0 [Gyawali et al., 2019](https://pubmed.ncbi.nlm.nih.gov/31590656/) . Drift was simulated with a population size of 5000 individuals with 250 female and 5000 male individuals for three generations. We assumed that every ear contributed ~500 kernels. Every kernel could have been pollinated by one of the male parents, which resulted in much higher harvest than 5000 kernels. Therefore, 5000 kernels were randomly drawn from the entire harvest to represent the seeds planted for the next generation. In the third generation, 96 individuals out of 5000 were sampled to represent the individuals that were actually genotyped (Turner et al., 2011; Kumar et al., 2021). Variable marker coverage was also simulated; marker coverage was sampled from a uniform distribution between 40 and 96 observations per marker to match our filtering process [Turner et al., 2011](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). Additionally, the marker coverage was also sampled, the minimal marker coverage was set to at least 40 out of 96 observations at a marker, so that the marker coverage was always sampled between 40 to 96 observations per marker [Turner et al., 2011](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). <br /> <br /> The drift simulator is available as `DriftSimulator.R` script. <br /> <br />
 <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> values were calculated for all simulated markers, which corresponded in our case to 500,000 simulations. We summed those up and choosed the the 99.9999th percentile of the emprirical distribution of all observations as significance threshold, similar to [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219). <br /> <br />
 
-### 9.3 Based on the FDRfS
+### 10.3 Based on the FDRfS
 **FDRfS for all possible values of the statistics**
 The function `calculate_FDR_for_selection()` generates a table to show all posible values of a statistic and the number of observed markers diverged between subpopulation selected in the same and opposite directions at a certain value. The FDR for selection is received by dividing the number of observed markers diverged between subpopulation selected in the same direction by the number of observed markers diverged between subpopulation selected in opposite directions. <br />
 The calculation of the FDR for selection is also demonstrated with the following table which shows for different statistics the number of markers diverged between subpopulations selected in the same and opposite directions and the corresponding FDR for selections:          
@@ -195,7 +192,7 @@ Even though, the significance threshold based on the FDR for selection is alread
 
 In the [Manhatten plot](https://en.wikipedia.org/wiki/Manhattan_plot#:~:text=A%20Manhattan%20plot%20is%20a%20type%20of%20scatter,genome-wide%20association%20studies%20%28GWAS%29%20to%20display%20significant%20SNPs.) the positions of the markers are plotted against the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> value observed at this marker. <br /> <br /> 
 <img src="https://github.com/MilaTost/ExpEvo_with_replicated_selection/assets/63467079/663ee6e3-7891-4fd9-9aef-7f8a470a7284.png" width="1200">
-**FST at each SNP marker between the subpopulations selected in opposite directions (A) and the same direction (B) and expressed by Wstat values across regions (C, D) with the significance thresholds based on the 99.9th percentile of the empirical distribution (light purple), based on the 99.99th percentile of the empirical distribution (dark purple), drift simulations (pink), and by the false discovery rate for selection (FDRfS) (yellow).**
+**Observations between the subpopulations selected in opposite directions (A) and the same direction (B) and expressed by Wstat values across regions (C, D) with the significance thresholds based on the 99.9th percentile of the empirical distribution (light purple), based on the 99.99th percentile of the empirical distribution (dark purple), drift simulations (pink), and by the false discovery rate for selection (FDRfS) (yellow).**
 
 ## Haplotype estimation and haplotype block calculation
 The data were phased using fastPHASE version 1.4.8 (Sheet and Stephens, 2006) for further dissection. We phased the genomic data of the region from 9.437 to 10.457 Mb on chromosome 3 with 10 iterations of the expectation-maximization (EM) algorithm (Sheet and Stephens, 2006). The model was supplied with labels indicating the different subpopulations. The scripts are available as `XXX.bash`. Haplotype blocks were calculated with the R package HaploBlocker [Pook et al., 2019](https://github.com/tpook92/HaploBlocker). The results look like this: <br />
