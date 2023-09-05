@@ -16,13 +16,13 @@
 [6 LD decay](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#6-ld-decay) <br />
 [7 Scan for selection signatures mapping with FST leveraging replicated selection](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#7-scan-for-selection-signatures) <br />
 [8 Test for selection: "Sauron plot"](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#8-test-for-selection-sauron-plot) <br />
-[9 Window based analysis]
-[10 Comparison of significance thresholds and candidate gene identification](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#9-comparison-of-significance-thresholds-and-candidate-gene-identification) <br />
-&emsp; [10.1 Based on the empirical distribution](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#91-based-on-the-empirical-distribution) <br />
-&emsp; [10.2 Based on drift simulations](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#92-based-on-drift-simulations) <br />
+[9 Window based analysis](https://github.com/MilaTost/ExpEvo_with_replicated_selection/tree/main#9-window-based-analysis)
+[10 Comparison of significance thresholds and candidate gene identification](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#10-comparison-of-significance-thresholds-and-candidate-gene-identification) <br />
+&emsp; [10.1 Based on the empirical distribution](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#101-based-on-the-empirical-distribution) <br />
+&emsp; [10.2 Based on drift simulations](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#102-based-on-drift-simulations) <br />
 &emsp; [Simulation of drift](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#simulation-of-drift) <br />
-&emsp; [10.3 Based on the FDRfS](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#93-based-on-the-fdrfs)<br />
-[11 Haplotype estimation and haplotype block calculation]
+&emsp; [10.3 Based on the FDRfS](https://github.com/MilaTost/ExpEvo_with_replicated_selection/tree/main#103-based-on-the-fdrfs) <br />
+[11 Haplotype estimation and haplotype block calculation](https://github.com/MilaTost/ExpEvo_with_replicated_selection/tree/main#11-haplotype-estimation-and-haplotype-block-calculation)
 
 ## 0 Introduction
 This repository contains scripts for selection signature mapping with replicated selection.
