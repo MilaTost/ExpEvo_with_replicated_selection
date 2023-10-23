@@ -139,7 +139,7 @@ Our scan for selection was based on the <img src="https://render.githubuserconte
 <br /> <br /> according to [Weir and Cockerham, 1984](https://doi.org/10.1111/j.1558-5646.1984.tb05657.x). <br /> 
 
 #### Calculation of FSTSum
-The sum of FST was calculated between the two non-redundant comparisons of divergently selected subpopulations (Short 1 vs Tall 1; Short 2 vs Tall 2) and subpopulation selected in the same direction (Short 1 vs Short; Tall 1 vs Tall 2). These values are required for the calculation of the false discovery rate for selection (FDRfS). For plotting we only use the FSTSum value calculated between divergently selected subpopulations (Short 1 vs Tall 1; Short 2 vs Tall 2). <br />        
+The sum of FST was calculated between the two non-redundant comparisons of divergently selected subpopulations (Short 1 vs Tall 1; Short 2 vs Tall 2) and subpopulation selected in the same direction (Short 1 vs Short; Tall 1 vs Tall 2). These values are required for the calculation of the false discovery rate for selection (FDRfS). For plotting we only use the FSTSum value calculated between divergently selected subpopulations (Short 1 vs Tall 1; Short 2 vs Tall 2). The results are presented [here](https://github.com/MilaTost/ExpEvo_with_replicated_selection/edit/main/README.md#manhattan-plot). <br />       
 
 ## 8 Visulization of selection and drift: "Sauron plot"      
 <img src="https://user-images.githubusercontent.com/63467079/171002013-a510cf2f-5150-4808-bff8-b3a5d92d40b4.png" width="400" height="400"> <br /> <br /> 
@@ -147,7 +147,7 @@ This so-called "Sauron plot" depicts how the FDRfS was computed and provides a v
 The "Sauron plot" for the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> does not even look like the eye of [Sauron](https://twitter.com/strnr/status/457201981007073280) anymore, as the "Sauron plot" from [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1) did. The Sauron plot for the allele frequency difference is created by the `create_sauron_plot_FST()` function, which is available in the `FstSum_value_calculation.R` script. <br /> <br />
 
 ## 9 Window-based analysis
-We implemented a window-based analysis to assess linked selection. A cubic smoothing spline was applied to the single-marker based FSTSum values. From the fitted spline, inflection points were calculated and used as window boundaries for newly defined regions. This analysis was performed with the R package GenWin from [Beissinger et al., 2015](https://gsejournal.biomedcentral.com/articles/10.1186/s12711-015-0105-9). Briefly, the GenWin package returns window boundaries that we used to define regions with linked markers that may be analyzed together ([Beissinger et al., 2015). The calculation of window boundaries with the `splineAnalyze()` function from the [GenWin package](https://cran.r-project.org/web/packages/GenWin/index.html) are available in the `Window_based_analysis.R`. <br /> 
+We implemented a window-based analysis to assess linked selection. A cubic smoothing spline was applied to the single-marker based FSTSum values. From the fitted spline, inflection points were calculated and used as window boundaries for newly defined regions. This analysis was performed with the R package GenWin from [Beissinger et al., 2015](https://gsejournal.biomedcentral.com/articles/10.1186/s12711-015-0105-9). Briefly, the GenWin package returns window boundaries that we used to define regions with linked markers that may be analyzed together ([Beissinger et al., 2015). The calculation of window boundaries with the `splineAnalyze()` function from the [GenWin package](https://cran.r-project.org/web/packages/GenWin/index.html) are available in the `Window_based_analysis.R`. The results are presented [here](https://github.com/MilaTost/ExpEvo_with_replicated_selection/edit/main/README.md#manhattan-plot). <br /> 
 
 ## 10 Calculation of significance thresholds
 Significance thresholds for selection were calculated three ways: 1) based on the empirical distribution; 2) based on drift simulations; and 3) based on the false discovery rate for selection (FDRfS) [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). <br />
@@ -160,7 +160,7 @@ FST_sig_thres_2 <- quantile(FST_values_od_cor$Fst, probs = 0.999, na.rm = TRUE)
 ```          
 The significance threshold is stored, so it can be used later directly for plotting. <br /> <br />
 ### 10.2 Based on drift simulations 
-The significance thresholds based on drift simulations were calculated in the `Simulation_of_drift.R` and then only retrieved from this script. The simulation of drift is described below and the script is also available in the repository.<br /> <br />
+The significance thresholds based on drift simulations were calculated in the `Simulation_of_drift.R` and then only retrieved from this script. The simulation of drift is described below and the script is also available in the repository. <br />
   
 ### Simulation of Drift
 The simulation of drift was conducted by using the `DriftSimulator.R` from [Beissinger (2021)](http://beissingerlab.github.io/Software/). The `DriftSimulator.R` script was run with a drift simulation script similar to the one from [Kumar et al., 2021](https://academic.oup.com/pcp/article/62/7/1199/6279219), which enables the implementation of the drift simulator over a large set of markers. The script, which enables the simulation of drift over a large set of markers is available as `Run_drift_simulator_over_many_markers.R`. The `Run_drift_simulator_over_many_markers.R` script contains a function which simulates drift acting a single locus. We ran 5,000,000 simulations. For each simulation, initial allele frequencies were set based on allele frequency spectrum observed in generation 0 [Gyawali et al., 2019](https://pubmed.ncbi.nlm.nih.gov/31590656/) . Drift was simulated with a population size of 5000 individuals with 250 female and 5000 male individuals for three generations. We assumed that every ear contributed ~500 kernels. Every kernel could have been pollinated by one of the male parents, which resulted in much higher harvest than 5000 kernels. Therefore, 5000 kernels were randomly drawn from the entire harvest to represent the seeds planted for the next generation. In the third generation, 96 individuals out of 5000 were sampled to represent the individuals that were actually genotyped (Turner et al., 2011; Kumar et al., 2021). Variable marker coverage was also simulated; marker coverage was sampled from a uniform distribution between 40 and 96 observations per marker to match our filtering process [Turner et al., 2011](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). Additionally, the marker coverage was also sampled, the minimal marker coverage was set to at least 40 out of 96 observations at a marker, so that the marker coverage was always sampled between 40 to 96 observations per marker [Turner et al., 2011](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). <br /> <br /> The drift simulator is available as `DriftSimulator.R` script. <br /> <br />
@@ -186,7 +186,9 @@ The calculation of the FDR for selection is also demonstrated with the following
 |0.753	|0		            |19	                             |0                |
 
 **A table like this is automatically generated by the** `calculate_FDR_for_selection()` **function.** <br /> <br /> 
-Even though, the significance threshold based on the FDR for selection is already printed by the previous function, the following function returns the threshold so it can be used directly in the Manhatten plot or to check the overlap between all the different statistics. The FDRfS can be choosen in the function. In our case we choosed a FDRfS < 5%. <br /> <br /> 
+Even though, the significance threshold based on the FDR for selection is already printed by the previous function, the following function returns the threshold so it can be used directly in the Manhatten plot or to check the overlap between all the different statistics. The FDRfS can be choosen in the function. In our case we choosed a FDRfS < 5%. <br />
+
+The different thresholds are compared here: <br /> 
 
 ## Manhattan plot
 In the [Manhatten plot](https://en.wikipedia.org/wiki/Manhattan_plot#:~:text=A%20Manhattan%20plot%20is%20a%20type%20of%20scatter,genome-wide%20association%20studies%20%28GWAS%29%20to%20display%20significant%20SNPs.) the positions of the markers are plotted against the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> value observed at this marker. <br /> <br /> 
@@ -200,14 +202,8 @@ The data were phased using fastPHASE version 1.4.8 [(Sheet and Stephens, 2006)](
 The haplotype block calculation and plotting of the blocks are contained in the `Create_Haplotype_figure.R` script. <br /> <br />
 
 ## Generation of the LDheatmap
-
-
-
-
-
-
-
-
+We also created a pairwise LD heatmap with the R package LDheatmap [Shin et al., 2006] (https://sfustatgen.github.io/LDheatmap/index.html) to supplement our haplotype investigation. We looked at LD across putatively selected regions in the different subpopulations. The pairwise LD heatmap shows strong LD in the subpopulations selected for short plant height across the entire region from 9.437 to 10.457 Mb on chromosome 3. <br /> 
+<img src="https://github.com/MilaTost/ExpEvo_with_replicated_selection/assets/63467079/d61e86d6-e710-48cf-b892-92f940ff505e.png" width="600">
 
 
 
