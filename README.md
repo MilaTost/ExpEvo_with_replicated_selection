@@ -105,7 +105,7 @@ The calculation can be found in the script `Calc_LD_decay_calc_with_TASSEL_based
 LD decay was modeled with a nonlinear regression model as expected value <img width="120" alt="Formula_Github" src="https://github.com/MilaTost/ExpEvo_with_replicated_selection/assets/63467079/dedff33d-bf1f-40e4-9191-9dbfc33b846b"> with N as the number of individuals at each site and C as the recombination coefficient between sites (Remington et al., 2001). The calculation and plotting script is available as `Plot_LD_decay_based_on_TASSEL_output.R`.
 
 ## Scan for selection signatures
-Our scan for selection was based on the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> leveraging replicated selection. <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> is calculated as: <br /> <br />
+Our scan for selection was based on the $F_ST$ leveraging replicated selection. $F_ST$ is calculated as: <br /> <br />
 <img width="150" alt="FST_formula" src="https://user-images.githubusercontent.com/63467079/171010281-cf3648d2-1baf-4fc3-8e23-83d3dbd792ca.png">
 <br /> <br /> according to [Weir and Cockerham, 1984](https://doi.org/10.1111/j.1558-5646.1984.tb05657.x). <br />
 
@@ -131,8 +131,7 @@ The significance threshold is stored, so it can be used later directly for plott
 The function `calculate_FDR_for_selection()` generates a table to show all posible values of a statistic and the number of observed markers diverged between subpopulation selected in the same and opposite directions at a certain value. The FDR for selection is received by dividing the number of observed markers diverged between subpopulation selected in the same direction by the number of observed markers diverged between subpopulation selected in opposite directions. <br />
 
 The different thresholds are compared here: <br />
-<img src="![2024_04_22_Combined_Manhattan_plots_WStat1](https://github.com/user-attachments/assets/2f5be0f8-a561-40af-85be-976a9911fc72)" width="600">
-**Observations between the subpopulations selected in opposite directions (A) and the same direction (B) with the significance thresholds based on the 99.99th percentile of the empirical distribution (light purple), based on the 99.9th percentile of the empirical distribution (dark purple), and by the false discovery rate for selection (FDRfS) (yellow).** <br /> <br />
+<img width="600" alt="Figure_3" src="https://github.com/user-attachments/assets/2f5be0f8-a561-40af-85be-976a9911fc72"> <br /> <br />
 The plotting functions are available in the `Plot_Manhattan_plot_with_WStat.R` script. <br /> <br />
 
 ## Haplotype estimation and haplotype block calculation
@@ -140,5 +139,6 @@ The data were phased using fastPHASE version 1.4.8 [(Sheet and Stephens, 2006)](
 
 ## Generation of the LDheatmap
 We also created a pairwise LD heatmap with the R package LDheatmap [Shin et al., 2006] (https://sfustatgen.github.io/LDheatmap/index.html) to supplement our haplotype investigation. We looked at LD across putatively selected regions in the different subpopulations. This calculation is contained in the `Create_Haplotype_figure.R` script. <br />Here a both plots combined for the identified region on chromosome 3: <br />
-<img src="![Region_plot_chr31](https://github.com/user-attachments/assets/89d6b2f5-d1d1-4480-b895-38731dcaeede)" width="600">
+<img width="600" alt="Figure_4" src="https://github.com/user-attachments/assets/89d6b2f5-d1d1-4480-b895-38731dcaeede"> <br /> <br />
+
 
