@@ -110,7 +110,7 @@ Our scan for selection was based on the $F_{ST}$ leveraging replicated selection
 <br /> <br /> according to [Weir and Cockerham, 1984](https://doi.org/10.1111/j.1558-5646.1984.tb05657.x). <br />
 
 #### Calculation of $F_{ST}Sum$
-The sum of $F_{ST}$ was calculated between the two non-redundant comparisons of divergently selected subpopulations (Short 1 vs Tall 1; Short 2 vs Tall 2) and subpopulation selected in the same direction (Short 1 vs Short; Tall 1 vs Tall 2). These values are required for the calculation of the false discovery rate for selection (FDRfS). For plotting we only use the $F_{ST}Sum$ value calculated between divergently selected subpopulations (Short 1 vs Tall 1; Short 2 vs Tall 2).
+The sum of $F_{ST}$ was calculated between the two non-redundant comparisons of divergently selected subpopulations (Short 1 vs Tall 1; Short 2 vs Tall 2) and subpopulation selected in the same direction (Short 1 vs Short; Tall 1 vs Tall 2). The $F_{ST}$ and $F_{ST}Sum$ calculation can be found in the script `Fst_Sum_calculation.R`. <br /> 
 
 ## Window-based analysis
 We implemented a window-based analysis to assess linked selection. A cubic smoothing spline was applied to the single-marker based  $F_{ST}Sum$ values. From the fitted spline, inflection points were calculated and used as window boundaries for newly defined regions. This analysis was performed with the R package GenWin from [Beissinger et al., 2015](https://gsejournal.biomedcentral.com/articles/10.1186/s12711-015-0105-9). Briefly, the GenWin package returns window boundaries that we used to define regions with linked markers that may be analyzed together ([Beissinger et al., 2015). The calculation of window boundaries with the `splineAnalyze()` function from the [GenWin package](https://cran.r-project.org/web/packages/GenWin/index.html) are available in the `Window_based_analysis.R`. <br /> 
@@ -135,7 +135,7 @@ The different thresholds are compared here: <br />
 The plotting functions are available in the `Plot_Manhattan_plot_with_WStat.R` script. <br /> <br />
 
 ## Haplotype estimation and haplotype block calculation
-The data were phased using fastPHASE version 1.4.8 [(Sheet and Stephens, 2006)](https://stephenslab.uchicago.edu/software.html#fastphase) for further dissection. We phased all regions putatively under selection with 10 iterations of the expectation-maximization (EM) algorithm (Sheet and Stephens, 2006). The haplotype block calculation and plotting of the blocks are contained in the `Create_Haplotype_figure.R` script. <br /> <br />
+The data were phased using fastPHASE version 1.4.8 [(Sheet and Stephens, 2006)](https://stephenslab.uchicago.edu/software.html#fastphase) for further dissection. We phased all regions putatively under selection with 10 iterations of the expectation-maximization (EM) algorithm (Sheet and Stephens, 2006). To phase our data, we prepare the regions with the rscript `Prepare_data_for_fastPhase.R` script. The haplotype block calculation and plotting of the blocks are contained in the `Create_Haplotype_figure.R` script. <br /> <br />
 
 ## Generation of the LDheatmap
 We also created a pairwise LD heatmap with the R package LDheatmap [Shin et al., 2006](https://sfustatgen.github.io/LDheatmap/index.html) to supplement our haplotype investigation. We looked at LD across putatively selected regions in the different subpopulations. This calculation is contained in the `Create_Haplotype_figure.R` script. <br />Here a both plots combined for the identified region on chromosome 3: <br />
