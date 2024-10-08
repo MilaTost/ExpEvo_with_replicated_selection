@@ -1,29 +1,21 @@
 # Experimental evolution with replicated selection
 ## Table of contents
-[0 Introduction](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#0-introduction) <br />
-[1 Phenotypic data analysis](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#1-phenotypic-data-analysis) <br />
-&emsp;[1.1 Truncation selection thresholds](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#11-truncation-selection-thresholds) <br />
-&emsp;[1.2 Plant height measurements](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#12-plant-height-measurements) <br />
-&emsp;[1.3 Realized heritability from the Breeder's equation](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#13-realized-heritability-from-the-breeders-equation) <br />
+[Introduction](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#0-introduction) <br />
+[Phenotypic data analysis](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#1-phenotypic-data-analysis) <br />
+&emsp;[Truncation selection thresholds](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#11-truncation-selection-thresholds) <br />
+&emsp;[Plant height measurements](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#12-plant-height-measurements) <br />
+&emsp;[Realized heritability from the Breeder's equation](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#13-realized-heritability-from-the-breeders-equation) <br />
 2 Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https://github.com/dpwickland/GB-eaSy) <br />
-[3 Filtering](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#3-filtering) <br />
-&emsp;[3.1 Filtering for individual samples with low coverage](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#31-filtering-for-individual-samples-with-low-coverage) <br />
-&emsp;[3.2 Filtering for read depth per sample](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#32-filtering-for-read-depth-per-sample) <br />
-&emsp;[3.3 Filtering for missingness](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#33-filtering-for-missingness) <br />
-&emsp;[3.4 Removal of non-diallelic and non-polymorphic markers](https://github.com/milaleonie/ExpEvo_with_replicated_selection/blob/main/README.md#34-removal-of-non-diallelic-and-non-polymorphic-markers) <br />
-[4 Allele frequency estimation](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#4-allele-frequency-estimation) <br />
-[5 Estimation of the effective population size](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#5-estimation-of-the-effective-population-size) <br />
-[6 LD decay](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#6-ld-decay) <br />
-[7 Scan for selection signatures mapping with FST leveraging replicated selection](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#7-scan-for-selection-signatures) <br />
-[8 Test for selection: "Sauron plot"](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#8-test-for-selection-sauron-plot) <br />
-[9 Window based analysis](https://github.com/MilaTost/ExpEvo_with_replicated_selection/tree/main#9-window-based-analysis) <br />
-[10 Comparison of significance thresholds and candidate gene identification](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#10-comparison-of-significance-thresholds-and-candidate-gene-identification) <br />
-&emsp; [10.1 Based on the empirical distribution](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#101-based-on-the-empirical-distribution) <br />
-&emsp; [10.2 Based on drift simulations](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#102-based-on-drift-simulations) <br />
-&emsp; [Simulation of drift](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#simulation-of-drift) <br />
-&emsp; [10.3 Based on the FDRfS](https://github.com/MilaTost/ExpEvo_with_replicated_selection/tree/main#103-based-on-the-fdrfs) <br />
-[11 Haplotype estimation and haplotype block calculation](https://github.com/MilaTost/ExpEvo_with_replicated_selection/tree/main#11-haplotype-estimation-and-haplotype-block-calculation) <br />
-[12 Generation of the LDheatmap](https://github.com/MilaTost/ExpEvo_with_replicated_selection/tree/main#11-haplotype-estimation-and-haplotype-block-calculation) <br />
+[Filtering](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#3-filtering) <br />
+[Allele frequency estimation](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#4-allele-frequency-estimation) <br />
+[Estimation of the effective population size](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#5-estimation-of-the-effective-population-size) <br />
+[LD decay](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#6-ld-decay) <br />
+[Scan for selection signatures mapping with FST leveraging replicated selection](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#7-scan-for-selection-signatures) <br />
+[Test for selection: "Sauron plot"](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#8-test-for-selection-sauron-plot) <br />
+[Window based analysis](https://github.com/MilaTost/ExpEvo_with_replicated_selection/tree/main#9-window-based-analysis) <br />
+[Comparison of significance thresholds and candidate gene identification](https://github.com/MilaTost/ExpEvo_with_replicated_selection/blob/main/README.md#10-comparison-of-significance-thresholds-and-candidate-gene-identification) <br />
+[Haplotype estimation and haplotype block calculation](https://github.com/MilaTost/ExpEvo_with_replicated_selection/tree/main#11-haplotype-estimation-and-haplotype-block-calculation) <br />
+[Generation of the LDheatmap](https://github.com/MilaTost/ExpEvo_with_replicated_selection/tree/main#11-haplotype-estimation-and-haplotype-block-calculation) <br /> <br />
 ## Introduction
 This repository contains scripts for selection signature mapping with replicated selection.
 Usually in experimental evolution studies a random-mating population is selected in divergent directions for one
@@ -160,7 +152,7 @@ The significance threshold is stored, so it can be used later directly for plott
 The function `calculate_FDR_for_selection()` generates a table to show all posible values of a statistic and the number of observed markers diverged between subpopulation selected in the same and opposite directions at a certain value. The FDR for selection is received by dividing the number of observed markers diverged between subpopulation selected in the same direction by the number of observed markers diverged between subpopulation selected in opposite directions. <br />
 
 The different thresholds are compared here: <br />
-
+<img src="C:\Users\mtost\Documents\2024_Shoepeg_resubmission_V3\Plots\final plots\S42.png" width="600">
 **Observations between the subpopulations selected in opposite directions (A) and the same direction (B) with the significance thresholds based on the 99.99th percentile of the empirical distribution (light purple), based on the 99.9th percentile of the empirical distribution (dark purple), and by the false discovery rate for selection (FDRfS) (yellow).** <br /> <br />
 The plotting functions are available in the `Plot_Manhattan_plot_with_WStat.R` script. <br /> <br />
 
