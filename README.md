@@ -84,16 +84,14 @@ After the VCF file was created with the GB-eaSy pipeline from [Wickland et al. 2
 - Filtering for read depth per sample
 - Filtering for missingness
 - Removal of non-diallelic and non-polymorphic markers
-<br /> 
-The Rscript contains many functions from the `vcfR` package from [Knaus and Grünwald 2018](https://github.com/knausb/vcfR#:~:text=VcfR%20is%20an%20R%20package%20intended%20to%20allow,rapidly%20read%20from%20and%20write%20to%20VCF%20files.).
-<br />
+<br /> The Rscript contains many functions from the `vcfR` package from [Knaus and Grünwald 2018](https://github.com/knausb/vcfR) <br /> <br />
 
 ## Allele frequency estimation
 The allele frequency estimation was done with the `Allele_frequency_estimation.R` rscript.<br/> <br />
 
 ## Estimation of the effective population size  
 The effective population size was calculated using the known demographic parameters of the populations and based off of the formula:
-          <img width="120" alt="effective_pop_size" src="https://user-images.githubusercontent.com/63467079/171614297-2936b14e-3c6c-4914-b0b5-6e6cca2c5fc7.png"> <br /> where ![formula] $N_{m}$ is the number of male and $N_{f}$ the number of female individuals (Crow and Kimura, 1970). In every generation the ~5% shortest or tallest plants were harvested, amounting to ~250 plants. Under the assumption of complete random mating, all 5000 plants could contribute as male parents for the next generation, the effective population size was calculated with the `Estimation_of_effective_population_size.R` rscript.<br /> <br />
+          <img width="120" alt="effective_pop_size" src="https://user-images.githubusercontent.com/63467079/171614297-2936b14e-3c6c-4914-b0b5-6e6cca2c5fc7.png"> <br /> where $N_{m}$ is the number of male and $N_{f}$ the number of female individuals (Crow and Kimura, 1970). In every generation the ~5% shortest or tallest plants were harvested, amounting to ~250 plants. Under the assumption of complete random mating, all 5000 plants could contribute as male parents for the next generation, the effective population size was calculated with the `Estimation_of_effective_population_size.R` rscript.<br /> <br />
 
 In field trials, the assumption of random mating is violated because of the effects of assortative mating due to varying flowering dates and limited spatial pollen dispersion (Allard, 1999). Therefore, we evaluated the flowering dates of the 96 randomly chosen plants from each subpopulation to approximate the number of simultaneously flowering tassels and silks. It was assumed that silks remain receptive up to 5 days after silk emergence (Nieh et al., 2014), so that we calculated the number of flowering tassels during this time interval and projected it onto the entire subpopulation. This calculation of this is also available in the  `Estimation_of_effective_population_size.R` rscript. <br /> <br />
 
