@@ -105,7 +105,7 @@ The calculation can be found in the script `Calc_LD_decay_calc_with_TASSEL_based
 LD decay was modeled with a nonlinear regression model as expected value <img width="120" alt="Formula_Github" src="https://github.com/MilaTost/ExpEvo_with_replicated_selection/assets/63467079/dedff33d-bf1f-40e4-9191-9dbfc33b846b"> with N as the number of individuals at each site and C as the recombination coefficient between sites (Remington et al., 2001). The calculation and plotting script is available as `Plot_LD_decay_based_on_TASSEL_output.R`.
 
 ## Scan for selection signatures
-Our scan for selection was based on the $F_ST$ leveraging replicated selection. $F_ST$ is calculated as: <br /> <br />
+Our scan for selection was based on the $F_{ST}$ leveraging replicated selection. $F_{ST}$ is calculated as: <br /> <br />
 <img width="150" alt="FST_formula" src="https://user-images.githubusercontent.com/63467079/171010281-cf3648d2-1baf-4fc3-8e23-83d3dbd792ca.png">
 <br /> <br /> according to [Weir and Cockerham, 1984](https://doi.org/10.1111/j.1558-5646.1984.tb05657.x). <br />
 
@@ -119,7 +119,7 @@ We implemented a window-based analysis to assess linked selection. A cubic smoot
 Significance thresholds for selection were calculated three ways: 1) based on the empirical distribution; 2) based on drift simulations; and 3) based on the false discovery rate for selection (FDRfS) [Turner and Miller (2012)](http://www.genetics.org/content/suppl/2012/03/30/genetics.112.139337.DC1). <br />
 The calculation of significance thresholds and the plotting functions are contained in the `Significance_thresholds_and_plotting.R`. <br /> <br />
 ### Based on the empirical distribution
-The significance thresholds based on the empirical distribution, were calculated by taking the 99.9th and 99.99th percentile of the empirical distribution of the <img src="https://render.githubusercontent.com/render/math?math=F_{ST}"> :
+The significance thresholds based on the empirical distribution, were calculated by taking the 99.9th and 99.99th percentile of the empirical distribution of the $F_{ST}$:
 ```{r}
 FST_sig_thres_1 <- quantile(FST_values_od_cor$Fst, probs = 0.9999, na.rm = TRUE)
 FST_sig_thres_2 <- quantile(FST_values_od_cor$Fst, probs = 0.999, na.rm = TRUE)    
@@ -138,7 +138,7 @@ The plotting functions are available in the `Plot_Manhattan_plot_with_WStat.R` s
 The data were phased using fastPHASE version 1.4.8 [(Sheet and Stephens, 2006)](https://stephenslab.uchicago.edu/software.html#fastphase) for further dissection. We phased all regions putatively under selection with 10 iterations of the expectation-maximization (EM) algorithm (Sheet and Stephens, 2006). The haplotype block calculation and plotting of the blocks are contained in the `Create_Haplotype_figure.R` script. <br /> <br />
 
 ## Generation of the LDheatmap
-We also created a pairwise LD heatmap with the R package LDheatmap [Shin et al., 2006] (https://sfustatgen.github.io/LDheatmap/index.html) to supplement our haplotype investigation. We looked at LD across putatively selected regions in the different subpopulations. This calculation is contained in the `Create_Haplotype_figure.R` script. <br />Here a both plots combined for the identified region on chromosome 3: <br />
+We also created a pairwise LD heatmap with the R package LDheatmap [Shin et al., 2006](https://sfustatgen.github.io/LDheatmap/index.html) to supplement our haplotype investigation. We looked at LD across putatively selected regions in the different subpopulations. This calculation is contained in the `Create_Haplotype_figure.R` script. <br />Here a both plots combined for the identified region on chromosome 3: <br />
 <img width="600" alt="Figure_4" src="https://github.com/user-attachments/assets/89d6b2f5-d1d1-4480-b895-38731dcaeede"> <br /> <br />
 
 
