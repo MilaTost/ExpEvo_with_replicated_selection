@@ -11,10 +11,8 @@ install.packages("stringr",
                  lib = "/home/uni08/mtost/R/x86_64-pc-linux-gnu-library/4.1",
                  repos='http://cran.rstudio.com/')
 install.packages("doMC",
-                 lib = "/home/uni08/mtost/R/x86_64-pc-linux-gnu-library/4.1",
                  repos='http://cran.rstudio.com/')
 install.packages("vcfR",
-                 lib = "/home/uni08/mtost/R/x86_64-pc-linux-gnu-library/4.1",
                  repos='http://cran.rstudio.com/',
                  INSTALL_opts = '--no-lock')
 #### Load required packages ----------------------------------------------------
@@ -31,7 +29,7 @@ time_0 <- Sys.time()
 cat("The data set loading starts")
 # vcf_S4 <- read.vcfR("YOUR_DATA_after_filtering.vcf.gz", verbose = FALSE)
 #setwd("/path/to/your/own/working/directory/")
-vcf_S4 <- read.vcfR("/usr/users/mtost/wd_GBeasy_rerun/Results/2022_GB10_Shoepeg_after_filtering.vcf.gz", verbose = FALSE)
+vcf_S4 <- read.vcfR("2022_GB10_Shoepeg_after_filtering.vcf.gz", verbose = FALSE)
 cat("The data set is loaded.","\n")
 time_1 <- Sys.time()
 print(time_1 - time_0)

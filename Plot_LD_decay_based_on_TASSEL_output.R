@@ -5,26 +5,25 @@ rm(list=ls())
 # read in table with NaN and distance calculated from TASSEL or wherever
 cat("Installation of the packages starts!", "\n")
 install.packages("ggplot2",
-                 lib = "/home/uni08/mtost/R/x86_64-pc-linux-gnu-library/4.1",
                  repos='http://cran.rstudio.com/')
 library(ggplot2)
 ### Test plotting on local machine ---------------------------------------------
 #setwd("C:/Users/mtost/Documents/Shoepeg_paper_final_versions/Scripts/Test_dir/")
-#ld <- read.delim("small_ld_output_TASSEL.txt",stringsAsFactors = FALSE,header=TRUE, sep = "\t") 
+#ld <- read.delim("small_ld_output_TASSEL.txt",stringsAsFactors = FALSE,header=TRUE, sep = "\t")
 #windowsFonts(my = windowsFont('Calibri'))
 ###############################################################################
 ### 		For more detail, please see following reference
 ###############################################################################
 ## Remington, D. L., Thornsberry, J. M., Matsuoka, Y.,
 ## Wilson, L. M., Whitt, S. R., Doebley, J., ... & Buckler, E. S. (2001). Structure of linkage disequilibrium
-## and phenotypic associations in the maize genome. 
-## Proceedings of the national academy of sciences, 98(20), 11479-11484. 
+## and phenotypic associations in the maize genome.
+## Proceedings of the national academy of sciences, 98(20), 11479-11484.
 ## https://doi.org/10.1073/pnas.201394398
 ###############################################################################
 setwd("/usr/users/mtost/Shoepeg_resubmission_new_analysis/Plot_LD_decay_with_TASSEL_output/")
-result_dir <- "/usr/users/mtost/Shoepeg_resubmission_new_analysis/Results/"
+result_dir <- "YOUR/OWN/PATH/"
 # import TASSEL LD output file
-ld <- read.delim("2022_GB10_Shoepeg_after_filtering.ld.win2000.txt",stringsAsFactors = FALSE,header=TRUE, sep = "\t") 
+ld <- read.delim("2022_GB10_Shoepeg_after_filtering.ld.win2000.txt",stringsAsFactors = FALSE,header=TRUE, sep = "\t")
 cat("The data was read in!","\n")
 ##remove sites that have NaN for distance or r2
 ld_sub <- ld[ld$R.2 != "NaN",]
@@ -37,10 +36,10 @@ file <- ld_sub2[,c(1,2,7,8,15:19)]
 # C values range from about 0.5 to 2, start with 0.1
 Cstart <- c(C=0.1)
 
-# fit a non linear model using the arbitrary C value, 
+# fit a non linear model using the arbitrary C value,
 # N is the number of the genotypes that have the SNP site
-modelC <- nls(rsq ~ ( (10+C*dist)/( (2+C*dist) * (11+C*dist) ) ) * 
-                ( 1+( (3+C*dist) * (12+12*C*dist+(C*dist)^2) ) / ( 2*N*(2+C*dist) * (11+C*dist) ) ), 
+modelC <- nls(rsq ~ ( (10+C*dist)/( (2+C*dist) * (11+C*dist) ) ) *
+                ( 1+( (3+C*dist) * (12+12*C*dist+(C*dist)^2) ) / ( 2*N*(2+C*dist) * (11+C*dist) ) ),
               data=file, start=Cstart, control=nls.control(maxiter=100))
 
 # extract rho, the recombination parameter in 4Nr
@@ -48,7 +47,7 @@ rho <- summary(modelC)$parameters[1]
 
 # feed in the new value of rho to obtain LD values adjusted for their distances along the chromosome/genome
 newrsq <- ( (10+rho*file$dist) / ( (2+rho*file$dist) * (11+rho*file$dist) ) ) *
-  ( 1 + ( (3+rho * file$dist) * (12+12*rho*file$dist + (rho*file$dist)^2) ) / 
+  ( 1 + ( (3+rho * file$dist) * (12+12*rho*file$dist + (rho*file$dist)^2) ) /
       (2*file$N*(2+rho*file$dist) * (11+rho*file$dist) ) )
 
 newfile <- data.frame(file$dist, newrsq)
@@ -80,11 +79,11 @@ cat("Plotting starts","\n")
 newfile$newrsq <- round(newfile$newrsq, 2)
 newfile$file.dist
 plot_r2 <- ggplot()+
-  geom_point(data = file, 
+  geom_point(data = file,
              aes(x = dist, y = rsq))+
-  #geom_line(data = newfile, 
+  #geom_line(data = newfile,
             #aes(x = file.dist, y = newrsq), colour = "red", linewidth = 1)+
-  geom_smooth(data = newfile, 
+  geom_smooth(data = newfile,
               aes(x = file.dist, y = newrsq))+
   theme(text = element_text(size = 14, #family = "my"
                             ),

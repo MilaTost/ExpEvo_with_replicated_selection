@@ -1,4 +1,4 @@
-######################## Selection_signature_mapping ###########################
+### Selection_signature_mapping ------------------------------------------------
 # load required packages
 library(stringr)
 library(data.table)
@@ -36,7 +36,7 @@ print(time_1 - time_0)
 ###            of populations is used: Weir and Cockerham, 1984
 
 ###### Fst value calculation ---------------------------------------------------
-### References: Weir and Cockerham, 1984, Estimating F-statistics for the 
+### References: Weir and Cockerham, 1984, Estimating F-statistics for the
 ### analysis of population structure. Evoluation 38(6): 1358-1390.
 
 ### Calculate Fst value between the different populations all togehter
@@ -44,10 +44,10 @@ print(time_1 - time_0)
 ### statistic between the subpopulations selected in opposite directions
 
 # The data table with the FST values is called "FST_values_od_cor".
-# This function calculates the FST between subpopulations selected 
+# This function calculates the FST between subpopulations selected
 # in the same and opposite directions, which are needed to calculate
-# the significance threshold based on the FDR for selection. 
-# Because this function is calculating additionally the absolute 
+# the significance threshold based on the FDR for selection.
+# Because this function is calculating additionally the absolute
 # FST observed between the subpopulations selected in opposite directions.
 # This  adjustment can be used to identify truly selected sites.
 ### Fst value calculation -------------------------------------------------
@@ -108,13 +108,13 @@ calculate_FST_value <- function(data,
     fst_pop <- var / (mean*(1-mean)+(var/2))
     return(fst_pop)
   }
-  Fst_value_sd_1 <- fst_value_calc(population_1 = marker_table_per_pop[,1], 
+  Fst_value_sd_1 <- fst_value_calc(population_1 = marker_table_per_pop[,1],
                                    population_2 = marker_table_per_pop[,22])
-  Fst_value_sd_2 <- fst_value_calc(population_1 = marker_table_per_pop[,15], 
+  Fst_value_sd_2 <- fst_value_calc(population_1 = marker_table_per_pop[,15],
                                    population_2 = marker_table_per_pop[,8])
-  Fst_value_od_1 <- fst_value_calc(population_1 = marker_table_per_pop[,1], 
+  Fst_value_od_1 <- fst_value_calc(population_1 = marker_table_per_pop[,1],
                                    population_2 = marker_table_per_pop[,15])
-  Fst_value_od_2 <- fst_value_calc(population_1 = marker_table_per_pop[,22], 
+  Fst_value_od_2 <- fst_value_calc(population_1 = marker_table_per_pop[,22],
                                    population_2 = marker_table_per_pop[,8])
   FSTSum_OD <- Fst_value_od_1 + Fst_value_od_2
   FSTSum_SD <- Fst_value_sd_1 + Fst_value_sd_2
@@ -139,7 +139,7 @@ calculate_FST_value <- function(data,
   cat("This was done within",print(time_1 - time_0),"\n")
   return(FST_value_dt)
 }
-FST_values_od_cor <- calculate_FST_value(data = vcf_S4, 
+FST_values_od_cor <- calculate_FST_value(data = vcf_S4,
                                          pop_low_phenotype_sel_1 = "Shoepag_1",
                                          pop_low_phenotype_sel_2 = "Shoepag_4",
                                          pop_high_phenotype_sel_1 = "Shoepag_3",

@@ -2,22 +2,16 @@
 ## Installing the packages -----------------------------------------------------
 cat("Package installation starts.","\n")
 install.packages("data.table",
-                 lib = "/home/uni08/mtost/R/x86_64-pc-linux-gnu-library/4.1",
                  repos='http://cran.rstudio.com/')
 install.packages("parallel",
-                 lib = "/home/uni08/mtost/R/x86_64-pc-linux-gnu-library/4.1",
                  repos='http://cran.rstudio.com/')
 install.packages("stringr",
-                 lib = "/home/uni08/mtost/R/x86_64-pc-linux-gnu-library/4.1",
                  repos='http://cran.rstudio.com/')
 install.packages("doMC",
-                 lib = "/home/uni08/mtost/R/x86_64-pc-linux-gnu-library/4.1",
                  repos='http://cran.rstudio.com/')
 install.packages("tidyverse",
-                 lib = "/home/uni08/mtost/R/x86_64-pc-linux-gnu-library/4.1",
                  repos='http://cran.rstudio.com/')
 install.packages("gridExtra",
-                 lib = "/home/uni08/mtost/R/x86_64-pc-linux-gnu-library/4.1",
                  repos='http://cran.rstudio.com/')
 ### Loading of the packages ----------------------------------------------------
 library(data.table)
@@ -33,8 +27,9 @@ cores <- as.integer(Sys.getenv('SLURM_CPUS_PER_TASK'))
 cores <- detectCores(all.tests = FALSE, logical = TRUE)
 registerDoMC(cores)
 ### Load the data --------------------------------------------------------------
-setwd("/usr/users/mtost/Shoepeg_resubmission_new_analysis/")
-result_directory <- "/usr/users/mtost/Shoepeg_resubmission_new_analysis/Results/"
+result_directory <- "/path/to/your/own/working/directory/"
+input_directory <- "/path/to/your/own/working/directory/"
+setwd(input_directory)
 FST_values_od_cor <- fread("2022_02_16_GB1005_corrected_dt_Fst_values.txt",
                            skip = 1)
 colnames_for_dt <- read.table("2022_02_16_GB1005_corrected_dt_Fst_values.txt",
@@ -43,16 +38,6 @@ FST_values_od_cor <- FST_values_od_cor[,2:12]
 colnames(FST_values_od_cor) <- colnames(colnames_for_dt)
 FST_values_od_cor <- as.data.frame(FST_values_od_cor)
 source("/usr/users/mtost/Shoepeg_resubmission_new_analysis/new_functions/2022_Wstat_calc_changed_by_Mila.R")
-### Test pipeline on local machine ---------------------------------------------
-setwd("C:/Users/mtost/Documents/Masterarbeit/Data_analysis/Final_data_sets_for_paper/")
-FST_values_od_cor <- fread("2022_02_16_GB1005_corrected_dt_Fst_values.txt",
-                           skip = 1)
-colnames_for_dt <- read.table("2022_02_16_GB1005_corrected_dt_Fst_values.txt",
-                              nrows = 1, header = TRUE)
-FST_values_od_cor <- FST_values_od_cor[,2:12]
-colnames(FST_values_od_cor) <- colnames(colnames_for_dt)
-FST_values_od_cor <- as.data.frame(FST_values_od_cor)
-source("C:/Users/mtost/Documents/Shoepeg_paper_final_versions/Scripts/2022_Wstat_calc_changed_by_Mila.R")
 #### Prepare the data set ------------------------------------------------------
 FST_values_od_cor <- as.data.table(FST_values_od_cor)
 FST_values_od_cor[, FstSum_OD := FST_value_opposite_dir1 + FST_value_opposite_dir2]
@@ -86,14 +71,14 @@ run_Spline_Analyze_per_chr <- function(data,
                                     smoothness = smoothness)
   win_FST_OD <- splineAnalyze_Mila(data[ ,ncol_FstSum_SD], data[ ,ncol_Position],
                                     smoothness = smoothness)
-  # Prepare the data table 
+  # Prepare the data table
   win_FST_OD_dt <- win_FST_OD$windowData
   win_FST_SD_dt <- win_FST_SD$windowData
   win_FST_SD_dt_new <- cbind(rep(Chromosome, nrow(win_FST_SD_dt)),win_FST_SD_dt)
   win_FST_OD_dt_new <- cbind(rep(Chromosome, nrow(win_FST_OD_dt)),win_FST_OD_dt)
   colnames(win_FST_SD_dt_new) <- c("Chromosome", colnames(win_FST_SD_dt))
   colnames(win_FST_OD_dt_new) <- c("Chromosome", colnames(win_FST_OD_dt))
-  return(list("Window_boundaries_SD" = win_FST_SD_dt_new, 
+  return(list("Window_boundaries_SD" = win_FST_SD_dt_new,
               "Window_boundaries_OD" = win_FST_OD_dt_new))
 }
 #### Run window boundaries analysis --------------------------------------------

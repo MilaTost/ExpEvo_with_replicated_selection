@@ -158,7 +158,7 @@ The plotting functions are available in the `Plot_Manhattan_plot_with_WStat.R` s
 
 ## Haplotype estimation and haplotype block calculation
 The data were phased using fastPHASE version 1.4.8 [(Sheet and Stephens, 2006)](https://stephenslab.uchicago.edu/software.html#fastphase) for further dissection. We phased the genomic data of the region from 9.437 to 10.457 Mb on chromosome 3 with 10 iterations of the expectation-maximization (EM) algorithm (Sheet and Stephens, 2006). The model was supplied with labels indicating the different subpopulations. The scripts are available as `Run_fastPHASE_random9MB_region_on_chr3.bash`. Before we ran fastPHASE, we prepared the data with the Rscript `Prepare_data_for_fastPHASE.R`. Haplotype blocks were calculated with the R package HaploBlocker [Pook et al., 2019](https://github.com/tpook92/HaploBlocker). The results look like this: <br />
-<img src="https://github.com/MilaTost/ExpEvo_with_replicated_selection/assets/63467079/76e648e6-fd51-41ab-bc79-6a9a201b0c80.png" width="600"> <br />
+<img C:\Users\mtost\Documents\2024_Shoepeg_paper_V4\Figures\Figure_6.png width="600"> <br />
 The haplotype block calculation and plotting of the blocks are contained in the `Create_Haplotype_figure.R` script. <br /> <br />
 
 ## Generation of the LDheatmap

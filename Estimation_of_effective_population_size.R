@@ -2,7 +2,7 @@
 library(stringr)
 library(ggplot2)
 library(data.table)
-setwd("C:/Users/mtost/Documents/Masterarbeit/Material_and_methods/Field/")
+setwd("YOUR/OWN/PATH")
 shoepag <- readxl::read_excel("field_data_collection_shoepag_12_09_2020.xlsx", sheet = 3, col_names = TRUE)
 
 ### Calculate the effetive population size -------------------------------------
@@ -27,14 +27,14 @@ flowering_data_set_T <- function(data){
   data <- data[index,]
   month_Tassel <- str_sub(data$Flowering_date_Tassel,4,5)
   date_T <- paste("2020",month_Tassel,day_Tassel, sep = "-", collapse = NULL, recycle0 = F)
-  
+
   day_S <- str_sub(data$Flowering_date_Silk,1,2)
   day_Silk <- day_S[!is.na(as.numeric(day_S))]
   index <- which(!is.na(as.numeric(day_S)))
   month_S <- str_sub(data$Flowering_date_Silk,4,5)
   month_Silk <- month_S[index]
   date_S <- paste("2020",month_Silk,day_Silk, sep = "-", collapse = NULL, recycle0 = F)
-  
+
   Flowering_date_T <- as.Date(date_T)
   Flowering_date_T <- as.data.frame(Flowering_date_T)
   colnames(Flowering_date_T) <- "Flowering_date_Tassel"
@@ -51,14 +51,14 @@ flowering_data_set_S <- function(data){
   data <- data[index,]
   month_Tassel <- str_sub(data$Flowering_date_Tassel,4,5)
   date_T <- paste("2020",month_Tassel,day_Tassel, sep = "-", collapse = NULL, recycle0 = F)
-  
+
   day_S <- str_sub(data$Flowering_date_Silk,1,2)
   day_Silk <- day_S[!is.na(as.numeric(day_S))]
   index <- which(!is.na(as.numeric(day_S)))
   month_S <- str_sub(data$Flowering_date_Silk,4,5)
   month_Silk <- month_S[index]
   date_S <- paste("2020",month_Silk,day_Silk, sep = "-", collapse = NULL, recycle0 = F)
-  
+
   Flowering_date_T <- as.Date(date_T)
   Flowering_date_T <- as.data.frame(Flowering_date_T)
   colnames(Flowering_date_T) <- "Flowering_date_Tassel"
@@ -75,21 +75,21 @@ flowering_time_intervals <- function(data){
   data <- data[index,]
   month_Tassel <- str_sub(data$Flowering_date_Tassel,4,5)
   date_T <- paste("2020",month_Tassel,day_Tassel, sep = "-", collapse = NULL, recycle0 = F)
-  
+
   day_S <- str_sub(data$Flowering_date_Silk,1,2)
   day_Silk <- day_S[!is.na(as.numeric(day_S))]
   index <- which(!is.na(as.numeric(day_S)))
   month_S <- str_sub(data$Flowering_date_Silk,4,5)
   month_Silk <- month_S[index]
   date_S <- paste("2020",month_Silk,day_Silk, sep = "-", collapse = NULL, recycle0 = F)
-  
+
   Flowering_date_T <- as.Date(date_T)
   Flowering_date_T <- as.data.frame(Flowering_date_T)
   colnames(Flowering_date_T) <- "Flowering_date_Tassel"
   Flowering_date_S <- as.Date(date_S)
   Flowering_date_S <- as.data.frame(Flowering_date_S)
   colnames(Flowering_date_S) <- "Flowering_date_Silk"
-  
+
   days_to_flowering_Tassel <- Flowering_date_T$Flowering_date_Tassel-as.Date("2020-04-28")
   as.Date("2020-04-28") + median(days_to_flowering_Tassel)
   mat <- matrix(nrow = 9, ncol= 4)
@@ -173,4 +173,3 @@ calculate_eff_pop_size(N_males = sim_flow_males_pop_3,
                        N_females = 250)
 calculate_eff_pop_size(N_males = sim_flow_males_pop_4,
                        N_females = 250)
-

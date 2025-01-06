@@ -19,7 +19,7 @@ cores <- detectCores(all.tests = FALSE, logical = TRUE)
 registerDoMC(cores)
 #### Load the data -------------------------------------------------------------
 ###### Load the WStat values ---------------------------------------------------
-setwd("C:/Users/mtost/Documents/Shoepeg_paper_final_versions/Scripts/Results/")
+setwd("/YOUR/OWN/PATH/")
 WStat_OD_M3 <- fread("2022-12-19_Method_3_window_boundaries_based_on_FSTSum_OD_NA_excluded.txt")
 WStat_SD_M3 <- fread("2022-12-19_Method_3_window_boundaries_based_on_FSTSum_SD_NA_excluded.txt")
 dt_FDRfS_M3 <- fread("2022-12-19_Method_3_dt_FDRfS_WStat_calc_on_FSTSum.txt")
