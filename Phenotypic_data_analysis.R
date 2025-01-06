@@ -5,7 +5,7 @@ library(stringr)
 library(data.table)
 library(gridExtra)
 ### Load data ------------------------------------------------------------------
-setwd("C:/Users/mtost/Documents/Masterarbeit/data/Shoepeg 2021/")
+setwd("YOUR/OWN/PATH/")
 data <- read.table("Shoepeg_all_years_2016_2017_2018_2020_2021.txt")
 data$year <- as.factor(data$year)
 ### Prepare data ---------------------------------------------------------------
@@ -85,7 +85,7 @@ Calc_Response_to_Sel <- function(Measurement_gen_before,
   Response_to_sel <- Measurement_gen_after - Measurement_gen_before
   return(Response_to_sel)
 }
-##### Calculate it for Short plants 1 
+##### Calculate it for Short plants 1
 Response_to_Sel_Gen1_Short1 <- Calc_Response_to_Sel(Measurement_gen_before = summarized_dt[Population == "Short_plants_1" & year == "2016",Mean_PlantHeight],
                                                     Measurement_gen_after = summarized_dt[Population == "Short_plants_1" & year == "2017",Mean_PlantHeight])
 Response_to_Sel_Gen2_Short1 <- Calc_Response_to_Sel(Measurement_gen_before = summarized_dt[Population == "Short_plants_1" & year == "2017",Mean_PlantHeight],
@@ -139,21 +139,21 @@ Results_T_test_2020 <- t.test(Tall_plants_2020$PlantHeight,Short_plants_2020$Pla
                               alternative = "two.sided",
                               paired = TRUE)
 #### Combine all data sets -----------------------------------------------------
-summarized_dt_short <- rbind(c("Short_plants_1", "2016", NA, summarized_dt[Population == "Short_plants_1" & year == "2016", Mean_PlantHeight][1], summarized_dt[Population == "Short_plants_1" & year == "2016",SD_PlantHeight][1], Results_T_test_2016$estimate, Results_T_test_2016$p.value, Results_T_test_2016$conf.int[1], Results_T_test_2016$conf.int[2]), 
+summarized_dt_short <- rbind(c("Short_plants_1", "2016", NA, summarized_dt[Population == "Short_plants_1" & year == "2016", Mean_PlantHeight][1], summarized_dt[Population == "Short_plants_1" & year == "2016",SD_PlantHeight][1], Results_T_test_2016$estimate, Results_T_test_2016$p.value, Results_T_test_2016$conf.int[1], Results_T_test_2016$conf.int[2]),
                              c("Short_plants_2", "2016", NA, summarized_dt[Population == "Short_plants_2" & year == "2016", Mean_PlantHeight][1], summarized_dt[Population == "Short_plants_2" & year == "2016",SD_PlantHeight][1], Results_T_test_2016$estimate, Results_T_test_2016$p.value, Results_T_test_2016$conf.int[1], Results_T_test_2016$conf.int[2]),
-                             c("Tall_plants_1", "2016", NA, summarized_dt[Population == "Tall_plants_1" & year == "2016", Mean_PlantHeight][1], summarized_dt[Population == "Tall_plants_1" & year == "2016",SD_PlantHeight][1], Results_T_test_2016$estimate, Results_T_test_2016$p.value, Results_T_test_2016$conf.int[1], Results_T_test_2016$conf.int[2]), 
+                             c("Tall_plants_1", "2016", NA, summarized_dt[Population == "Tall_plants_1" & year == "2016", Mean_PlantHeight][1], summarized_dt[Population == "Tall_plants_1" & year == "2016",SD_PlantHeight][1], Results_T_test_2016$estimate, Results_T_test_2016$p.value, Results_T_test_2016$conf.int[1], Results_T_test_2016$conf.int[2]),
                              c("Tall_plants_2", "2016", NA, summarized_dt[Population == "Tall_plants_2" & year == "2016", Mean_PlantHeight][1], summarized_dt[Population == "Tall_plants_2" & year == "2016",SD_PlantHeight][1], Results_T_test_2016$estimate, Results_T_test_2016$p.value, Results_T_test_2016$conf.int[1], Results_T_test_2016$conf.int[2]),
-                             c("Short_plants_1", "2017", Response_to_Sel_Gen1_Short1[1], summarized_dt[Population == "Short_plants_1" & year == "2017", Mean_PlantHeight][1], summarized_dt[Population == "Short_plants_1" & year == "2017",SD_PlantHeight][1], Results_T_test_2017$estimate, Results_T_test_2017$p.value, Results_T_test_2017$conf.int[1], Results_T_test_2017$conf.int[2]), 
+                             c("Short_plants_1", "2017", Response_to_Sel_Gen1_Short1[1], summarized_dt[Population == "Short_plants_1" & year == "2017", Mean_PlantHeight][1], summarized_dt[Population == "Short_plants_1" & year == "2017",SD_PlantHeight][1], Results_T_test_2017$estimate, Results_T_test_2017$p.value, Results_T_test_2017$conf.int[1], Results_T_test_2017$conf.int[2]),
                              c("Short_plants_2", "2017", Response_to_Sel_Gen1_Short2[1], summarized_dt[Population == "Short_plants_2" & year == "2017", Mean_PlantHeight][1], summarized_dt[Population == "Short_plants_2" & year == "2017",SD_PlantHeight][1], Results_T_test_2017$estimate, Results_T_test_2017$p.value, Results_T_test_2017$conf.int[1], Results_T_test_2017$conf.int[2]),
-                             c("Tall_plants_1", "2017", Response_to_Sel_Gen1_Tall1[1], summarized_dt[Population == "Tall_plants_1" & year == "2017", Mean_PlantHeight][1], summarized_dt[Population == "Tall_plants_1" & year == "2017",SD_PlantHeight][1], Results_T_test_2017$estimate, Results_T_test_2017$p.value, Results_T_test_2017$conf.int[1], Results_T_test_2017$conf.int[2]), 
+                             c("Tall_plants_1", "2017", Response_to_Sel_Gen1_Tall1[1], summarized_dt[Population == "Tall_plants_1" & year == "2017", Mean_PlantHeight][1], summarized_dt[Population == "Tall_plants_1" & year == "2017",SD_PlantHeight][1], Results_T_test_2017$estimate, Results_T_test_2017$p.value, Results_T_test_2017$conf.int[1], Results_T_test_2017$conf.int[2]),
                              c("Tall_plants_2", "2017", Response_to_Sel_Gen1_Tall2[1], summarized_dt[Population == "Tall_plants_2" & year == "2017", Mean_PlantHeight][1], summarized_dt[Population == "Tall_plants_2" & year == "2017",SD_PlantHeight][1], Results_T_test_2017$estimate, Results_T_test_2017$p.value, Results_T_test_2017$conf.int[1], Results_T_test_2017$conf.int[2]),
-                             c("Short_plants_1", "2018", Response_to_Sel_Gen2_Short1[1], summarized_dt[Population == "Short_plants_1" & year == "2018", Mean_PlantHeight][1], summarized_dt[Population == "Short_plants_1" & year == "2018",SD_PlantHeight][1], Results_T_test_2018$estimate, Results_T_test_2018$p.value, Results_T_test_2018$conf.int[1], Results_T_test_2018$conf.int[2]), 
+                             c("Short_plants_1", "2018", Response_to_Sel_Gen2_Short1[1], summarized_dt[Population == "Short_plants_1" & year == "2018", Mean_PlantHeight][1], summarized_dt[Population == "Short_plants_1" & year == "2018",SD_PlantHeight][1], Results_T_test_2018$estimate, Results_T_test_2018$p.value, Results_T_test_2018$conf.int[1], Results_T_test_2018$conf.int[2]),
                              c("Short_plants_2", "2018", Response_to_Sel_Gen2_Short2[1], summarized_dt[Population == "Short_plants_2" & year == "2018", Mean_PlantHeight][1], summarized_dt[Population == "Short_plants_2" & year == "2018",SD_PlantHeight][1], Results_T_test_2018$estimate, Results_T_test_2018$p.value, Results_T_test_2018$conf.int[1], Results_T_test_2018$conf.int[2]),
-                             c("Tall_plants_1", "2018", Response_to_Sel_Gen2_Tall1[1], summarized_dt[Population == "Tall_plants_1" & year == "2018", Mean_PlantHeight][1], summarized_dt[Population == "Tall_plants_1" & year == "2018",SD_PlantHeight][1], Results_T_test_2018$estimate, Results_T_test_2018$p.value, Results_T_test_2018$conf.int[1], Results_T_test_2018$conf.int[2]), 
+                             c("Tall_plants_1", "2018", Response_to_Sel_Gen2_Tall1[1], summarized_dt[Population == "Tall_plants_1" & year == "2018", Mean_PlantHeight][1], summarized_dt[Population == "Tall_plants_1" & year == "2018",SD_PlantHeight][1], Results_T_test_2018$estimate, Results_T_test_2018$p.value, Results_T_test_2018$conf.int[1], Results_T_test_2018$conf.int[2]),
                              c("Tall_plants_2", "2018", Response_to_Sel_Gen2_Tall2[1], summarized_dt[Population == "Tall_plants_2" & year == "2018", Mean_PlantHeight][1], summarized_dt[Population == "Tall_plants_2" & year == "2018",SD_PlantHeight][1], Results_T_test_2018$estimate, Results_T_test_2018$p.value, Results_T_test_2018$conf.int[1], Results_T_test_2018$conf.int[2]),
-                             c("Short_plants_1", "2020", Response_to_Sel_Gen3_Short1[1], summarized_dt[Population == "Short_plants_1" & year == "2020", Mean_PlantHeight][1], summarized_dt[Population == "Short_plants_1" & year == "2020",SD_PlantHeight][1], Results_T_test_2020$estimate, Results_T_test_2020$p.value, Results_T_test_2020$conf.int[1], Results_T_test_2020$conf.int[2]), 
+                             c("Short_plants_1", "2020", Response_to_Sel_Gen3_Short1[1], summarized_dt[Population == "Short_plants_1" & year == "2020", Mean_PlantHeight][1], summarized_dt[Population == "Short_plants_1" & year == "2020",SD_PlantHeight][1], Results_T_test_2020$estimate, Results_T_test_2020$p.value, Results_T_test_2020$conf.int[1], Results_T_test_2020$conf.int[2]),
                              c("Short_plants_2", "2020", Response_to_Sel_Gen3_Short2[1], summarized_dt[Population == "Short_plants_2" & year == "2020", Mean_PlantHeight][1], summarized_dt[Population == "Short_plants_2" & year == "2020",SD_PlantHeight][1], Results_T_test_2020$estimate, Results_T_test_2020$p.value, Results_T_test_2020$conf.int[1], Results_T_test_2020$conf.int[2]),
-                             c("Tall_plants_1", "2020", Response_to_Sel_Gen3_Tall1[1], summarized_dt[Population == "Tall_plants_1" & year == "2020", Mean_PlantHeight][1], summarized_dt[Population == "Tall_plants_1" & year == "2020",SD_PlantHeight][1], Results_T_test_2020$estimate, Results_T_test_2020$p.value, Results_T_test_2020$conf.int[1], Results_T_test_2020$conf.int[2]), 
+                             c("Tall_plants_1", "2020", Response_to_Sel_Gen3_Tall1[1], summarized_dt[Population == "Tall_plants_1" & year == "2020", Mean_PlantHeight][1], summarized_dt[Population == "Tall_plants_1" & year == "2020",SD_PlantHeight][1], Results_T_test_2020$estimate, Results_T_test_2020$p.value, Results_T_test_2020$conf.int[1], Results_T_test_2020$conf.int[2]),
                              c("Tall_plants_2", "2020", Response_to_Sel_Gen3_Tall2[1], summarized_dt[Population == "Tall_plants_2" & year == "2020", Mean_PlantHeight][1], summarized_dt[Population == "Tall_plants_2" & year == "2020",SD_PlantHeight][1], Results_T_test_2020$estimate, Results_T_test_2020$p.value, Results_T_test_2020$conf.int[1], Results_T_test_2020$conf.int[2]))
 summarized_dt_short <- as.data.frame(summarized_dt_short)
 colnames(summarized_dt_short) <- c("Population", "Year", "Response_to_selection","MeanPlantHeight","SDPlantHeight", "T_test_results_estimate", "T_test_results_p_value", "T_test_results_CI_1", "T_test_results_CI_2")
@@ -182,7 +182,7 @@ colors_Shoepeg <- c("Short_plants_1" = color_short_1,
 #### Plotting ------------------------------------------------------------------
 Response_to_sel_plot1 <- ggplot()+
   stat_summary(data = data,
-               fun = "mean", 
+               fun = "mean",
                geom = "line",
                aes(y = PlantHeight, x = year, group = Population,
                    color = Population))+
@@ -216,7 +216,7 @@ Response_to_sel_plot1 <- ggplot()+
                     as.numeric(summarized_dt[Population == "Short_plants_1" & year == "2020", Mean_PlantHeight][1] + Results_T_test_2020$estimate)),
            x = 1.1:4.1, xend = 1.1:4.1,
            colour = "black")+
-  annotate("text", 
+  annotate("text",
            label = paste(c(summarized_dt_short[Population == "Short_plants_1" & Year == "2017", Response_to_selection][1],
                            summarized_dt_short[Population == "Short_plants_1" & Year == "2018", Response_to_selection][1],
                            summarized_dt_short[Population == "Short_plants_1" & Year == "2020", Response_to_selection][1])),
@@ -225,7 +225,7 @@ Response_to_sel_plot1 <- ggplot()+
                  summarized_dt_short[Population == "Short_plants_1" & Year == "2020", MeanPlantHeight][1]-5),
            x = 1.35:3.35,
            colour = color_short_1, family = "my", size = 3)+
-  annotate("text", 
+  annotate("text",
            label = paste(c(summarized_dt_short[Population == "Short_plants_2" & Year == "2017", Response_to_selection][1],
                            summarized_dt_short[Population == "Short_plants_2" & Year == "2018", Response_to_selection][1],
                            summarized_dt_short[Population == "Short_plants_2" & Year == "2020", Response_to_selection][1])),
@@ -234,7 +234,7 @@ Response_to_sel_plot1 <- ggplot()+
                  summarized_dt_short[Population == "Short_plants_2" & Year == "2020", MeanPlantHeight][1]-5),
            x = 1.75:3.75,
            colour = color_short_2, family = "my", size = 3)+
-  annotate("text", 
+  annotate("text",
            label = paste(c(summarized_dt_short[Population == "Tall_plants_1" & Year == "2017", Response_to_selection][1],
                            summarized_dt_short[Population == "Tall_plants_1" & Year == "2018", Response_to_selection][1],
                            summarized_dt_short[Population == "Tall_plants_1" & Year == "2020", Response_to_selection][1])),
@@ -243,7 +243,7 @@ Response_to_sel_plot1 <- ggplot()+
                  summarized_dt_short[Population == "Tall_plants_1" & Year == "2020", MeanPlantHeight][1]-5),
            x = 1.35:3.35,
            colour = color_tall_1, family = "my", size = 3)+
-  annotate("text", 
+  annotate("text",
            label = paste(c(summarized_dt_short[Population == "Tall_plants_2" & Year == "2017", Response_to_selection][1],
                            summarized_dt_short[Population == "Tall_plants_2" & Year == "2018", Response_to_selection][1],
                            summarized_dt_short[Population == "Tall_plants_2" & Year == "2020", Response_to_selection][1])),
@@ -280,7 +280,7 @@ ggsave("C:/Users/mtost/Documents/Shoepeg_paper_final_versions/Figures/New_figure
        Response_to_sel_plot1,
        device = png,
        height = 4, width = 7,
-       dpi =1800) 
+       dpi =1800)
 ### S3: plot to show the preocedure of simultaneously flowering male plants ----
 #### Prepare the data ----------------------------------------------------------
 ### Flowering dates ------------------------------------------------------------
@@ -300,7 +300,7 @@ Tall_2 <- shoepag[population == "2",]
 Tall_1 <- shoepag[population == "3",]
 Short_2 <- shoepag[population == "4",]
 ### Translate flowering dates for plotting and correlation calc ----------------
-##### TASSELS 
+##### TASSELS
 get_flowering_days_tassel <- function(data){
   # Translate the tassel dates
   day_Tassel <- str_sub(data$Flowering_date_Tassel,1,2)
@@ -318,7 +318,7 @@ Short_1$Days_to_Tassel_flowering <- Short_1_days_to_flowering_T
 Short_2$Days_to_Tassel_flowering <- Short_2_days_to_flowering_T
 Tall_1$Days_to_Tassel_flowering <- Tall_1_days_to_flowering_T
 Tall_2$Days_to_Tassel_flowering <- Tall_2_days_to_flowering_T
-##### SILKS 
+##### SILKS
 get_flowering_days_silk <- function(data){
   # Translate the silk dates
   day_Silk <- str_sub(data$Flowering_date_Silk,1,2)
@@ -406,7 +406,7 @@ Tall_2$Days_to_Silk_maturity <- as.numeric(Tall_2$Days_to_Silk_maturity)
 Short_1_demo_plot <- ggplot()+
   geom_histogram(data = Short_1, aes(x = Days_to_Tassel_flowering),
                  fill ="royalblue1", colour = "royalblue4",alpha = 0.6)+
-  geom_histogram(data = Short_1, aes(x = Days_to_Silk_maturity), 
+  geom_histogram(data = Short_1, aes(x = Days_to_Silk_maturity),
                  fill ="indianred1", colour = "indianred4", alpha = 0.6)+
   annotate(geom = "rect",
            xmin = Short_1_results_flowering_times$Lower_quantile[min(which(Short_1_results_flowering_times$time_int_in_days <= 5))],
@@ -433,7 +433,7 @@ Short_1_demo_plot <- ggplot()+
 Short_2_demo_plot <- ggplot()+
   geom_histogram(data = Short_2, aes(x = Days_to_Tassel_flowering),
                  fill ="royalblue1", colour = "royalblue4",alpha = 0.6)+
-  geom_histogram(data = Short_2, aes(x = Days_to_Silk_maturity), 
+  geom_histogram(data = Short_2, aes(x = Days_to_Silk_maturity),
                  fill ="indianred1", colour = "indianred4", alpha = 0.6)+
   annotate(geom = "rect",
            xmin = Short_2_results_flowering_times$Lower_quantile[min(which(Short_2_results_flowering_times$time_int_in_days <= 5))],
@@ -460,7 +460,7 @@ Short_2_demo_plot <- ggplot()+
 Tall_1_demo_plot <- ggplot()+
   geom_histogram(data = Tall_1, aes(x = Days_to_Tassel_flowering),
                  fill ="royalblue1", colour = "royalblue4",alpha = 0.6)+
-  geom_histogram(data = Tall_1, aes(x = Days_to_Silk_maturity), 
+  geom_histogram(data = Tall_1, aes(x = Days_to_Silk_maturity),
                  fill ="indianred1", colour = "indianred4", alpha = 0.6)+
   annotate(geom = "rect",
            xmin = Tall_1_results_flowering_times$Lower_quantile[min(which(Tall_1_results_flowering_times$time_int_in_days <= 5))],
@@ -488,7 +488,7 @@ Tall_1_demo_plot
 Tall_2_demo_plot <- ggplot()+
   geom_histogram(data = Tall_2, aes(x = Days_to_Tassel_flowering),
                  fill ="royalblue1", colour = "royalblue4",alpha = 0.6)+
-  geom_histogram(data = Tall_2, aes(x = Days_to_Silk_maturity), 
+  geom_histogram(data = Tall_2, aes(x = Days_to_Silk_maturity),
                  fill ="indianred1", colour = "indianred4", alpha = 0.6)+
   annotate(geom = "rect",
            xmin = Tall_2_results_flowering_times$Lower_quantile[min(which(Tall_2_results_flowering_times$time_int_in_days <= 5))],

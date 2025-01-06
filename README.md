@@ -134,11 +134,3 @@ The different thresholds are compared here: <br />
 <img width="600" alt="Figure_3" src="https://github.com/user-attachments/assets/2f5be0f8-a561-40af-85be-976a9911fc72"> <br /> <br />
 The plotting functions are available in the `Plot_Manhattan_plot_with_WStat.R` script. <br /> <br />
 
-## Haplotype estimation and haplotype block calculation
-The data were phased using fastPHASE version 1.4.8 [(Sheet and Stephens, 2006)](https://stephenslab.uchicago.edu/software.html#fastphase) for further dissection. We phased all regions putatively under selection with 10 iterations of the expectation-maximization (EM) algorithm (Sheet and Stephens, 2006). To phase our data, we prepare the regions with the rscript `Prepare_data_for_fastPhase.R` script. The haplotype block calculation and plotting of the blocks are contained in the `Create_Haplotype_figure.R` script. <br /> <br />
-
-## Generation of the LDheatmap
-We also created a pairwise LD heatmap with the R package LDheatmap [Shin et al., 2006](https://sfustatgen.github.io/LDheatmap/index.html) to supplement our haplotype investigation. We looked at LD across putatively selected regions in the different subpopulations. This calculation is contained in the `Create_Haplotype_figure.R` script. <br />Here a both plots combined for the identified region on chromosome 3: <br />
-<img width="600" alt="Figure_4" src="https://github.com/user-attachments/assets/89d6b2f5-d1d1-4480-b895-38731dcaeede"> <br /> <br />
-
-

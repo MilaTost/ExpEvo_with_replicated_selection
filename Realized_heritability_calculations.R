@@ -5,7 +5,7 @@ library(ggplot2)
 library(stringr)
 library(data.table)
 
-setwd("//winfs-uni.top.gwdg.de/mtost$/Masterarbeit/Data_analysis/phenotypic_data/")
+setwd("/path/to/your/own/working/directory/")
 data <- read.table("data_all_years.txt")
 data <-  as.data.table(data)
 

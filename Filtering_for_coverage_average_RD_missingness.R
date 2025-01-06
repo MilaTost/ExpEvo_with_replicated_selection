@@ -1,4 +1,4 @@
-################ Filtering_for_coverage_average_RD_missingness #################
+# Filtering_for_coverage_average_RD_missingness --------------------------------
 library(stringr)
 library(data.table)
 library(doMC)
@@ -135,8 +135,8 @@ filter_for_average_read_depth <- function(data, min_av_depth, max_av_depth){
   cat("This was done within",print(time_1 - time_0),"\n")
   return(data)
 }
-vcf_S4 <- filter_for_average_read_depth(data = vcf_S4, 
-                                        min_av_depth = 1, 
+vcf_S4 <- filter_for_average_read_depth(data = vcf_S4,
+                                        min_av_depth = 1,
                                         max_av_depth = 10)
 ## Create again a quality control plot -----------------------------------------
 chrom <- create.chromR(name="Supercontig", vcf=vcf_S4, verbose=FALSE)
@@ -149,7 +149,7 @@ chromoqc(chrom, dp.alpha = 66)
 dev.off()
 rm(chrom)
 ## Calculate amount of markers with too many missing observations --------------
-calculate_missingness_per_pop <- function(data, 
+calculate_missingness_per_pop <- function(data,
                                           population_1,
                                           population_2,
                                           population_3,
@@ -209,7 +209,7 @@ cat("When you would require, SNPs with at least 20 observations","\n",
     "When you would require, SNPs with at least 40 observations","\n",
     "you would keep", min_40_obs,"SNPs in the data set","\n")
 ### Start filtering for missingness --------------------------------------------
-filter_missingness_per_pop <- function(data, 
+filter_missingness_per_pop <- function(data,
                                        population_1,
                                        population_2,
                                        population_3,
@@ -262,7 +262,7 @@ filter_missingness_per_pop <- function(data,
   cat("This was done within",print(time_1 - time_0),"\n")
   return(data)
 }
-vcf_S4 <- filter_missingness_per_pop(data = vcf_S4, 
+vcf_S4 <- filter_missingness_per_pop(data = vcf_S4,
                                      population_1 = "Shoepag_1",
                                      population_2 = "Shoepag_2",
                                      population_3 = "Shoepag_3",
