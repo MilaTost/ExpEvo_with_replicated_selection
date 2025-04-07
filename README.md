@@ -16,6 +16,7 @@ Pipeline for the analysis of GBS data adapted from [Wickland et al. 2013](https:
 ## Introduction
 This repository contains scripts for the analysis of replicated experimental evolution studies.
 Replicated experimental evolution has been implemented with several model organisms including bacteria, viruses, Drosophila melanogaster and yeast. However, replicated experimental evolution has not been applied to a large population in any agricultural species. Replicating selection can help to identify selected sites and differentiate them from sites affected only by drift. We developed a replicated set of experimental evolution maize populations, each with large population size (~5,000 plants), and implemented three generations of selection for height. We analysed the sequence data with window-based analysis, performed a haplotype block analysis, and created pairwise LD heatmaps of all regions putatively under selection. The preprint is available as [Tost et al., 2024](https://www.biorxiv.org/content/10.1101/2024.02.26.582128v1). <br /> <br />
+The publication is available [here](https://academic.oup.com/genetics/article/229/3/iyaf012/8015405?login=true#authorNotesSectionTitle)
 In the following you can find detailed explanations of the different analysis steps: <br />
 
 ## Phenotypic data analysis
